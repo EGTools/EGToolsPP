@@ -64,6 +64,7 @@ resources/      리소스·엔트리포인트 정의
 
 ## 기반 및 라이선스
 
+- **EGTools++는 [Apache License 2.0](LICENSE)으로 배포됩니다.**
 - 베이스 프레임워크: [xlOil](https://gitlab.com/stevecu/xloil) (Apache-2.0) — 정적 링크 및
   구버전 호환 패치 적용(`patches/` 참조)
 - 실행 파일 압축: UPX
