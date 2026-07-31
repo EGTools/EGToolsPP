@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 0.0.1
+  VERSION 0.1.0
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX)
 
@@ -86,6 +86,12 @@ target_compile_definitions(EGToolsPP PRIVATE
   WIN32_LEAN_AND_MEAN
   NOMINMAX
   UNICODE _UNICODE
+  # Single-source version: consumed by the ribbon About box (C++) and the
+  # VERSIONINFO resource (RC) — resources/egtools.rc.
+  EG_VERSION_STR=\"${PROJECT_VERSION}\"
+  EG_VER_MAJOR=${PROJECT_VERSION_MAJOR}
+  EG_VER_MINOR=${PROJECT_VERSION_MINOR}
+  EG_VER_PATCH=${PROJECT_VERSION_PATCH}
   # No spdlog: logging was never initialised anywhere (no file/sink setup), so
   # the XLO_* macros only dragged dead spdlog code into the .xll (-133KB; the
   # bundled fmt that Throw.h really uses stays). Must match the xlOil lib build

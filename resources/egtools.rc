@@ -1,6 +1,37 @@
 // egtools.rc — embed the i18n JSON catalogs into the .xll as RCDATA so the
 // add-in stays a single self-contained file. Loaded at runtime by core/I18n.
+// Also carries the VERSIONINFO block (version fed from CMake via EG_VER_*).
 #include "resource.h"
+#include <winres.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION     EG_VER_MAJOR,EG_VER_MINOR,EG_VER_PATCH,0
+ PRODUCTVERSION  EG_VER_MAJOR,EG_VER_MINOR,EG_VER_PATCH,0
+ FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+ FILEFLAGS       0x0L
+ FILEOS          VOS__WINDOWS32
+ FILETYPE        VFT_DLL
+ FILESUBTYPE     0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"   // en-US, Unicode
+        BEGIN
+            VALUE "CompanyName",      "EGTools (https://github.com/EGTools/EGToolsPP)"
+            VALUE "FileDescription",  "EGTools++ - Modern Excel functions for legacy Excel"
+            VALUE "FileVersion",      EG_VERSION_STR
+            VALUE "InternalName",     "EGTools++"
+            VALUE "OriginalFilename", "EGTools++.xll"
+            VALUE "ProductName",      "EGTools++"
+            VALUE "ProductVersion",   EG_VERSION_STR
+            VALUE "LegalCopyright",   "Based on xlOil (Apache-2.0)"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
 
 IDR_I18N_EN     RCDATA  "i18n/en.json"
 IDR_I18N_KO     RCDATA  "i18n/ko.json"
