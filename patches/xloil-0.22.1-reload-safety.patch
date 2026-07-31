@@ -1,0 +1,242 @@
+diff --git a/include/xloil/XllEntryPoint.h b/include/xloil/XllEntryPoint.h
+index 612aa07..9eb02bc 100644
+--- a/include/xloil/XllEntryPoint.h
++++ b/include/xloil/XllEntryPoint.h
+@@ -9,6 +9,9 @@
+ #include <filesystem>
+ 
+ namespace xloil { class RegisteredWorksheetFunc; }
++// Declared in src/xlOil-COM/Connect.h (not a public header); a static XLL must
++// drop the COM event sink itself on unload — see autoClose below.
++namespace xloil { namespace COM { void disconnectCom(); } }
+ 
+ namespace XllInfo
+ {
+@@ -55,6 +58,10 @@ namespace xloil
+   {
+     std::unique_ptr<T> theAddin;
+     std::vector<std::shared_ptr<const RegisteredWorksheetFunc>> theFunctions;
++    // True once autoOpen initialised the message queue, so autoClose only tears
++    // down what it actually created (Excel calls xlAutoClose on paths where the
++    // add-in never opened).
++    bool theWasOpen = false;
+ 
+     ~RegisterAddin()
+     {
+@@ -67,6 +74,18 @@ namespace xloil
+ 
+     void autoOpen()
+     {
++      // [EGTools++] Duplicate-load guard: when the same XLL is registered more
++      // than once (duplicate OPEN/OPEN<n> registry entries, or add-in manager
++      // plus a command-line load), Excel calls xlAutoOpen once per REGISTER on
++      // the one loaded module. Without this guard the second pass re-registers
++      // everything, then theAddin.reset(new T()) destroys the previous addin,
++      // whose destructor unregisters the just-registered functions — every UDF
++      // returns #VALUE!, the ribbon vanishes, and the torn state crashes in
++      // xlAutoClose. First open wins; later opens are no-ops (autoClose is
++      // already idempotent via theXllIsOpen/theWasOpen).
++      if (theXllIsOpen)
++        return;
++
+       try
+       {
+         Environment::initAppContext();
+@@ -81,6 +100,7 @@ namespace xloil
+ 
+         // Do this safely in single-thread mode
+         initMessageQueue(Environment::excelProcess().hInstance);
++        theWasOpen = true;
+ 
+         lauch();
+ 
+@@ -110,6 +130,21 @@ namespace xloil
+         theAddin.reset();
+ 
+       theFunctions.clear();
++
++      // Mirror what AddinLoader.cpp does for the xlOil.dll case: a static XLL is
++      // its own core, so nothing else tears these down. Excel FreeLibrary's the
++      // XLL after xlAutoClose, and the message queue's hidden window + the COM
++      // event sink both hold callbacks into this module — left alive they are
++      // dangling pointers (CFG fast-fail 0xC0000409) and the window class blocks
++      // a later re-tick. This MUST come after theFunctions.clear(), which still
++      // needs the message queue to unregister.
++      if (theWasOpen)
++      {
++        teardownMessageQueue();
++        COM::disconnectCom();
++        theWasOpen = false;
++      }
++
+       theXllIsOpen = false;
+     }
+   };
+diff --git a/src/xlOil-COM/API/ExcelThread.cpp b/src/xlOil-COM/API/ExcelThread.cpp
+index 8151c14..52411a4 100644
+--- a/src/xlOil-COM/API/ExcelThread.cpp
++++ b/src/xlOil-COM/API/ExcelThread.cpp
+@@ -39,16 +39,21 @@ namespace xloil
+         if (!_threadHandle)
+           XLO_THROW(L"Failed create message queue thread: {0}", writeWindowsError());
+ 
+-        auto windowClass = wstring(Environment::coreDllName());
+-        windowClass.resize(windowClass.size() - 4);  // Drop ".exe"
+-        windowClass += L"Hidden";
++        _windowClass = wstring(Environment::coreDllName());
++        _windowClass.resize(_windowClass.size() - 4);  // Drop ".exe"
++        _windowClass += L"Hidden";
++        _hInstance = excelInstance;
+ 
+         WNDCLASS wc;
+         memset(&wc, 0, sizeof(WNDCLASS));
+         wc.lpfnWndProc = WindowProc;
+         wc.hInstance = excelInstance;
+-        wc.lpszClassName = windowClass.c_str();
+-        if (RegisterClass(&wc) == 0)
++        wc.lpszClassName = _windowClass.c_str();
++        // A previous load of this add-in in the same Excel process (add-in
++        // unticked then re-ticked) leaves the class registered; clear any stale
++        // registration so the wndproc always points into the current module.
++        UnregisterClassW(_windowClass.c_str(), _hInstance);
++        if (RegisterClass(&wc) == 0 && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+           XLO_THROW(L"Failed to register window class: {0}", writeWindowsError());
+ 
+         _hiddenWindow = CreateWindow(
+@@ -69,6 +74,9 @@ namespace xloil
+       {
+         KillTimer(_hiddenWindow, IDT_TIMER1);
+         DestroyWindow(_hiddenWindow);
++        // Unregister so the add-in can be unloaded and reloaded in the same
++        // Excel session without RegisterClass failing (class already exists).
++        UnregisterClassW(_windowClass.c_str(), _hInstance);
+       }
+ 
+       static void createInstance(void* excelInstance)
+@@ -284,6 +292,8 @@ namespace xloil
+ 
+       HWND _hiddenWindow;
+       CHandle _threadHandle;
++      wstring _windowClass;
++      HINSTANCE _hInstance = nullptr;
+     };
+ 
+     std::atomic<Messenger*> Messenger::_theInstance;
+diff --git a/src/xlOil-COM/ComAddin.cpp b/src/xlOil-COM/ComAddin.cpp
+index bca7ebf..c778c38 100644
+--- a/src/xlOil-COM/ComAddin.cpp
++++ b/src/xlOil-COM/ComAddin.cpp
+@@ -278,15 +278,30 @@ namespace xloil
+           SetAutomationSecurity setSecurity(
+             Office::MsoAutomationSecurity::msoAutomationSecurityLow);
+ 
+-          // It's possible the addin has already been registered. We ensure it is 
+-          // reconnected, so that any new Ribbon XML is picked up by calling 
++          // It's possible the addin has already been registered. We ensure it is
++          // reconnected, so that any new Ribbon XML is picked up by calling
+           // findAddin then disconnecting it.
+-          // 
+-          // If the addin has already been registered, the findAddin call can cause Excel 
++          //
++          // If the addin has already been registered, the findAddin call can cause Excel
+           // to query it for ribbon XML which is why we run this after setting the XML.
+           findAddin(app);
+ 
+-          if (!_comAddin)
++          if (_comAddin && isComAddinConnected())
++          {
++            // Not disconnect(): on a fresh ComAddinCreator _connected is false,
++            // so disconnect() early-returns and the stale connected instance
++            // would keep its old ribbon XML.
++            _comAddin->Connect = VARIANT_FALSE;
++          }
++
++          // [EGTools++ reload-safety] ALWAYS (re)write the AddIns registry
++          // entry, even when findAddin succeeded: on a static-XLL reload the
++          // previous unload deleted the key (RegisterCom::cleanRegistry) while
++          // Excel's COMAddIns collection still caches the item. Trusting the
++          // cached item skips re-registration, the Update() below then drops
++          // the entry, and Connect=TRUE applies to a detached item — silently
++          // succeeding with no ribbon. Re-writing is idempotent when the key
++          // already exists.
+           {
+             const auto addinPath = fmt::format(
+               L"Software\\Microsoft\\Office\\Excel\\AddIns\\{0}", _registrar.progid());
+@@ -297,20 +312,15 @@ namespace xloil
+             if (_description.c_str())
+               _registrar.writeRegistry(
+                 HKEY_CURRENT_USER, addinPath.c_str(), L"Description", _description.c_str());
+-          } 
+-          else if (isComAddinConnected())
+-          {
+-            disconnect();
+           }
+-          
++
+           app.GetCOMAddIns()->Update();
+-          if (!_comAddin)
+-          {
+-            findAddin(app);
+ 
+-            if (!_comAddin)
+-              XLO_THROW(L"Add-in connect: could not find addin '{0}'", progid());
+-          }
++          // Re-find unconditionally: Update() may invalidate a pre-Update item.
++          _comAddin = nullptr;
++          findAddin(app);
++          if (!_comAddin)
++            XLO_THROW(L"Add-in connect: could not find addin '{0}'", progid());
+ 
+           _comAddin->Connect = VARIANT_TRUE;
+           _connected = true;
+diff --git a/src/xlOil-COM/Connect.cpp b/src/xlOil-COM/Connect.cpp
+index d83a42d..4c89869 100644
+--- a/src/xlOil-COM/Connect.cpp
++++ b/src/xlOil-COM/Connect.cpp
+@@ -107,9 +107,15 @@ namespace xloil
+ 
+         ~COMConnector()
+         {
++          // Only balance the CoInitialize done by applicationObjectFromWindow if
++          // we actually connected. An unconditional CoUninitialize decrements
++          // Excel's own COM init count when we never initialised — that corrupts
++          // the host apartment (leaking one init is far safer).
++          const bool wasConnected = connected();
+           _handler.reset();
+           _xlApp.release();
+-          CoUninitialize();
++          if (wasConnected)
++            CoUninitialize();
+         }
+ 
+         Application& thisApp() { return (Application&)_xlApp; }
+@@ -124,6 +130,11 @@ namespace xloil
+ 
+     bool connectCom()
+     {
++      // A static XLL stays loaded when the add-in is unticked, so disconnectCom()
++      // can be followed by another connect (re-tick). Recreate the connector
++      // instead of dereferencing the null unique_ptr it left behind.
++      if (!theComConnector)
++        theComConnector.reset(new COMConnector());
+       if (theComConnector->connected())
+         return true;
+       else
+@@ -137,7 +148,7 @@ namespace xloil
+ 
+     bool isComApiAvailable() noexcept
+     {
+-      if (!theComConnector->connected())
++      if (!theComConnector || !theComConnector->connected())
+         return false;
+       
+       // Do some random COM thing - is this the fastest thing?
+@@ -148,7 +159,7 @@ namespace xloil
+ 
+     Application& attachedApplication()
+     {
+-      if (!theComConnector->connected())
++      if (!theComConnector || !theComConnector->connected())
+         throw ComConnectException("COM Connection not ready");
+       return theComConnector->thisApp();
+     }

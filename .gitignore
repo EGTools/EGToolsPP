@@ -1,0 +1,44 @@
+# Build output
+/build/
+/out/
+/dist/*.xll
+/dist/*.pdb
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake.stamp
+
+# vcpkg
+vcpkg_installed/
+/vcpkg/
+
+# external dependencies (cloned sources)
+/external/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.vcxproj.user
+*.aps
+*.ncb
+*.sdf
+*.opensdf
+ipch/
+
+# MSVC artifacts
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.idb
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Claude (개인 메모리/설정 — 공유 드라이브 정션으로 관리, git 제외)
+/.claude/

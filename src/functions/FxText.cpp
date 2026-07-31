@@ -1,0 +1,339 @@
+// FxText.cpp — text functions.
+
+#include "../core/Registry.h"
+#include "../core/Apply.h"
+#include "../core/Spill.h"
+#include "../core/ArrayUtil.h"
+
+#include <xlOil/xlOil.h>
+#include <xlOil/ExcelArray.h>
+#include <string>
+#include <vector>
+#include <cwctype>
+#include <cwchar>
+
+using namespace xloil;
+
+namespace egtools::functions
+{
+    namespace
+    {
+        // Flatten an argument (scalar or range/array) into text pieces.
+        void collectText(const ExcelObj& v, std::vector<std::wstring>& out, bool skipEmpty)
+        {
+            auto add = [&](const ExcelObj& e)
+            {
+                if (e.type() == ExcelType::Missing) return;
+                std::wstring s = e.toString();
+                if (skipEmpty && s.empty()) return;
+                out.push_back(std::move(s));
+            };
+            if (v.isMissing()) return;
+            if (v.isType(ExcelType::Multi))
+            {
+                ExcelArray a(v);
+                const size_t n = (size_t)a.nRows() * a.nCols();
+                for (size_t k = 0; k < n; ++k) add(a.at(k));
+            }
+            else add(v);
+        }
+
+        std::wstring lower(std::wstring s)
+        {
+            for (auto& c : s) c = (wchar_t)std::towlower(c);
+            return s;
+        }
+
+        // Find the i-th (1-based) occurrence of `delim` in `text`. i<0 counts
+        // from the end. Returns npos if not found.
+        size_t findInstance(const std::wstring& text, const std::wstring& delim,
+                            int instance, bool ci)
+        {
+            if (delim.empty()) return std::wstring::npos;
+            const std::wstring t = ci ? lower(text) : text;
+            const std::wstring d = ci ? lower(delim) : delim;
+            if (instance >= 0)
+            {
+                size_t pos = 0; int n = 0;
+                while ((pos = t.find(d, pos)) != std::wstring::npos)
+                    if (++n == instance) return pos; else pos += d.size();
+                return std::wstring::npos;
+            }
+            // negative: from the end
+            size_t pos = t.size(); int n = 0;
+            while (pos != std::wstring::npos)
+            {
+                size_t found = t.rfind(d, pos == 0 ? 0 : pos - 1);
+                if (found == std::wstring::npos) break;
+                if (++n == -instance) return found;
+                if (found == 0) break;
+                pos = found;
+            }
+            return std::wstring::npos;
+        }
+
+        // Split `text` by any of the delimiters in `delims`.
+        std::vector<std::wstring> splitBy(const std::wstring& text,
+                                          const std::vector<std::wstring>& delims, bool ci)
+        {
+            std::vector<std::wstring> parts;
+            const std::wstring t = ci ? lower(text) : text;
+            size_t pos = 0;
+            while (pos <= text.size())
+            {
+                size_t best = std::wstring::npos, bestLen = 0;
+                for (const auto& draw : delims)
+                {
+                    if (draw.empty()) continue;
+                    const std::wstring d = ci ? lower(draw) : draw;
+                    size_t f = t.find(d, pos);
+                    if (f != std::wstring::npos && (best == std::wstring::npos || f < best))
+                        { best = f; bestLen = d.size(); }
+                }
+                if (best == std::wstring::npos) { parts.push_back(text.substr(pos)); break; }
+                parts.push_back(text.substr(pos, best - pos));
+                pos = best + bestLen;
+            }
+            return parts;
+        }
+
+        // VALUETOTEXT semantics: strict mode wraps text in double quotes
+        // (internal quotes doubled); concise mode is the plain display text.
+        std::wstring valueToText(const ExcelObj& v, bool strict)
+        {
+            if (strict && v.type() == ExcelType::Str)
+            {
+                const std::wstring s = v.toString();
+                std::wstring out = L"\"";
+                for (wchar_t c : s) { if (c == L'"') out += L"\"\""; else out.push_back(c); }
+                out += L"\"";
+                return out;
+            }
+            return v.toString();
+        }
+
+        // NUMBERVALUE: locale-independent parse. Whitespace ignored, group
+        // separators removed, decimal separator normalised, trailing % scaled.
+        ExcelObj parseNumberValue(const std::wstring& text, wchar_t dec, wchar_t grp)
+        {
+            std::wstring s;
+            for (wchar_t c : text)
+                if (!std::iswspace(c)) s.push_back(c);
+            if (s.empty()) return ExcelObj(0.0);
+
+            std::wstring t;
+            for (wchar_t c : s)
+            {
+                if (c == grp) continue;
+                t.push_back(c == dec ? L'.' : c);
+            }
+            int pct = 0;
+            while (!t.empty() && t.back() == L'%') { ++pct; t.pop_back(); }
+            if (t.empty()) return ExcelObj(CellError::Value);
+
+            wchar_t* end = nullptr;
+            double v = std::wcstod(t.c_str(), &end);
+            if (end == t.c_str() || (end && *end != L'\0'))
+                return ExcelObj(CellError::Value);
+            for (int i = 0; i < pct; ++i) v /= 100.0;
+            return ExcelObj(v);
+        }
+
+        // UNICHAR(number): Unicode code point → character.
+        ExcelObj unicharOne(const ExcelObj& e)
+        {
+            const int code = e.get<int>(0);
+            if (code < 1 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF))
+                return ExcelObj(CellError::Value);
+
+            std::wstring s;
+            if (code <= 0xFFFF)
+                s.push_back((wchar_t)code);
+            else
+            {
+                const int c = code - 0x10000;
+                s.push_back((wchar_t)(0xD800 + (c >> 10)));
+                s.push_back((wchar_t)(0xDC00 + (c & 0x3FF)));
+            }
+            return ExcelObj(std::wstring_view(s));
+        }
+
+        // UNICODE(text): code point of the first character.
+        ExcelObj unicodeOne(const ExcelObj& e)
+        {
+            const std::wstring s = e.toString();
+            if (s.empty())
+                return ExcelObj(CellError::Value);
+
+            unsigned cp = (unsigned)(wchar_t)s[0];
+            if (cp >= 0xD800 && cp <= 0xDBFF && s.size() >= 2)   // high surrogate
+            {
+                const unsigned lo = (unsigned)(wchar_t)s[1];
+                if (lo >= 0xDC00 && lo <= 0xDFFF)
+                    cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);
+            }
+            return ExcelObj((double)cp);
+        }
+    }
+
+    void registerText()
+    {
+        egtools::core::registerFn(L"UNICHAR",
+            [](const ExcelObj& n) -> ExcelObj* { return egtools::core::mapUnary(n, unicharOne); });
+        egtools::core::registerFn(L"UNICODE",
+            [](const ExcelObj& t) -> ExcelObj* { return egtools::core::mapUnary(t, unicodeOne); });
+
+        // NUMBERVALUE(text, [decimal_separator], [group_separator]).
+        egtools::core::registerFn(L"NUMBERVALUE",
+            [](const ExcelObj& text, const ExcelObj& decSep, const ExcelObj& grpSep) -> ExcelObj*
+            {
+                wchar_t dec = L'.', grp = L',';
+                if (!decSep.isMissing()) { auto s = decSep.toString(); if (!s.empty()) dec = s[0]; }
+                if (!grpSep.isMissing()) { auto s = grpSep.toString(); if (!s.empty()) grp = s[0]; }
+                return egtools::core::mapUnary(text, [dec, grp](const ExcelObj& e)
+                {
+                    return parseNumberValue(e.toString(), dec, grp);
+                });
+            });
+
+        // TEXTJOIN(delimiter, ignore_empty, text1, …) — variadic up to 255 args.
+        egtools::core::registerRawFn(L"TEXTJOIN",
+            [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
+            {
+                const bool skip = args[0] && args[1] ? args[1]->get<double>(1.0) != 0.0 : true;
+                const std::wstring d = args[0] ? args[0]->toString() : std::wstring();
+                std::vector<std::wstring> parts;
+                for (size_t i = 2; i < info.numArgs(); ++i) collectText(*args[i], parts, skip);
+                std::wstring out;
+                for (size_t i = 0; i < parts.size(); ++i)
+                    { if (i) out += d; out += parts[i]; }
+                return returnValue(ExcelObj(std::wstring_view(out)));
+            });
+
+        // CONCAT(text1, …) — concatenate all text (incl. ranges), variadic.
+        egtools::core::registerRawFn(L"CONCAT",
+            [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
+            {
+                std::vector<std::wstring> parts;
+                for (size_t i = 0; i < info.numArgs(); ++i) collectText(*args[i], parts, false);
+                std::wstring out;
+                for (auto& s : parts) out += s;
+                return returnValue(ExcelObj(std::wstring_view(out)));
+            });
+
+        // TEXTBEFORE(text, delimiter, [instance], [match_mode], [if_not_found]).
+        egtools::core::registerFn(L"TEXTBEFORE",
+            [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
+               const ExcelObj& modeA, const ExcelObj& nfA) -> ExcelObj*
+            {
+                const std::wstring text = textA.toString();
+                const std::wstring delim = delimA.toString();
+                const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
+                const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
+                const size_t at = findInstance(text, delim, inst, ci);
+                if (at == std::wstring::npos)
+                    return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
+                return returnValue(ExcelObj(text.substr(0, at)));
+            });
+
+        // TEXTAFTER(text, delimiter, [instance], [match_mode], [if_not_found]).
+        egtools::core::registerFn(L"TEXTAFTER",
+            [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
+               const ExcelObj& modeA, const ExcelObj& nfA) -> ExcelObj*
+            {
+                const std::wstring text = textA.toString();
+                const std::wstring delim = delimA.toString();
+                const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
+                const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
+                const size_t at = findInstance(text, delim, inst, ci);
+                if (at == std::wstring::npos)
+                    return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
+                return returnValue(ExcelObj(text.substr(at + delim.size())));
+            });
+
+        // TEXTSPLIT(text, col_delim, [row_delim], [ignore_empty], [match_mode], [pad_with]).
+        egtools::core::registerFn(L"TEXTSPLIT",
+            [](const ExcelObj& textA, const ExcelObj& colD, const ExcelObj& rowD,
+               const ExcelObj& ignoreA, const ExcelObj& modeA, const ExcelObj& padA) -> ExcelObj*
+            {
+                const std::wstring text = textA.toString();
+                const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
+                const bool ignore = ignoreA.isMissing() ? false : (ignoreA.get<double>(0.0) != 0.0);
+                const ExcelObj pad = padA.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(padA);
+
+                std::vector<std::wstring> colDelims, rowDelims;
+                if (!colD.isMissing()) colDelims.push_back(colD.toString());
+                if (!rowD.isMissing()) rowDelims.push_back(rowD.toString());
+
+                // Rows: split by row_delim (or whole text as one row).
+                std::vector<std::wstring> rowStrs = rowDelims.empty()
+                    ? std::vector<std::wstring>{ text } : splitBy(text, rowDelims, ci);
+
+                std::vector<std::vector<std::wstring>> grid;
+                size_t maxCols = 0;
+                for (auto& rs : rowStrs)
+                {
+                    std::vector<std::wstring> cells = colDelims.empty()
+                        ? std::vector<std::wstring>{ rs } : splitBy(rs, colDelims, ci);
+                    if (ignore)
+                    {
+                        std::vector<std::wstring> kept;
+                        for (auto& c : cells) if (!c.empty()) kept.push_back(c);
+                        cells.swap(kept);
+                    }
+                    if (!cells.empty() || !ignore) { maxCols = std::max(maxCols, cells.size()); grid.push_back(std::move(cells)); }
+                }
+                if (ignore)
+                {
+                    std::vector<std::vector<std::wstring>> kept;
+                    for (auto& r : grid) if (!r.empty()) kept.push_back(std::move(r));
+                    grid.swap(kept);
+                }
+                if (grid.empty() || maxCols == 0) return returnValue(CellError::Value);
+
+                std::vector<ExcelObj> vals;
+                vals.reserve(grid.size() * maxCols);
+                for (auto& r : grid)
+                    for (size_t j = 0; j < maxCols; ++j)
+                        vals.emplace_back(j < r.size() ? ExcelObj(std::wstring_view(r[j])) : pad);
+                return egtools::core::output(egtools::core::makeArray(
+                    (xloil::ExcelArrayBuilder::row_t)grid.size(),
+                    (xloil::ExcelArrayBuilder::col_t)maxCols, vals));
+            });
+
+        // VALUETOTEXT(value, [format]) — 0 concise (default), 1 strict (quote text).
+        egtools::core::registerFn(L"VALUETOTEXT",
+            [](const ExcelObj& value, const ExcelObj& fmt) -> ExcelObj*
+            {
+                const bool strict = fmt.isMissing() ? false : (fmt.get<int>(0) == 1);
+                std::wstring s = valueToText(value, strict);
+                return returnValue(ExcelObj(std::wstring_view(s)));
+            });
+
+        // ARRAYTOTEXT(array, [format]) — 0 list "a, b, c"; 1 strict "{a,b;c,d}".
+        egtools::core::registerFn(L"ARRAYTOTEXT",
+            [](const ExcelObj& array, const ExcelObj& fmt) -> ExcelObj*
+            {
+                const bool strict = fmt.isMissing() ? false : (fmt.get<int>(0) == 1);
+                if (!array.isType(ExcelType::Multi))
+                {
+                    std::wstring s = valueToText(array, strict);
+                    return returnValue(ExcelObj(std::wstring_view(s)));
+                }
+                ExcelArray a(array);
+                std::wstring out;
+                if (strict) out = L"{";
+                for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
+                {
+                    if (r) out += strict ? L";" : L", ";
+                    for (ExcelArray::col_t c = 0; c < a.nCols(); ++c)
+                    {
+                        if (c) out += strict ? L"," : L", ";
+                        out += valueToText(a.at(r, c), strict);
+                    }
+                }
+                if (strict) out += L"}";
+                return returnValue(ExcelObj(std::wstring_view(out)));
+            });
+    }
+}

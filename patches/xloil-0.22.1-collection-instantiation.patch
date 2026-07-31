@@ -1,0 +1,19 @@
+diff --git a/src/xlOil-COM/AppObjects.cpp b/src/xlOil-COM/AppObjects.cpp
+index ae1006f..dc1db70 100644
+--- a/src/xlOil-COM/AppObjects.cpp
++++ b/src/xlOil-COM/AppObjects.cpp
+@@ -912,4 +912,14 @@ namespace xloil
+   {
+     return COM::workbookPaths();
+   }
++
++  // [EGTools++ patch] Explicit instantiation of the Collection<> specializations.
++  // Their member functions are defined out-of-line in this TU but unused here,
++  // so without explicit instantiation they are emitted nowhere — causing
++  // LNK2001 (e.g. Collection<ExcelWorkbook,Workbooks>::get) in static-link
++  // consumers such as WorkbookScopeFunctions. See plan/08_Phase0_검증보고.md.
++  template class Collection<ExcelWorksheet, Excel::Sheets>;
++  template class Collection<ExcelWorkbook, Excel::Workbooks>;
++  template class Collection<ExcelWorksheet, Excel::Windows>;
++  template class Collection<ExcelRange, Excel::Areas>;
+ }

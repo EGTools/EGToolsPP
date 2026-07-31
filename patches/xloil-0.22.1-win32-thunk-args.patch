@@ -1,0 +1,70 @@
+diff --git a/src/xlOil-Dynamic/Thunker.cpp b/src/xlOil-Dynamic/Thunker.cpp
+index 8b32b15..b4b9fa0 100644
+--- a/src/xlOil-Dynamic/Thunker.cpp
++++ b/src/xlOil-Dynamic/Thunker.cpp
+@@ -195,6 +195,52 @@ namespace xloil
+     asmb.emitEpilog(frame);
+   }
+ 
++  // [EGTools++ patch: win32-thunk-args] Hand-rolled Win32 thunk without the
++  // 16-argument limit of the asmjit-Compiler path below (asmjit's FuncDetail
++  // caps function signatures at 16 args, which made registration of variadic
++  // UDFs fail for numArgs > 16 on Win32 only).
++  //
++  // Under __stdcall the caller pushes the xloper12* arguments right-to-left,
++  // so on entry [esp+4], [esp+8], ... IS already the contiguous array
++  // xloper12* args[numArgs] in left-to-right order. Unlike x64 (register
++  // args) nothing needs to be copied — pass its address straight to the
++  // cdecl callback:  callback(data, &args[0]).
++  //
++  // The emitted code is deliberately byte-compatible with what
++  // patchThunkData() searches for: the context pointer is loaded with
++  // exactly `mov dword ptr [esp], imm32` (see ptr_zsp(0, 4) there).
++  //
++  //   sub  esp, 8              ; outgoing arg space for the cdecl call
++  //   lea  eax, [esp+12]       ; &arg0 (8 outgoing + 4 return address)
++  //   mov  [esp+4], eax        ; 2nd callback arg: xloper12** args
++  //   mov  dword ptr [esp], data ; 1st callback arg (patchable)
++  //   call callback
++  //   add  esp, 8
++  //   ret  numArgs*4           ; stdcall: callee pops Excel's arguments
++  void handRoll32(CodeHolder* code,
++    void* callback,
++    const void* data,
++    size_t numArgs,
++    bool /*hasReturnVal*/)
++  {
++    asmjit::x86::Assembler asmb(code);
++
++    XLO_DEBUG("Building thunk with {0} arguments", numArgs);
++
++    asmb.sub(x86::esp, 8);
++    asmb.lea(x86::eax, asmb.ptr_zsp(12));
++    asmb.mov(asmb.ptr_zsp(4, 4), x86::eax);
++    asmb.mov(asmb.ptr_zsp(0, 4), imm(data));
++    asmb.call(imm((void*)callback));
++    asmb.add(x86::esp, 8);
++    // An xloper* return value (when present) is already in eax; async thunks
++    // are registered as void so eax is simply ignored by Excel.
++    if (numArgs > 0)
++      asmb.ret(imm(numArgs * sizeof(void*)));
++    else
++      asmb.ret();
++  }
++
+   void createArrayOfArgsOnStack(
+     asmjit::x86::Compiler& cc, x86::Mem& stackPtr, size_t startArg, size_t endArg)
+   {
+@@ -319,9 +365,9 @@ namespace xloil
+ #if _WIN64
+     handRoll64(_holder, (void*)callback, contextData, numArgs, hasReturnVal);
+ #else
+-    if (numArgs > 16)
+-      throw Exception("In Win32 builds, there is a limit of 16 args for non-local UDFs. Raise a github issue if this is a problem!");
+-    buildThunk(callback, contextData, numArgs, hasReturnVal, *_holder);
++    // [EGTools++ patch: win32-thunk-args] hand-rolled thunk — no 16-arg limit
++    // (the asmjit-Compiler path remains available via the SlowBuild ctor).
++    handRoll32(_holder, (void*)callback, contextData, numArgs, hasReturnVal);
+ #endif
+   }
+ 

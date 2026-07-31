@@ -1,0 +1,10 @@
+// egtools.rc — embed the i18n JSON catalogs into the .xll as RCDATA so the
+// add-in stays a single self-contained file. Loaded at runtime by core/I18n.
+#include "resource.h"
+
+IDR_I18N_EN     RCDATA  "i18n/en.json"
+IDR_I18N_KO     RCDATA  "i18n/ko.json"
+IDR_I18N_ZH_CN  RCDATA  "i18n/zh-CN.json"
+IDR_I18N_ZH_TW  RCDATA  "i18n/zh-TW.json"
+IDR_I18N_JA     RCDATA  "i18n/ja.json"
+IDR_I18N_ES     RCDATA  "i18n/es.json"

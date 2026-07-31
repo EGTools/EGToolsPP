@@ -1,0 +1,21 @@
+; EGTools++ — module-definition file.
+;
+; Exports the Excel XLL entry points with UNDECORATED names.
+;
+; On x86, __stdcall symbols are name-decorated by the compiler
+; (xlAutoOpen -> _xlAutoOpen@0). Excel's Add-in Manager looks up the *plain*
+; names via GetProcAddress, so without this .def `RegisterXLL` fails on 32-bit
+; Excel (the entry point is invisible). x64 has no such decoration, which is why
+; the 64-bit build loaded while the 32-bit one did not (O2 finding, 2026-06-27,
+; verified against Excel 2016 32-bit). See plan/11_x86_로드버그_수정.md.
+;
+; The symbols themselves are provided by the statically-linked xlOil-XLL.lib;
+; this file only renames their exports. Mirrors xlOil's own
+; src/xlOil-Loader/xlOilAddin.def (plus xlAddInManagerInfo12 for the manager
+; display name, which is compiled in and confirmed present).
+EXPORTS
+	xlAutoOpen
+	xlAutoClose
+	xlAutoFree12
+	xlAddInManagerInfo12
+	xlHandleCalculationCancelled

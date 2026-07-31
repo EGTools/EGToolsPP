@@ -1,0 +1,136 @@
+diff --git a/include/xloil/Events.h b/include/xloil/Events.h
+index cc50594..c71fcf1 100644
+--- a/include/xloil/Events.h
++++ b/include/xloil/Events.h
+@@ -171,8 +171,10 @@ namespace xloil
+         _lock.lock();
+         std::vector<handler> copy(_handlers.begin(), _handlers.end());
+         _lock.unlock();
++#ifndef XLOIL_NO_SPDLOG
+         if (spdlog::default_logger()->level() <= spdlog::level::debug)
+           XLO_DEBUG(L"Firing event {0}{1}", _name, detail::concatParameters(std::forward<Args>(args)...));
++#endif
+         return _collector(copy, std::forward<Args>(args)...);
+       }
+ 
+diff --git a/include/xloil/Log.h b/include/xloil/Log.h
+index 2ee4eca..21cdf2a 100644
+--- a/include/xloil/Log.h
++++ b/include/xloil/Log.h
+@@ -4,11 +4,17 @@
+ 
+ #ifdef XLOIL_NO_SPDLOG
+ 
+-#define XLO_TRACE(...) 
+-#define XLO_DEBUG(...) 
+-#define XLO_INFO(...) 
+-#define XLO_WARN(...) 
+-#define XLO_ERROR(...) 
++// Keep the transitive includes the spdlog branch provided: several xlOil
++// sources (e.g. ExcelObj.cpp) rely on Log.h for WindowsSlim.h / <string>.
++#include <xloil/ExportMacro.h>
++#include <xlOil/WindowsSlim.h>
++#include <string>
++
++#define XLO_TRACE(...)
++#define XLO_DEBUG(...)
++#define XLO_INFO(...)
++#define XLO_WARN(...)
++#define XLO_ERROR(...)
+ 
+ #else
+ 
+diff --git a/include/xloil/Plugin.h b/include/xloil/Plugin.h
+index c0f31be..bacb891 100644
+--- a/include/xloil/Plugin.h
++++ b/include/xloil/Plugin.h
+@@ -13,8 +13,12 @@ namespace xloil
+   /// <param name="plugin"></param>
+   inline void linkPluginToCoreLogger(AddinContext*, const PluginContext& plugin)
+   {
++#ifndef XLOIL_NO_SPDLOG
+     if (plugin.action == PluginContext::Load)
+       spdlog::set_default_logger(loggerRegistry().default_logger());
++#else
++    (void)plugin;
++#endif
+   }
+   /// <summary>
+   /// Throws if the version of xlOil used to build the plugin does not exactly match
+diff --git a/src/xlOil-COM/RtdServerWorker.h b/src/xlOil-COM/RtdServerWorker.h
+index 57d11d7..09a5c69 100644
+--- a/src/xlOil-COM/RtdServerWorker.h
++++ b/src/xlOil-COM/RtdServerWorker.h
+@@ -291,7 +291,11 @@ namespace xloil
+             if (topicsToConnect.empty() && topicIdsToDisconnect.empty())
+               continue;
+ 
++#ifdef XLOIL_NO_SPDLOG
++            const bool doTrace = false;
++#else
+             const bool doTrace = spdlog::default_logger_raw()->should_log(spdlog::level::trace);
++#endif
+ 
+             if (doTrace)
+             {
+diff --git a/src/xlOil-Funcs/xloLog.cpp b/src/xlOil-Funcs/xloLog.cpp
+index e4a6d24..bbd181e 100644
+--- a/src/xlOil-Funcs/xloLog.cpp
++++ b/src/xlOil-Funcs/xloLog.cpp
+@@ -1,6 +1,7 @@
++#include <xloil/Log.h>
++#ifndef XLOIL_NO_SPDLOG
+ #include <xloil/StaticRegister.h>
+ #include <xloil/Preprocessor.h>
+-#include <xloil/Log.h>
+ #include <xloil/LogWindow.h>
+ #include <xloil-XLL/LogWindowSink.h>
+ #include <spdlog/sinks/basic_file_sink.h>
+@@ -31,4 +32,5 @@ namespace xloil
+   XLO_FUNC_END(xloLog).threadsafe()
+     .help(L"Flushes the log to file and returns the path of the main log file")
+     .arg(L"ShowWindow", L"Opens the log window if True");
+-}
+\ No newline at end of file
++}
++#endif // XLOIL_NO_SPDLOG
+\ No newline at end of file
+diff --git a/src/xlOil-XLL/Log.cpp b/src/xlOil-XLL/Log.cpp
+index b887699..5f119e8 100644
+--- a/src/xlOil-XLL/Log.cpp
++++ b/src/xlOil-XLL/Log.cpp
+@@ -1,4 +1,5 @@
+ #include <xlOil/Log.h>
++#ifndef XLOIL_NO_SPDLOG
+ #include <xlOil/StringUtils.h>
+ #include <xlOil/Events.h>
+ #include <xlOil/Throw.h>
+@@ -88,4 +89,5 @@ namespace xloil
+ 
+     return fileWrite->filename();
+   }
+-}
+\ No newline at end of file
++}
++#endif // XLOIL_NO_SPDLOG
+\ No newline at end of file
+diff --git a/tests/TestAddin/Main.cpp b/tests/TestAddin/Main.cpp
+index 9b649f2..3f613b0 100644
+--- a/tests/TestAddin/Main.cpp
++++ b/tests/TestAddin/Main.cpp
+@@ -22,6 +22,7 @@ struct MyAddin
+ 
+   MyAddin()
+   {
++#ifndef XLOIL_NO_SPDLOG
+     auto logger = loggerInitialise("warn");
+     // It's not a great idea to put your log file in the same directory as the XLL
+     // because if the XLL has been added to Excel's `XLSTART` folder, Excel will
+@@ -30,6 +31,7 @@ struct MyAddin
+       getEnvironmentVar(L"APPDATA") + L"\\xlOil\\" + XllInfo::xllName + L".log",
+       "debug",
+       1000);
++#endif
+ 
+     theFuncs.push_back(RegisterLambda<>(
+       [](const ExcelObj& /*arg1*/, const ExcelObj& /*arg2*/)

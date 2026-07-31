@@ -1,0 +1,42 @@
+diff --git a/include/xloil/XllEntryPoint.h b/include/xloil/XllEntryPoint.h
+index 66a37ed..612aa07 100644
+--- a/include/xloil/XllEntryPoint.h
++++ b/include/xloil/XllEntryPoint.h
+@@ -175,18 +175,32 @@ XLO_ENTRY_POINT(msxll::XLOPER12*) xlAddInManagerInfo12(msxll::XLOPER12* xAction)
+ {
+   using namespace msxll;
+ 
+-  static XLOPER12 xIntAction, xInfo = { 1.0, xltypeNum }, xType = { 1.0, xltypeInt };
+-  xType.val.w = xltypeInt;
+-
+-  Excel12(msxll::xlCoerce, &xIntAction, 2, xAction, xType);
++  static XLOPER12 xInfo = { 1.0, xltypeNum };
+ 
+   if (xInfo.xltype == xltypeStr)
++  {
+     delete[] xInfo.val.str.data;
++    xInfo.xltype = xltypeNum;
++    xInfo.val.num = 1.0;
++  }
++
++  // [EGTools++ patch] Determine the requested action by reading xAction DIRECTLY
++  // instead of calling Excel12(xlCoerce). The Add-in Manager invokes this entry
++  // point to fetch the display name, sometimes before the XLL's Excel C API
++  // context is fully established; on Excel 2016 (x86) the xlCoerce callback then
++  // faults inside EXCEL.EXE (0xC0000005), which the user sees as "the add-in
++  // can't be registered". Excel passes xAction as Int (==1 to request the name).
++  int action = 0;
++  if (xAction)
++  {
++    if (xAction->xltype == xltypeInt)      action = xAction->val.w;
++    else if (xAction->xltype == xltypeNum) action = (int)xAction->val.num;
++  }
+ 
+   try
+   {
+     auto info = addInManagerInfo();
+-    if (xIntAction.val.w == 1 && !info.empty())
++    if (action == 1 && !info.empty())
+     {
+       xInfo.xltype = xltypeStr;
+       xInfo.val.str.data = xloil::PString(info).release();
