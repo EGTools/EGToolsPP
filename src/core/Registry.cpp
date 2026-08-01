@@ -26,6 +26,9 @@ namespace egtools::functions {
     void registerEgDate();     // FxEgDate.cpp
     void registerEgJson();     // FxEgJson.cpp
     void registerEgUtil();     // FxEgUtil.cpp
+    void registerBarcode();    // FxBarcode.cpp
+    void registerColor();      // FxColor.cpp
+    void registerPublicApi();  // FxPublicApi.cpp
 }
 
 namespace egtools::core
@@ -145,6 +148,9 @@ namespace egtools::core
         group(egtools::functions::registerEgDate);     // TOLUNAR/TOSOLAR/KOREANHOLIDAYS/… (EGTools 날짜, plan/20 E4)
         group(egtools::functions::registerEgJson);     // JSONFILTER (plan/20 E7)
         group(egtools::functions::registerEgUtil);     // DIRFOLDER/RESTAPI/EXRATE/EVAL/SHEETLIST/TOTALPAGES (plan/20 E5·E8)
+        group(egtools::functions::registerBarcode);    // BARCODE/QRCODE/DATAMATRIX/CODE128/READBARCODE/READGS1 (plan/22 B2)
+        group(egtools::functions::registerColor);      // DISPLAYCOLOR/COUNTIFCOLOR/SUMIFCOLOR/ISVISIBLE/VISIBLEAGGR/ILOOKUP (plan/22 B3)
+        group(egtools::functions::registerPublicApi);  // SEARCHADDRESS/BRNSTATUS/GEO*/ADDRESSMAP (plan/22 B4, 키=HKCU ApiKeys)
     }
 
     void unregisterFunctions()

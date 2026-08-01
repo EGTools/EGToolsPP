@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 0.4
+  VERSION 0.5
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX)
 
@@ -60,6 +60,9 @@ set(EG_SOURCES
   src/functions/FxEgDate.cpp
   src/functions/FxEgJson.cpp
   src/functions/FxEgUtil.cpp
+  src/functions/FxBarcode.cpp
+  src/functions/FxColor.cpp
+  src/functions/FxPublicApi.cpp
   src/intellisense/IntelliSense.cpp
   src/intellisense/FormulaParser.cpp
   src/intellisense/Catalog.cpp
@@ -158,6 +161,19 @@ eg_link_xloil(EGToolsPP)
 # JSON parsing for the embedded i18n catalogs (header-only).
 find_package(nlohmann_json CONFIG REQUIRED)
 target_link_libraries(EGToolsPP PRIVATE nlohmann_json::nlohmann_json)
+
+# Barcode encode/decode (BARCODE/QRCODE/…/READBARCODE) — static zxing-cpp.
+find_package(ZXing CONFIG REQUIRED)
+target_link_libraries(EGToolsPP PRIVATE ZXing::ZXing)
+
+# Console self-test that round-trips the barcode core without Excel
+# (encodes sample BMPs which tests/ then decodes via READBARCODE).
+# Not part of ALL and never shipped.
+add_executable(eg_barcode_selftest EXCLUDE_FROM_ALL tools/barcode_selftest.cpp)
+target_include_directories(eg_barcode_selftest PRIVATE src)
+target_link_libraries(eg_barcode_selftest PRIVATE ZXing::ZXing)
+set_property(TARGET eg_barcode_selftest PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # --- Place artifact into dist/ (Release: UPX-packed by default) --------------
 # Deployment default = UPX-compressed dist (~-65%, decided 2026-07-31 after the

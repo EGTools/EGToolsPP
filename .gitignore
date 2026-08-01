@@ -42,3 +42,6 @@ Desktop.ini
 
 # Claude (개인 메모리/설정 — 공유 드라이브 정션으로 관리, git 제외)
 /.claude/
+
+# dev-only API keys (plan/22 B4) - never distribute
+.env

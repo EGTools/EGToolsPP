@@ -50,6 +50,37 @@ namespace egtools::functions
             return ExcelObj(std::wstring_view(out));
         }
 
+        // ---- DECODEURL ----------------------------------------------------
+        ExcelObj decodeUrlOne(const ExcelObj& e)
+        {
+            const std::wstring w = e.toString();
+            auto hex = [](wchar_t c) -> int {
+                if (c >= L'0' && c <= L'9') return c - L'0';
+                if (c >= L'A' && c <= L'F') return c - L'A' + 10;
+                if (c >= L'a' && c <= L'f') return c - L'a' + 10;
+                return -1;
+            };
+            std::string u8;
+            u8.reserve(w.size());
+            for (size_t i = 0; i < w.size(); ++i)
+            {
+                if (w[i] == L'%' && i + 2 < w.size())
+                {
+                    const int h = hex(w[i + 1]), l = hex(w[i + 2]);
+                    if (h >= 0 && l >= 0) { u8.push_back((char)((h << 4) | l)); i += 2; continue; }
+                }
+                // non-escaped char: pass through as UTF-8
+                wchar_t one[2] = { w[i], 0 };
+                char buf[8];
+                int n = WideCharToMultiByte(CP_UTF8, 0, one, 1, buf, sizeof(buf), nullptr, nullptr);
+                u8.append(buf, (size_t)n);
+            }
+            int n = MultiByteToWideChar(CP_UTF8, 0, u8.data(), (int)u8.size(), nullptr, 0);
+            std::wstring out((size_t)n, L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, u8.data(), (int)u8.size(), out.data(), n);
+            return ExcelObj(std::wstring_view(out));
+        }
+
         // ---- FILTERXML ----------------------------------------------------
         ExcelObj* filterXml(const ExcelObj& xmlObj, const ExcelObj& xpathObj)
         {
@@ -175,6 +206,9 @@ namespace egtools::functions
     {
         egtools::core::registerFn(L"ENCODEURL",
             [](const ExcelObj& t) -> ExcelObj* { return egtools::core::mapUnary(t, encodeUrlOne); });
+
+        egtools::core::registerFn(L"DECODEURL",
+            [](const ExcelObj& t) -> ExcelObj* { return egtools::core::mapUnary(t, decodeUrlOne); });
 
         egtools::core::registerFn(L"FILTERXML",
             [](const ExcelObj& xml, const ExcelObj& xpath) -> ExcelObj* { return filterXml(xml, xpath); },

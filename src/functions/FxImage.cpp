@@ -163,7 +163,8 @@ namespace egtools::functions
         // Runs on Excel's main thread (deferred, COM_API queue). Inserts the picture.
         // Returns false → ComBusyException-style retry is handled by the queue wrapper;
         // we simply return (best-effort, fire-and-forget like the VB version).
-        void insertImage(std::wstring fullAddr, std::wstring cell, std::wstring source, int mode)
+        void insertImage(std::wstring fullAddr, std::wstring cell, std::wstring source, int mode,
+                         bool deleteLocalAfter = false)
         {
             std::wstring tempFile;
             bool isTemp = false;
@@ -184,6 +185,7 @@ namespace egtools::functions
                 }
                 else if (GetFileAttributesW(source.c_str()) == INVALID_FILE_ATTRIBUTES)
                     return;
+                else if (deleteLocalAfter) { tempFile = source; isTemp = true; }
 
                 // Resolve the caller range via xlOil (robust COM handling), then get
                 // its IDispatch — everything after this is late-bound.
@@ -264,6 +266,19 @@ namespace egtools::functions
         }
     }
 
+    // Shared entry point (ImageInsert.h) — also used by the barcode functions.
+    void queueInsertPicture(const std::wstring& fullAddr, const std::wstring& cell,
+                            const std::wstring& source, int mode, bool deleteLocalAfter)
+    {
+        // WINDOW (not COM_API): in this static-XLL context the COM_API queue
+        // callback never fires, but WINDOW posts to Excel's main thread where
+        // COM is usable after connectCom().
+        xloil::runExcelThread(
+            [fullAddr, cell, source, mode, deleteLocalAfter]
+            { insertImage(fullAddr, cell, source, mode, deleteLocalAfter); },
+            xloil::ExcelRunQueue::WINDOW | xloil::ExcelRunQueue::ENQUEUE);
+    }
+
     void registerImage()
     {
         // IMAGE(source, [alt_text], [resize_mode], [height], [width]).
@@ -284,13 +299,7 @@ namespace egtools::functions
                     parseSheetCell(fullAddr, sheet, cell);
                     if (cell.empty()) return returnValue(CellError::Ref);
 
-                    // WINDOW (not COM_API): in this static-XLL context the COM_API queue
-                    // callback never fires, but WINDOW posts to Excel's main thread where
-                    // COM is usable after connectCom(). The crash was the typed-COM Shapes
-                    // access (now late-bound), NOT the queue choice.
-                    xloil::runExcelThread(
-                        [fullAddr, cell, source, mode] { insertImage(fullAddr, cell, source, mode); },
-                        xloil::ExcelRunQueue::WINDOW | xloil::ExcelRunQueue::ENQUEUE);
+                    queueInsertPicture(fullAddr, cell, source, mode, /*deleteLocalAfter*/ false);
 
                     return returnValue(ExcelObj(std::wstring_view(L"")));
                 }

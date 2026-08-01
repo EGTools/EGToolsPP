@@ -308,5 +308,57 @@ namespace egtools::functions
                     out[k % rows][k / rows] = v[k];   // fill column-major
                 return emit(out);
             });
+
+        // TRIMRANGE(array, [trim_rows], [trim_cols]) — drop blank edge rows/cols.
+        // Mode per axis: 0 none, 1 leading, 2 trailing, 3 both (default).
+        // NB: reads with trim=false — the default ExcelArray ctor silently drops
+        // trailing blank rows/cols, which would pre-trim exactly what this
+        // function is supposed to control.
+        egtools::core::registerFn(L"TRIMRANGE",
+            [](const ExcelObj& array, const ExcelObj& rowsA, const ExcelObj& colsA) -> ExcelObj*
+            {
+                Grid g;
+                if (array.isType(ExcelType::Multi))
+                {
+                    ExcelArray a(array, /*trim*/ false);
+                    for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
+                    {
+                        std::vector<ExcelObj> row;
+                        row.reserve(a.nCols());
+                        for (ExcelArray::col_t c = 0; c < a.nCols(); ++c) row.emplace_back(a.at(r, c));
+                        g.push_back(std::move(row));
+                    }
+                }
+                else if (!array.isMissing()) g.push_back({ ExcelObj(array) });
+                if (g.empty()) return returnValue(CellError::Value);
+                const int mr = rowsA.isMissing() ? 3 : rowsA.get<int>(3);
+                const int mc = colsA.isMissing() ? 3 : colsA.get<int>(3);
+                if (mr < 0 || mr > 3 || mc < 0 || mc > 3) return returnValue(CellError::Value);
+
+                const size_t R = g.size(), C = width(g);
+                auto blankRow = [&](size_t r) {
+                    for (size_t j = 0; j < C; ++j) if (!isBlank(g[r][j])) return false;
+                    return true;
+                };
+                auto blankCol = [&](size_t c) {
+                    for (size_t i = 0; i < R; ++i) if (!isBlank(g[i][c])) return false;
+                    return true;
+                };
+                size_t r0 = 0, r1 = R, c0 = 0, c1 = C;   // half-open [r0,r1) × [c0,c1)
+                if (mr & 1) while (r0 < r1 && blankRow(r0)) ++r0;
+                if (mr & 2) while (r1 > r0 && blankRow(r1 - 1)) --r1;
+                if (mc & 1) while (c0 < c1 && blankCol(c0)) ++c0;
+                if (mc & 2) while (c1 > c0 && blankCol(c1 - 1)) --c1;
+                if (r0 >= r1 || c0 >= c1) return returnValue(CellError::Value);
+
+                Grid out;
+                for (size_t i = r0; i < r1; ++i)
+                {
+                    std::vector<ExcelObj> row;
+                    for (size_t j = c0; j < c1; ++j) row.emplace_back(g[i][j]);
+                    out.push_back(std::move(row));
+                }
+                return emit(out);
+            });
     }
 }

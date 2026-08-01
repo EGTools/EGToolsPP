@@ -2,7 +2,7 @@
 
 Per-function reference. Clicking a function name in the IntelliSense tooltip opens the matching page.
 
-## MS Excel compatibility functions (68)
+## MS Excel compatibility functions (69)
 
 - [ARABIC](ARABIC.md) — Excel 2013
 - [ARRAYTOTEXT](ARRAYTOTEXT.md) — Excel 2024 / Microsoft 365
@@ -61,6 +61,7 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 - [TEXTSPLIT](TEXTSPLIT.md) — Excel 2024 / Microsoft 365
 - [TOCOL](TOCOL.md) — Excel 2024 / Microsoft 365
 - [TOROW](TOROW.md) — Excel 2024 / Microsoft 365
+- [TRIMRANGE](TRIMRANGE.md) — Excel 2024 / Microsoft 365
 - [UNICHAR](UNICHAR.md) — Excel 2013
 - [UNICODE](UNICODE.md) — Excel 2013
 - [UNIQUE](UNIQUE.md) — Excel 2021
@@ -83,31 +84,49 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 - [IMPORTRANGE](IMPORTRANGE.md)
 - [QUERY](QUERY.md)
 
-## EGTools-only functions (33)
+## EGTools-only functions (52)
 
+- [ADDRESSMAP](ADDRESSMAP.md)
 - [ADVANCEDFILTER](ADVANCEDFILTER.md)
+- [BARCODE](BARCODE.md)
 - [BOMTREE](BOMTREE.md)
+- [BRNSTATUS](BRNSTATUS.md)
+- [CODE128](CODE128.md)
 - [COMPARELIST](COMPARELIST.md)
+- [COUNTIFCOLOR](COUNTIFCOLOR.md)
 - [CP](CP.md)
 - [CPK](CPK.md)
+- [DATAMATRIX](DATAMATRIX.md)
+- [DECODEURL](DECODEURL.md)
 - [DIRFOLDER](DIRFOLDER.md)
+- [DISPLAYCOLOR](DISPLAYCOLOR.md)
 - [EVAL](EVAL.md)
 - [EXPLODE](EXPLODE.md)
 - [EXRATE](EXRATE.md)
+- [GEOADDRESS](GEOADDRESS.md)
+- [GEOCODER](GEOCODER.md)
+- [GEOSEARCH](GEOSEARCH.md)
 - [HANTONUMBER](HANTONUMBER.md)
+- [ILOOKUP](ILOOKUP.md)
+- [ISVISIBLE](ISVISIBLE.md)
 - [JSONFILTER](JSONFILTER.md)
 - [KOREANHOLIDAYS](KOREANHOLIDAYS.md)
 - [MONTHBHYWEEK](MONTHBHYWEEK.md)
 - [MVLOOKUP](MVLOOKUP.md)
 - [NETWORKHOUR](NETWORKHOUR.md)
+- [QRCODE](QRCODE.md)
+- [READBARCODE](READBARCODE.md)
+- [READGS1](READGS1.md)
 - [RESTAPI](RESTAPI.md)
 - [SAMPLINGAC](SAMPLINGAC.md)
 - [SAMPLINGLABEL](SAMPLINGLABEL.md)
 - [SAMPLINGRE](SAMPLINGRE.md)
 - [SAMPLINGSIZE](SAMPLINGSIZE.md)
+- [SEARCHADDRESS](SEARCHADDRESS.md)
 - [SHEETLIST](SHEETLIST.md)
 - [STREXT](STREXT.md)
 - [SUMBYBOM](SUMBYBOM.md)
+- [SUMIFCOLOR](SUMIFCOLOR.md)
 - [TEXTBETWEEN](TEXTBETWEEN.md)
 - [TEXTNUMSORT](TEXTNUMSORT.md)
 - [TEXTREPLACE](TEXTREPLACE.md)
@@ -117,6 +136,7 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 - [TOTALPAGES](TOTALPAGES.md)
 - [TRIMENDS](TRIMENDS.md)
 - [UNPIVOT](UNPIVOT.md)
+- [VISIBLEAGGR](VISIBLEAGGR.md)
 - [WEEKNUMOFMONTH](WEEKNUMOFMONTH.md)
 
 ## Ribbon Menu

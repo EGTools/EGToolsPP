@@ -5,6 +5,7 @@
   "description": "EGTools++ — modern Excel functions for legacy Excel as a single static .xll add-in.",
   "builtin-baseline": "b1b19307e2d2ec1eefbdb7ea069de7d4bcd31f01",
   "dependencies": [
-    "nlohmann-json"
+    "nlohmann-json",
+    "nu-book-zxing-cpp"
   ]
 }

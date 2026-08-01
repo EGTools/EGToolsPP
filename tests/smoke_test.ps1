@@ -106,6 +106,7 @@ $cases = @(
     # R1(네이티브 정합) 이후 기본 total_depth=1 → 합계 라벨이 UI 언어를 따르므로
     # 스모크는 로캘 무관하게 총계 없음(depth 0)을 명시한다.
     [pscustomobject]@{n='GROUPBY';     f='=EG.GROUPBY({"x";"y";"x"},{1;2;3},"SUM",0,0)';         e='x,4,y,2'}
+    [pscustomobject]@{n='TRIMRANGE';   f='=EG.TRIMRANGE({"","";"a",1;"",""})';                   e='a,1'}
     [pscustomobject]@{n='PIVOTBY';     f='=EG.PIVOTBY({"x";"y"},{"p";"p"},{1;2},"SUM",0,0,1,0)'; e=',p,x,1,y,2'}
     # FxMath — ROUND wraps the three that would otherwise expose binary-float noise.
     [pscustomobject]@{n='PERCENTOF';   f='=ROUND(EG.PERCENTOF({1;2;3},{1;2;3;4}),6)';      e='0.6'}

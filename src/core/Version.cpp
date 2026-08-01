@@ -101,6 +101,8 @@ namespace egtools::core
                 { L"LET", { 2021, false } },
                 // IMAGE (365/2024) — 2016 → bare IMAGE, 365 → EG.IMAGE.
                 { L"IMAGE", { 2024, false } },
+                // TRIMRANGE (365/2024) — value-based edge trim (native is ref-based).
+                { L"TRIMRANGE", { 2024, true } },
             };
             return t;
         }
