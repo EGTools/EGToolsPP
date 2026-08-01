@@ -80,7 +80,16 @@ $xl = New-Object -ComObject Excel.Application
 $xl.Visible = $false; $xl.DisplayAlerts = $false
 $pass = 0; $fail = 0; $fails = @()
 try {
-    $xll = Join-Path $root 'dist\EGTools++64.xll'
+    # pick the xll matching the host Excel bitness (PE header machine field)
+    $exe = Join-Path $xl.Path 'EXCEL.EXE'
+    $fs = [IO.File]::OpenRead($exe)
+    try {
+        $br = New-Object IO.BinaryReader($fs)
+        $null = $fs.Seek(0x3C, 'Begin'); $peOff = $br.ReadInt32()
+        $null = $fs.Seek($peOff + 4, 'Begin'); $machine = $br.ReadUInt16()
+    } finally { $fs.Dispose() }
+    $bits = if ($machine -eq 0x8664 -or $machine -eq 0xAA64) { '64' } else { '32' }
+    $xll = Join-Path $root "dist\EGTools++$bits.xll"
     if (-not $xl.RegisterXLL($xll)) { throw "RegisterXLL failed: $xll" }
     $wb = $xl.Workbooks.Add(); $ws = $wb.Worksheets.Item(1)
 
