@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 0.1.0
+  VERSION 0.4
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX)
 
@@ -53,6 +53,13 @@ set(EG_SOURCES
   src/functions/FxBit.cpp
   src/functions/FxLet.cpp
   src/functions/FxImage.cpp
+  src/functions/FxGoogle.cpp
+  src/functions/FxEgText.cpp
+  src/functions/FxEgData.cpp
+  src/functions/FxEgQC.cpp
+  src/functions/FxEgDate.cpp
+  src/functions/FxEgJson.cpp
+  src/functions/FxEgUtil.cpp
   src/intellisense/IntelliSense.cpp
   src/intellisense/FormulaParser.cpp
   src/intellisense/Catalog.cpp
@@ -86,12 +93,11 @@ target_compile_definitions(EGToolsPP PRIVATE
   WIN32_LEAN_AND_MEAN
   NOMINMAX
   UNICODE _UNICODE
-  # Single-source version: consumed by the ribbon About box (C++) and the
-  # VERSIONINFO resource (RC) — resources/egtools.rc.
-  EG_VERSION_STR=\"${PROJECT_VERSION}\"
+  # 버전 major.minor — build 번호는 gen/BuildNum.h(매 빌드 자동 증가)가 제공하고,
+  # EG_VERSION_STR("major.minor.build")도 그 헤더가 조합한다. 리본 About(C++)과
+  # VERSIONINFO 리소스(RC, resources/egtools.rc)가 함께 사용.
   EG_VER_MAJOR=${PROJECT_VERSION_MAJOR}
   EG_VER_MINOR=${PROJECT_VERSION_MINOR}
-  EG_VER_PATCH=${PROJECT_VERSION_PATCH}
   # No spdlog: logging was never initialised anywhere (no file/sink setup), so
   # the XLO_* macros only dragged dead spdlog code into the .xll (-133KB; the
   # bundled fmt that Throw.h really uses stays). Must match the xlOil lib build
@@ -107,10 +113,44 @@ target_compile_options(EGToolsPP PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
 # Excel's own marshalling, while binary size is a distribution goal (single
 # self-contained .xll). /Gw puts data in COMDATs so /OPT:REF can drop unused
 # globals; /Zc:inline drops unreferenced inline functions at compile time.
+# 실측(2026-08-01, 100k행 TEXTNUMSORT/MVLOOKUP×2/REGEXTEST 20k/UNIQUE 풀재계산):
+# /O2는 1319ms→1286ms(~2.5%, 편차 수준)에 크기 +52KB(+7%) — /O1 유지 결정.
 target_compile_options(EGToolsPP PRIVATE
   $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CONFIG:Release>>:/O1 /Ob1 /Gw /Zc:inline>)
 target_link_options(EGToolsPP PRIVATE
   $<$<CONFIG:Release>:/OPT:REF /OPT:ICF>)
+
+# --- 빌드 번호 (major.minor.build) ------------------------------------------
+# build_number.txt(저장소 루트)가 현재 빌드 번호를 보관한다. 없으면 master
+# 커밋 수로 초기화. 매 빌드 전에 cmake/bump_build.cmake가 각 빌드 트리의
+# 스탬프(build_stamp.txt)와 비교해 "같은 아키텍처의 새 라운드"일 때만 +1 —
+# 그래서 이어서 빌드하는 x64/x86 쌍은 같은 번호를 갖는다(상세는 스크립트 주석).
+set(EG_BUILD_NUM_FILE ${CMAKE_SOURCE_DIR}/build_number.txt)
+set(EG_GEN_DIR ${CMAKE_BINARY_DIR}/gen)
+if(NOT EXISTS ${EG_BUILD_NUM_FILE})
+  execute_process(COMMAND git rev-list --count master
+                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                  OUTPUT_VARIABLE EG_GIT_COUNT
+                  OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+  if(NOT EG_GIT_COUNT MATCHES "^[0-9]+$")
+    set(EG_GIT_COUNT 0)
+  endif()
+  file(WRITE ${EG_BUILD_NUM_FILE} "${EG_GIT_COUNT}")
+endif()
+# 구성 시점에 초기 헤더 생성(스탬프 없음 = 소비 없음) — 첫 컴파일 전에 필요.
+execute_process(COMMAND ${CMAKE_COMMAND}
+  -DTXT=${EG_BUILD_NUM_FILE} -DHDR=${EG_GEN_DIR}/BuildNum.h
+  -P ${CMAKE_SOURCE_DIR}/cmake/bump_build.cmake)
+
+add_custom_target(eg_bump
+  COMMAND ${CMAKE_COMMAND}
+    -DTXT=${EG_BUILD_NUM_FILE} -DHDR=${EG_GEN_DIR}/BuildNum.h
+    -DSTAMP=${CMAKE_BINARY_DIR}/build_stamp.txt
+    -P ${CMAKE_SOURCE_DIR}/cmake/bump_build.cmake
+  BYPRODUCTS ${EG_GEN_DIR}/BuildNum.h
+  COMMENT "Bump build number (build_number.txt)")
+add_dependencies(EGToolsPP eg_bump)
+target_include_directories(EGToolsPP PRIVATE ${EG_GEN_DIR})
 
 # Link xlOil static libraries (see cmake/xlOil.cmake).
 eg_link_xloil(EGToolsPP)

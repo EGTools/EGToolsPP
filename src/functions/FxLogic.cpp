@@ -12,9 +12,9 @@ namespace egtools::functions
 {
     namespace
     {
-        // XOR over up to 8 args (each scalar or range): TRUE if an odd number of
+        // XOR over variadic args (each scalar or range): TRUE if an odd number of
         // logical-TRUE values. Errors propagate; text/blank ignored.
-        ExcelObj* xorImpl(const ExcelObj* args[], int n)
+        ExcelObj* xorImpl(const ExcelObj* const args[], size_t n)
         {
             long trueCount = 0;
             bool any = false;
@@ -31,7 +31,7 @@ namespace egtools::functions
                 default: break;  // Str / Missing / Nil ignored
                 }
             };
-            for (int k = 0; k < n; ++k)
+            for (size_t k = 0; k < n; ++k)
             {
                 const ExcelObj& v = *args[k];
                 if (v.isMissing()) continue;
@@ -62,13 +62,11 @@ namespace egtools::functions
                 });
             });
 
-        // XOR(logical1, [logical2], …) — up to 8 args.
-        egtools::core::registerFn(L"XOR",
-            [](const ExcelObj& a1, const ExcelObj& a2, const ExcelObj& a3, const ExcelObj& a4,
-               const ExcelObj& a5, const ExcelObj& a6, const ExcelObj& a7, const ExcelObj& a8) -> ExcelObj*
+        // XOR(logical1, [logical2], …) — 네이티브와 동일한 가변 인수(최대 254).
+        egtools::core::registerRawFn(L"XOR",
+            [](const xloil::FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
-                const ExcelObj* args[] = { &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8 };
-                return xorImpl(args, 8);
+                return xorImpl(args, info.numArgs());
             });
     }
 }

@@ -19,8 +19,8 @@ namespace egtools::functions
 
         std::mt19937& rng()
         {
-            static std::random_device rd;
-            static std::mt19937 g(rd());
+            // MTR(멀티스레드 재계산) 참여를 위해 스레드별 생성기 사용.
+            thread_local std::mt19937 g{ std::random_device{}() };
             return g;
         }
     }

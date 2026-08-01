@@ -19,6 +19,13 @@ namespace egtools::functions {
     void registerBit();        // FxBit.cpp
     void registerLet();        // FxLet.cpp
     void registerImage();      // FxImage.cpp
+    void registerGoogle();     // FxGoogle.cpp
+    void registerEgText();     // FxEgText.cpp
+    void registerEgData();     // FxEgData.cpp
+    void registerEgQC();       // FxEgQC.cpp
+    void registerEgDate();     // FxEgDate.cpp
+    void registerEgJson();     // FxEgJson.cpp
+    void registerEgUtil();     // FxEgUtil.cpp
 }
 
 namespace egtools::core
@@ -38,7 +45,7 @@ namespace egtools::core
 
     void registerRawFn(const std::wstring& bareName,
                        xloil::DynamicExcelFunc<> fn,
-                       bool macro)
+                       bool macro, bool threadsafe)
     {
         std::wstring desc;
         std::vector<egtools::i18n::ArgMeta> rep;
@@ -66,7 +73,8 @@ namespace egtools::core
             auto info = std::make_shared<xloil::FuncInfo>();
             info->name = name;
             info->help = desc;
-            info->options = macro ? (unsigned)xloil::FuncInfo::MACRO_TYPE : 0u;
+            info->options = macro ? (unsigned)xloil::FuncInfo::MACRO_TYPE
+                                  : (threadsafe ? (unsigned)xloil::FuncInfo::THREAD_SAFE : 0u);
             info->args.reserve(full.size());
             for (const auto& a : full)
             {
@@ -130,6 +138,13 @@ namespace egtools::core
         group(egtools::functions::registerLet);        // LET (macro-type, formula rewrite)
         group(egtools::functions::registerImage);      // IMAGE — late-bound IDispatch + COM_API
         //   queue (retry of typed-COM Worksheet.Shapes crash, Excel 2016/x86). plan/15 §2.
+        group(egtools::functions::registerGoogle);     // GOOGLETRANSLATE/GTRS/IMPORT*/QUERY (Google 호환, plan/20)
+        group(egtools::functions::registerEgText);     // TEXTNUMSORT/TRIMENDS/STREXT/… (EGTools 텍스트, plan/20 E1)
+        group(egtools::functions::registerEgData);     // UNPIVOT/BOMTREE/EXPLODE/… (EGTools 데이터, plan/20 E2)
+        group(egtools::functions::registerEgQC);       // SAMPLING*/CP/CPK (EGTools 품질, plan/20 E3)
+        group(egtools::functions::registerEgDate);     // TOLUNAR/TOSOLAR/KOREANHOLIDAYS/… (EGTools 날짜, plan/20 E4)
+        group(egtools::functions::registerEgJson);     // JSONFILTER (plan/20 E7)
+        group(egtools::functions::registerEgUtil);     // DIRFOLDER/RESTAPI/EXRATE/EVAL/SHEETLIST/TOTALPAGES (plan/20 E5·E8)
     }
 
     void unregisterFunctions()

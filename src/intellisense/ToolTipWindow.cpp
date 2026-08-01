@@ -1,11 +1,14 @@
 #include "ToolTipWindow.h"
 
 #include <windows.h>
+#include <windowsx.h>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
 
 namespace egtools::intellisense
 {
@@ -15,10 +18,12 @@ namespace egtools::intellisense
         HWND  g_wnd = nullptr;
         HFONT g_font = nullptr;
         HFONT g_fontBold = nullptr;
+        HFONT g_fontLink = nullptr;   // 함수명 하이퍼링크(밑줄)
 
         // Current content (owned by the IntelliSense thread).
         FuncInfo g_func;
         int      g_argIndex = -1;
+        RECT     g_linkRect{};        // 함수명 영역(클라이언트 좌표) — 클릭=매뉴얼 열기
 
         // User-chosen position: once the user drags the box, remember where they
         // put it and keep showing it there (until they drag again). Before any
@@ -28,17 +33,40 @@ namespace egtools::intellisense
 
         const int kPadX = 8, kPadY = 6, kGap = 4;
 
-        HFONT makeFont(bool bold)
+        HFONT makeFont(bool bold, bool underline = false)
         {
             return CreateFontW(-15, 0, 0, 0, bold ? FW_SEMIBOLD : FW_NORMAL,
-                FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH,
-                L"Segoe UI");
+                FALSE, underline ? TRUE : FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                DEFAULT_PITCH, L"Segoe UI");
+        }
+
+        // UI 언어 → 준비된 매뉴얼 언어 폴더. 준비된 번역이 없으면 영어로 폴백.
+        // 번역이 추가되면 여기에 매핑 한 줄만 더한다 (예: ja → L"ja").
+        std::wstring manualLang()
+        {
+            const std::wstring ui = egtools::i18n::current();
+            if (ui == L"ko") return L"kr";
+            if (ui == L"en") return L"en";
+            return L"en";   // ja/es/zh-CN/zh-TW 등 미준비 언어 → 영어 폴백
+        }
+
+        // 함수명 → GitHub 매뉴얼 URL. EG./x 접두를 벗겨 bare 이름으로 연결한다.
+        std::wstring manualUrl(const std::wstring& funcName)
+        {
+            std::wstring bare = funcName;
+            if (bare.rfind(L"EG.", 0) == 0) bare = bare.substr(3);
+            else if (bare.size() > 1 && bare[0] == L'x' &&
+                     iswupper(bare[1]))          // xSORT/xFILTER/xLET (구버전 충돌 회피명)
+                bare = bare.substr(1);
+            return L"https://github.com/EGTools/EGToolsPP/blob/main/manual/" +
+                   manualLang() + L"/" + bare + L".md";
         }
 
         // Build the signature pieces: name, "(", then arg names separated by ", ",
-        // then ")". Each piece carries whether it is the active argument.
-        struct Piece { std::wstring text; bool active; };
+        // then ")". Each piece carries whether it is the active argument; `link`
+        // marks the clickable function name.
+        struct Piece { std::wstring text; bool active; bool link = false; };
 
         std::wstring argLabel(const std::wstring& name, bool optional)
         {
@@ -115,6 +143,51 @@ namespace egtools::intellisense
                                             f.args[H + P + t].optional), false });
         }
 
+        // 2행 텍스트: 활성 인수가 있으면 그 인수의 설명("이름: 설명"),
+        // 없거나 설명이 비어 있으면 함수 설명. (반복 인수는 강조와 같은 규칙으로
+        // 대표 슬롯에 매핑하고 표시 이름에 반복 회차를 반영한다.)
+        std::wstring line2Text(const FuncInfo& f, int argIndex)
+        {
+            const ArgInfo* arg = nullptr;
+            std::wstring shownName;
+
+            if (argIndex >= 0)
+            {
+                if (f.repeat.has)
+                {
+                    const auto& sp = f.repeat;
+                    const int H = sp.head, P = sp.period, T = sp.tail;
+                    const int N = (int)f.args.size();
+                    if (P > 0 && N == H + P + T)
+                    {
+                        if (argIndex < H)
+                        {
+                            arg = &f.args[argIndex];
+                            shownName = arg->name;
+                        }
+                        else
+                        {
+                            const int maxIter = (sp.max - H - T) / P;
+                            int rep = (argIndex - H) / P + 1;
+                            if (rep > maxIter) rep = maxIter;
+                            const int slot = (argIndex - H) % P;
+                            arg = &f.args[H + slot];
+                            shownName = egtools::i18n::repeatArgName(arg->name, rep);
+                        }
+                    }
+                }
+                else if (argIndex < (int)f.args.size())
+                {
+                    arg = &f.args[argIndex];
+                    shownName = arg->name;
+                }
+            }
+
+            if (arg && !arg->help.empty())
+                return shownName + L": " + arg->help;
+            return f.help;
+        }
+
         std::vector<Piece> buildSignature(const FuncInfo& f, int argIndex)
         {
             std::vector<Piece> tokens;
@@ -122,7 +195,8 @@ namespace egtools::intellisense
             else              buildFlat(tokens, f, argIndex);
 
             std::vector<Piece> v;
-            v.push_back({ f.name + L"(", false });
+            v.push_back({ f.name, false, true });   // 함수명 = 매뉴얼 링크
+            v.push_back({ L"(", false });
             for (size_t k = 0; k < tokens.size(); ++k)
             {
                 if (k > 0) v.push_back({ L", ", false });
@@ -144,30 +218,35 @@ namespace egtools::intellisense
             const COLORREF active = RGB(0x10, 0x50, 0xC0);
 
             // Line 1: signature, piece by piece.
+            const COLORREF linkCol = RGB(0x00, 0x66, 0xCC);
             int x = kPadX, y = kPadY;
             auto pieces = buildSignature(g_func, g_argIndex);
             int lineH = 0;
+            SetRectEmpty(&g_linkRect);
             for (auto& p : pieces)
             {
-                HFONT use = p.active ? g_fontBold : g_font;
+                HFONT use = p.link ? g_fontLink : (p.active ? g_fontBold : g_font);
                 HGDIOBJ old = SelectObject(dc, use);
-                SetTextColor(dc, p.active ? active : normal);
+                SetTextColor(dc, p.link ? linkCol : (p.active ? active : normal));
                 SIZE sz{};
                 GetTextExtentPoint32W(dc, p.text.c_str(), (int)p.text.size(), &sz);
                 TextOutW(dc, x, y, p.text.c_str(), (int)p.text.size());
+                if (p.link)
+                    g_linkRect = RECT{ x, y, x + sz.cx, y + sz.cy };
                 x += sz.cx;
                 lineH = (sz.cy > lineH) ? sz.cy : lineH;
                 SelectObject(dc, old);
             }
 
-            // Line 2: function help.
+            // Line 2: 활성 인수의 설명(없으면 함수 설명).
             y += lineH + kGap;
             SelectObject(dc, g_font);
             SetTextColor(dc, normal);
-            if (!g_func.help.empty())
+            const std::wstring help = line2Text(g_func, g_argIndex);
+            if (!help.empty())
             {
                 RECT t{ kPadX, y, rc.right - kPadX, rc.bottom - kPadY };
-                DrawTextW(dc, g_func.help.c_str(), -1, &t, DT_LEFT | DT_TOP | DT_NOPREFIX);
+                DrawTextW(dc, help.c_str(), -1, &t, DT_LEFT | DT_TOP | DT_NOPREFIX);
             }
         }
 
@@ -180,7 +259,7 @@ namespace egtools::intellisense
             auto pieces = buildSignature(f, argIndex);
             for (auto& p : pieces)
             {
-                SelectObject(dc, p.active ? g_fontBold : g_font);
+                SelectObject(dc, p.link ? g_fontLink : (p.active ? g_fontBold : g_font));
                 SIZE sz{};
                 GetTextExtentPoint32W(dc, p.text.c_str(), (int)p.text.size(), &sz);
                 sigW += sz.cx;
@@ -188,23 +267,52 @@ namespace egtools::intellisense
             }
             SelectObject(dc, g_font);
             SIZE hs{};
-            if (!f.help.empty())
-                GetTextExtentPoint32W(dc, f.help.c_str(), (int)f.help.size(), &hs);
+            const std::wstring help = line2Text(f, argIndex);
+            if (!help.empty())
+                GetTextExtentPoint32W(dc, help.c_str(), (int)help.size(), &hs);
 
             SelectObject(dc, old);
             ReleaseDC(nullptr, dc);
 
             int w = (sigW > hs.cx ? sigW : hs.cx) + kPadX * 2;
-            int h = lineH + (f.help.empty() ? 0 : (kGap + hs.cy)) + kPadY * 2;
+            int h = lineH + (help.empty() ? 0 : (kGap + hs.cy)) + kPadY * 2;
             return SIZE{ w, h };
         }
 
         LRESULT CALLBACK wndProc(HWND h, UINT m, WPARAM w, LPARAM l)
         {
-            // Make the whole window a drag handle so the user can reposition it.
+            // Make the whole window a drag handle so the user can reposition it —
+            // except the function-name link, which must receive clicks.
             // (WS_EX_NOACTIVATE keeps Excel's cell edit active while dragging.)
             if (m == WM_NCHITTEST)
+            {
+                POINT pt{ GET_X_LPARAM(l), GET_Y_LPARAM(l) };
+                ScreenToClient(h, &pt);
+                if (PtInRect(&g_linkRect, pt))
+                    return HTCLIENT;
                 return HTCAPTION;
+            }
+
+            if (m == WM_SETCURSOR)
+            {
+                POINT pt{};
+                GetCursorPos(&pt);
+                ScreenToClient(h, &pt);
+                if (PtInRect(&g_linkRect, pt))
+                {
+                    SetCursor(LoadCursor(nullptr, IDC_HAND));
+                    return TRUE;
+                }
+            }
+
+            if (m == WM_LBUTTONUP)
+            {
+                POINT pt{ GET_X_LPARAM(l), GET_Y_LPARAM(l) };
+                if (PtInRect(&g_linkRect, pt) && !g_func.name.empty())
+                    ShellExecuteW(nullptr, L"open", manualUrl(g_func.name).c_str(),
+                                  nullptr, nullptr, SW_SHOWNORMAL);
+                return 0;
+            }
 
             // After a user drag, remember the position.
             if (m == WM_EXITSIZEMOVE)
@@ -232,6 +340,7 @@ namespace egtools::intellisense
             if (g_wnd) return;
             g_font = makeFont(false);
             g_fontBold = makeFont(true);
+            g_fontLink = makeFont(true, /*underline*/ true);
 
             WNDCLASSEXW wc{ sizeof(wc) };
             wc.lpfnWndProc = wndProc;
@@ -290,6 +399,7 @@ namespace egtools::intellisense
         if (g_wnd) { DestroyWindow(g_wnd); g_wnd = nullptr; }
         if (g_font) { DeleteObject(g_font); g_font = nullptr; }
         if (g_fontBold) { DeleteObject(g_fontBold); g_fontBold = nullptr; }
+        if (g_fontLink) { DeleteObject(g_fontLink); g_fontLink = nullptr; }
         UnregisterClassW(kClass, GetModuleHandleW(nullptr));
     }
 }

@@ -72,6 +72,9 @@ namespace egtools::core
                 { L"REGEXEXTRACT",{ 2024, true } },
                 // GROUPBY/PIVOTBY (365) — text-aggregator variant, spills.
                 { L"GROUPBY",     { 2024, true } }, { L"PIVOTBY",      { 2024, true } },
+                // IMPORTTEXT/IMPORTCSV (365, 2026 롤아웃 — Beta부터) — post-DA로 취급:
+                // DA 호스트(2024+)에선 EG. 접두(향후 네이티브와 공존), 구버전은 드롭인.
+                { L"IMPORTTEXT",  { 2024, true } }, { L"IMPORTCSV",    { 2024, true } },
                 // Pre-dynamic-array — decided by edition year.
                 { L"IFS",       { 2019, false } }, { L"SWITCH",    { 2019, false } },
                 { L"MAXIFS",    { 2019, false } }, { L"MINIFS",    { 2019, false } },

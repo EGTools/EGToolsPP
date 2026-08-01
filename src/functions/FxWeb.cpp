@@ -177,9 +177,11 @@ namespace egtools::functions
             [](const ExcelObj& t) -> ExcelObj* { return egtools::core::mapUnary(t, encodeUrlOne); });
 
         egtools::core::registerFn(L"FILTERXML",
-            [](const ExcelObj& xml, const ExcelObj& xpath) -> ExcelObj* { return filterXml(xml, xpath); });
+            [](const ExcelObj& xml, const ExcelObj& xpath) -> ExcelObj* { return filterXml(xml, xpath); },
+            /*macro*/ false, /*threadsafe*/ false);   // MSXML COM — MTR 워커 불가
 
         egtools::core::registerFn(L"WEBSERVICE",
-            [](const ExcelObj& url) -> ExcelObj* { return returnValue(webservice(url)); });
+            [](const ExcelObj& url) -> ExcelObj* { return returnValue(webservice(url)); },
+            /*macro*/ false, /*threadsafe*/ true);    // 스칼라 네트워크 — 병렬 효과 큼
     }
 }

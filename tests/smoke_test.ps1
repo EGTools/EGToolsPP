@@ -103,8 +103,10 @@ $cases = @(
     [pscustomobject]@{n='REGEXTEST';   f='=EG.REGEXTEST("abc123","\d+")';                  e='TRUE'}
     [pscustomobject]@{n='REGEXEXTRACT';f='=EG.REGEXEXTRACT("id=42; id=99","\d+")';         e='42'}
     [pscustomobject]@{n='REGEXREPLACE';f='=EG.REGEXREPLACE("a1b2","\d","#")';              e='a#b#'}
-    [pscustomobject]@{n='GROUPBY';     f='=EG.GROUPBY({"x";"y";"x"},{1;2;3},"SUM")';       e='x,4,y,2'}
-    [pscustomobject]@{n='PIVOTBY';     f='=EG.PIVOTBY({"x";"y"},{"p";"p"},{1;2},"SUM")';   e=',p,x,1,y,2'}
+    # R1(네이티브 정합) 이후 기본 total_depth=1 → 합계 라벨이 UI 언어를 따르므로
+    # 스모크는 로캘 무관하게 총계 없음(depth 0)을 명시한다.
+    [pscustomobject]@{n='GROUPBY';     f='=EG.GROUPBY({"x";"y";"x"},{1;2;3},"SUM",0,0)';         e='x,4,y,2'}
+    [pscustomobject]@{n='PIVOTBY';     f='=EG.PIVOTBY({"x";"y"},{"p";"p"},{1;2},"SUM",0,0,1,0)'; e=',p,x,1,y,2'}
     # FxMath — ROUND wraps the three that would otherwise expose binary-float noise.
     [pscustomobject]@{n='PERCENTOF';   f='=ROUND(EG.PERCENTOF({1;2;3},{1;2;3;4}),6)';      e='0.6'}
     [pscustomobject]@{n='COMBINA';     f='=EG.COMBINA(4,3)';                               e='20'}

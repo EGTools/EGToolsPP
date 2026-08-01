@@ -72,6 +72,18 @@ namespace egtools::functions
             return std::wstring::npos;
         }
 
+        // Count non-overlapping occurrences of `delim` in `text`.
+        int countInstances(const std::wstring& text, const std::wstring& delim, bool ci)
+        {
+            if (delim.empty()) return 0;
+            const std::wstring t = ci ? lower(text) : text;
+            const std::wstring d = ci ? lower(delim) : delim;
+            int n = 0;
+            size_t pos = 0;
+            while ((pos = t.find(d, pos)) != std::wstring::npos) { ++n; pos += d.size(); }
+            return n;
+        }
+
         // Split `text` by any of the delimiters in `delims`.
         std::vector<std::wstring> splitBy(const std::wstring& text,
                                           const std::vector<std::wstring>& delims, bool ci)
@@ -221,34 +233,60 @@ namespace egtools::functions
                 return returnValue(ExcelObj(std::wstring_view(out)));
             });
 
-        // TEXTBEFORE(text, delimiter, [instance], [match_mode], [if_not_found]).
+        // TEXTBEFORE(text, delimiter, [instance_num], [match_mode], [match_end],
+        //            [if_not_found]) — 네이티브와 동일 6인수.
+        // match_end=1이면 텍스트의 끝(양수 instance)/시작(음수 instance)을 가상의
+        // 구분자 1개로 간주: 개수+1번째 instance까지 허용된다.
         egtools::core::registerFn(L"TEXTBEFORE",
             [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
-               const ExcelObj& modeA, const ExcelObj& nfA) -> ExcelObj*
+               const ExcelObj& modeA, const ExcelObj& endA, const ExcelObj& nfA) -> ExcelObj*
             {
                 const std::wstring text = textA.toString();
                 const std::wstring delim = delimA.toString();
                 const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
+                if (inst == 0) return returnValue(CellError::Value);
                 const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
+                const bool matchEnd = endA.isMissing() ? false : (endA.get<double>(0.0) != 0.0);
+
                 const size_t at = findInstance(text, delim, inst, ci);
-                if (at == std::wstring::npos)
-                    return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
-                return returnValue(ExcelObj(text.substr(0, at)));
+                if (at != std::wstring::npos)
+                    return returnValue(ExcelObj(text.substr(0, at)));
+                if (matchEnd)
+                {
+                    const int n = countInstances(text, delim, ci);
+                    if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
+                        return returnValue(ExcelObj(std::wstring_view(text)));
+                    if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
+                        return returnValue(ExcelObj(std::wstring_view(L"")));
+                }
+                return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
             });
 
-        // TEXTAFTER(text, delimiter, [instance], [match_mode], [if_not_found]).
+        // TEXTAFTER(text, delimiter, [instance_num], [match_mode], [match_end],
+        //           [if_not_found]) — 네이티브와 동일 6인수.
         egtools::core::registerFn(L"TEXTAFTER",
             [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
-               const ExcelObj& modeA, const ExcelObj& nfA) -> ExcelObj*
+               const ExcelObj& modeA, const ExcelObj& endA, const ExcelObj& nfA) -> ExcelObj*
             {
                 const std::wstring text = textA.toString();
                 const std::wstring delim = delimA.toString();
                 const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
+                if (inst == 0) return returnValue(CellError::Value);
                 const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
+                const bool matchEnd = endA.isMissing() ? false : (endA.get<double>(0.0) != 0.0);
+
                 const size_t at = findInstance(text, delim, inst, ci);
-                if (at == std::wstring::npos)
-                    return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
-                return returnValue(ExcelObj(text.substr(at + delim.size())));
+                if (at != std::wstring::npos)
+                    return returnValue(ExcelObj(text.substr(at + delim.size())));
+                if (matchEnd)
+                {
+                    const int n = countInstances(text, delim, ci);
+                    if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
+                        return returnValue(ExcelObj(std::wstring_view(L"")));
+                    if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
+                        return returnValue(ExcelObj(std::wstring_view(text)));
+                }
+                return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
             });
 
         // TEXTSPLIT(text, col_delim, [row_delim], [ignore_empty], [match_mode], [pad_with]).
