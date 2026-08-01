@@ -19,15 +19,17 @@ Returns the number of combinations with repetitions for a given number of items.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the number of combinations with repetition (scalar number). Non-numeric or negative arguments return a #NUM! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=COMBINA(...)` | | <!-- TODO --> |
+| `=COMBINA(4,3)` | 20 | Choose 3 of 4 with repetition |
+| `=COMBINA(10,3)` | 220 | Choose 3 of 10 with repetition |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Fractional parts are truncated; computed as C(n+k-1, k).
+- Related function: PERMUTATIONA
 - Supported: Excel 2010+. Registered as `COMBINA` (drop-in) on hosts without the native function, and as `EG.COMBINA` on modern Excel that has it.

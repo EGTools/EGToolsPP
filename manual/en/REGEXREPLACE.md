@@ -22,15 +22,19 @@ Replaces text matching a regular expression ($1.. backrefs).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the replaced text as a single scalar. Returns #VALUE! for an invalid pattern.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=REGEXREPLACE(...)` | | <!-- TODO --> |
+| `=REGEXREPLACE("a1b2c3","\d","-")` | a-b-c- | replace all |
+| `=REGEXREPLACE("a1b2c3","\d","-",2)` | a1b-c3 | replace 2nd only |
+| `=REGEXREPLACE("john smith","(\w+) (\w+)","$2 $1")` | smith john | backreference swap |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- $1, $2 backreferences are supported in the replacement.
+- occurrence 0 (default) replaces all matches; N>0 replaces only the Nth.
+- The regex flavor is std::wregex ECMAScript.
 - Supported: Excel 2010+. Registered as `REGEXREPLACE` (drop-in) on hosts without the native function, and as `EG.REGEXREPLACE` on modern Excel that has it.

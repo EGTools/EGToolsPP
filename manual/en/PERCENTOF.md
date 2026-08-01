@@ -19,15 +19,17 @@ Returns the sum of a subset divided by the sum of all data.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a scalar number: the sum of the subset divided by the sum of all data. Missing arguments give #VALUE!; if the total sum is 0 or contains no numbers the result is #DIV/0!.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=PERCENTOF(...)` | | <!-- TODO --> |
+| `=PERCENTOF({10;20},{10;20;30;40})` | 0.3 | share of subset in total |
+| `=PERCENTOF(50,200)` | 0.25 | scalar ratio |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Non-numeric values are ignored when summing.
+- Passing "PERCENTOF" as the function argument of GROUPBY/PIVOTBY computes per-group shares.
 - Supported: Excel 2010+. Registered as `PERCENTOF` (drop-in) on hosts without the native function, and as `EG.PERCENTOF` on modern Excel that has it.

@@ -21,15 +21,17 @@ Imports a CSV file (local path or URL) as an array — comma delimiter, UTF-8.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the CSV content as a spilled 2-D array; numeric and date (yyyy-M-d style) text is auto-converted to values. A missing path or a file-read/download failure gives #VALUE!; if no rows remain the result is #N/A.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IMPORTCSV(...)` | | <!-- TODO --> |
+| `=IMPORTCSV("C:\data\sales.csv",1)` |  | result depends on the file |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Delimiter is fixed to comma and encoding to UTF-8 (a BOM takes precedence); use IMPORTTEXT for other delimiters or encodings.
+- Double-quoted fields (including "" escapes) are recognized.
+- Negative skip_rows/take_rows count from the end.
 - Supported: Excel 2010+. Registered as `IMPORTCSV` (drop-in) on hosts without the native function, and as `EG.IMPORTCSV` on modern Excel that has it.

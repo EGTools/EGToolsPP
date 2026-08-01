@@ -19,15 +19,17 @@ Returns a number shifted right by the given number of bits.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the right-shifted value (floored) as a scalar number. Returns #NUM! if number is not an integer in [0, 2^48-1], if shift_amount is not an integer or its absolute value exceeds 53, or if the result exceeds 2^53.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=BITRSHIFT(...)` | | <!-- TODO --> |
+| `=BITRSHIFT(13,2)` | 3 | Shift right by 2 bits |
+| `=BITRSHIFT(3,-2)` | 12 | Negative shift goes left |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- A negative shift_amount shifts left instead.
+- Related function: BITLSHIFT
 - Supported: Excel 2010+. Registered as `BITRSHIFT` (drop-in) on hosts without the native function, and as `EG.BITRSHIFT` on modern Excel that has it.

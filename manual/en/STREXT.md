@@ -20,15 +20,19 @@ Extracts or removes characters by type (digits, Latin, Korean, Japanese, Hanja) 
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the extracted (or removed) result as a single text (scalar). Returns #VALUE! when text/option is missing or option is empty, no valid character class results, or the regex is invalid.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=STREXT(...)` | | <!-- TODO --> |
+| `=STREXT("abc123한글45","N")` | 12345 | extract digits |
+| `=STREXT("abc123한글45","K")` | 한글 | extract Korean |
+| `=STREXT("a1b2","N","-")` | 1-2 | join with delimiter |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The N class also includes the decimal point '.'.
+- If the option is not composed of -SANKJH letters, the whole option is treated as an ECMAScript regex (std::wregex).
+- A leading '-' removes the matched characters instead of extracting them.
 - Supported: Excel 2010+. Always registered as `STREXT` on every Excel version.

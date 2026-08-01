@@ -18,15 +18,18 @@ Returns the Unicode character for the given number (code point).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the character (scalar text) for the code point; an array of numbers is evaluated element-wise and spills. Returns #VALUE! when the code is outside 1..1114111 or in the surrogate range (55296..57343).
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=UNICHAR(...)` | | <!-- TODO --> |
+| `=UNICHAR(44032)` | 가 | Hangul syllable |
+| `=UNICHAR(128512)` | 😀 | beyond the BMP |
+| `=UNICHAR(0)` | #VALUE! | out of range |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Characters above 0xFFFF are returned as a UTF-16 surrogate pair.
+- Related function: UNICODE
 - Supported: Excel 2010+. Registered as `UNICHAR` (drop-in) on hosts without the native function, and as `EG.UNICHAR` on modern Excel that has it.

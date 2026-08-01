@@ -18,15 +18,16 @@ Total number of pages with the current print settings (recalculate before printi
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the total page count as a numeric scalar, reflecting the first-page-number print setting (counts from 1 when ignore_start is TRUE). Returns #VALUE! when the page count query fails.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TOTALPAGES(...)` | | <!-- TODO --> |
+| `=TOTALPAGES()` |  | Result depends on the print settings |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Macro-type function; uses XLM GET.DOCUMENT (not thread-safe).
+- Recalculate after changing print settings to refresh the value.
 - Supported: Excel 2010+. Always registered as `TOTALPAGES` on every Excel version.

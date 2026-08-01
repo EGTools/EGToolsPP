@@ -19,15 +19,17 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+중복을 허용한 순열의 수 number^number_chosen(스칼라 숫자)을 반환합니다. 인수가 숫자가 아니거나 음수이면 #NUM! 오류를 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=PERMUTATIONA(...)` | | <!-- TODO --> |
+| `=PERMUTATIONA(3,2)` | 9 | 3^2 |
+| `=PERMUTATIONA(2,5)` | 32 | 2^5 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- 소수 부분은 버립니다.
+- 관련 함수: COMBINA
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `PERMUTATIONA` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.PERMUTATIONA`으로 등록됩니다.

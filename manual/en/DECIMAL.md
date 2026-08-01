@@ -19,15 +19,17 @@ Converts a text representation of a number in a given base to a decimal number.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the decimal value of the base-radix text (scalar number). A radix outside 2 to 36 or a character not valid in that radix returns a #NUM! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=DECIMAL(...)` | | <!-- TODO --> |
+| `=DECIMAL("FF",16)` | 255 | Hex to decimal |
+| `=DECIMAL("111",2)` | 7 | Binary to decimal |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Digits are case-insensitive.
+- Related function: BASE
 - Supported: Excel 2010+. Registered as `DECIMAL` (drop-in) on hosts without the native function, and as `EG.DECIMAL` on modern Excel that has it.

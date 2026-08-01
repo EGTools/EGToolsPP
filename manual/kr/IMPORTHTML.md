@@ -21,15 +21,17 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+웹 페이지의 표(2차원 배열) 또는 목록(N×1 배열)을 스필하여 반환하며 숫자 텍스트는 자동 변환됩니다. URL 누락, search가 "table"/"list"가 아니거나 index가 1 미만이면 #VALUE!, 다운로드 실패나 해당 index의 표/목록이 없으면 #N/A를 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=IMPORTHTML(...)` | | <!-- TODO --> |
+| `=IMPORTHTML("https://en.wikipedia.org/wiki/Microsoft_Excel","table",1)` |  | 페이지 내용에 따름 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- <script>를 제거한 뒤 MSHTML로 파싱하므로 스크립트가 만들어 내는 동적 콘텐츠는 가져올 수 없습니다.
+- 표의 rowspan/colspan은 그리드로 정규화되며 값은 좌상단 셀에만 들어갑니다.
+- COM 사용으로 다중 스레드 재계산에서 제외되며 인터넷 연결이 필요합니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `IMPORTHTML` 이름 그대로 등록됩니다.

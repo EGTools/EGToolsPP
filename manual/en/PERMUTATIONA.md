@@ -19,15 +19,17 @@ Returns the number of permutations with repetitions (number ^ number_chosen).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the number of permutations with repetition, number^number_chosen (scalar number). Non-numeric or negative arguments return a #NUM! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=PERMUTATIONA(...)` | | <!-- TODO --> |
+| `=PERMUTATIONA(3,2)` | 9 | 3^2 |
+| `=PERMUTATIONA(2,5)` | 32 | 2^5 |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Fractional parts are truncated.
+- Related function: COMBINA
 - Supported: Excel 2010+. Registered as `PERMUTATIONA` (drop-in) on hosts without the native function, and as `EG.PERMUTATIONA` on modern Excel that has it.

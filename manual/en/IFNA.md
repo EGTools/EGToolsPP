@@ -19,15 +19,17 @@ Returns value_if_na if the value is the #N/A error; otherwise the value.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns value_if_na when the value is the #N/A error, otherwise the value itself. Given an array, it is applied element-wise and returns an array that spills.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IFNA(...)` | | <!-- TODO --> |
+| `=IFNA(NA(),"none")` | none | Replaces #N/A |
+| `=IFNA(1/0,0)` | #DIV/0! | Other errors pass through |
+| `=IFNA(5,0)` | 5 | Normal value unchanged |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- For array input, only #N/A elements are replaced (element-wise, array result spills).
 - Supported: Excel 2010+. Registered as `IFNA` (drop-in) on hosts without the native function, and as `EG.IFNA` on modern Excel that has it.

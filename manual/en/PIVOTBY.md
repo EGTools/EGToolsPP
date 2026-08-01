@@ -28,15 +28,17 @@ Pivots data by row and column keys. Aggregator is text (SUM, COUNT, …).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a spilled 2-D cross-tab: a column-key header row, one row per row key, and total row/column by default. #VALUE! if row_fields/col_fields/values have more than one column each or relative_to is outside 0-2; #N/A if no rows pass the filter; empty intersections become empty strings.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=PIVOTBY(...)` | | <!-- TODO --> |
+| `=PIVOTBY({"a";"b";"a"},{"x";"x";"y"},{10;20;30},"SUM")` | {"","x","y","Total";"a",10,30,40;"b",20,"",20;"Total",30,30,60} | pivot with row/column totals |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- row_fields, col_fields and values each support only a single column (no multi-column nesting).
+- For PERCENTOF, this implementation supports relative_to 0 (column totals, default) / 1 (row totals) / 2 (grand total) only; 3 and 4 (parent totals) return #VALUE!.
+- Total row/column labels follow the UI language (Korean UI: 합계, English UI: Total).
 - Supported: Excel 2010+. Registered as `PIVOTBY` (drop-in) on hosts without the native function, and as `EG.PIVOTBY` on modern Excel that has it.

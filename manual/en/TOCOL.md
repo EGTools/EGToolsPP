@@ -20,15 +20,19 @@ Returns the array as a single column.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns every value of the array laid out as a single column (N x 1); on dynamic-array hosts the result spills. The ignore option (1=blanks, 2=errors, 3=both) filters values out. Returns #VALUE! if the array is empty or no values remain.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TOCOL(...)` | | <!-- TODO --> |
+| `=TOCOL({1,2;3,4})` | {1;2;3;4} | Row-major flatten to one column |
+| `=TOCOL({1,2;3,4},0,TRUE)` | {1;3;2;4} | Scan by column |
+| `=TOCOL({1,"",2},1)` | {1;2} | Ignore blanks |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Empty strings ("") count as blanks for ignore options 1 and 3.
+- If every value is filtered out, returns #VALUE! instead of the native #CALC!.
+- Related function: TOROW
 - Supported: Excel 2010+. Registered as `TOCOL` (drop-in) on hosts without the native function, and as `EG.TOCOL` on modern Excel that has it.

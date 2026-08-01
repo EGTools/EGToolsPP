@@ -21,15 +21,17 @@ Returns the maximum of cells that meet all criteria.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the maximum numeric value among cells meeting all criteria, as a numeric scalar. Returns #VALUE! when a criteria range's size differs from the value range, and 0 when nothing matches.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=MAXIFS(...)` | | <!-- TODO --> |
+| `=MAXIFS({1;5;3},{1;2;3},">1")` | 5 | Max meeting criteria |
+| `=MAXIFS({10;20},{1;2},">5")` | 0 | Returns 0 when nothing matches |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Criteria support numbers, comparison operators (e.g. ">5") and wildcards (*, ?); text comparison is case-insensitive.
+- Related functions: MINIFS.
 - Supported: Excel 2010+. Registered as `MAXIFS` (drop-in) on hosts without the native function, and as `EG.MAXIFS` on modern Excel that has it.

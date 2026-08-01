@@ -19,15 +19,18 @@ Returns a text representation of an array.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a single text value (scalar) that joins the whole array. The implementation itself returns no error values.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=ARRAYTOTEXT(...)` | | <!-- TODO --> |
+| `=ARRAYTOTEXT({1,2;3,4})` | 1, 2, 3, 4 | concise format |
+| `=ARRAYTOTEXT({"a",1;"b",2},1)` | {"a",1;"b",2} | strict format |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Concise (0) format joins every element with ", " regardless of rows/columns.
+- Strict (1) format produces {a,b;c,d}; only text is quoted, inner quotes doubled ("").
+- Related function: VALUETOTEXT
 - Supported: Excel 2010+. Registered as `ARRAYTOTEXT` (drop-in) on hosts without the native function, and as `EG.ARRAYTOTEXT` on modern Excel that has it.

@@ -20,15 +20,18 @@ Converts text to a number in a locale-independent way.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a number (scalar); if text is an array it is evaluated element-wise and spills on dynamic-array hosts. Returns #VALUE! when the text does not parse as a number after separator handling; empty (whitespace-only) text returns 0.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=NUMBERVALUE(...)` | | <!-- TODO --> |
+| `=NUMBERVALUE("2.500,27",",",".")` | 2500.27 | European-style notation |
+| `=NUMBERVALUE("9%%")` | 0.0009 | each % divides by 100 |
+| `=NUMBERVALUE("abc")` | #VALUE! | not a number |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- All whitespace is ignored anywhere in the text, and group separators are removed wherever they appear.
+- Trailing % signs divide the result by 100 once per sign.
 - Supported: Excel 2010+. Registered as `NUMBERVALUE` (drop-in) on hosts without the native function, and as `EG.NUMBERVALUE` on modern Excel that has it.

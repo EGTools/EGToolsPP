@@ -22,15 +22,19 @@ Extracts the text between StartKey and EndKey.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the extracted text as a single scalar. Returns #VALUE! when text, start key, or end key is empty, or when the Nth-instance number is out of range; returns an empty string when no section matches.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TEXTBETWEEN(...)` | | <!-- TODO --> |
+| `=TEXTBETWEEN("[a] and [b]","[","]")` | a,b | join all sections with , |
+| `=TEXTBETWEEN("[a] and [b]","[","]",2)` | b | 2nd section only |
+| `=TEXTBETWEEN("<x><y>","<",">","/",TRUE)` | <x>/<y> | include the markers |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Key matching ignores case.
+- If the 4th argument is a number it selects the Nth section; if text, it is the joiner for all sections (default ",").
+- Related function: TEXTREPLACE
 - Supported: Excel 2010+. Always registered as `TEXTBETWEEN` on every Excel version.

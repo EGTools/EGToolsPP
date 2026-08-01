@@ -20,15 +20,15 @@ Returns the number of periods required by an investment to reach a value.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the number of periods needed to reach the target value (scalar number). If rate, pv, or fv is non-numeric or not positive, returns a #NUM! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=PDURATION(...)` | | <!-- TODO --> |
+| `=PDURATION(0.025,2000,2200)` | 3.859866163 | Periods for 2000 to 2200 at 2.5% |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Related function: RRI
 - Supported: Excel 2010+. Registered as `PDURATION` (drop-in) on hosts without the native function, and as `EG.PDURATION` on modern Excel that has it.

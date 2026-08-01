@@ -25,15 +25,18 @@ Groups rows by key(s) and aggregates values. Aggregator is text: SUM/AVERAGE/COU
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a spilled 2-D array of group key columns plus aggregated value columns. Missing required arguments, mismatched key/value row counts, or invalid aggregator/option values give #VALUE!; if no rows pass the filter the result is #N/A; AVERAGE/PERCENTOF cells with a zero denominator show #DIV/0!.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=GROUPBY(...)` | | <!-- TODO --> |
+| `=GROUPBY({"a";"b";"a"},{10;20;30},"SUM")` | {"a",40;"b",20;"Total",60} | sum per key plus grand total row |
+| `=GROUPBY({"a";"b";"a"},{10;20;30},"COUNT",0,0)` | {"a",2;"b",1} | count per key, no totals |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The function argument is text ("SUM", "PERCENTOF", ...) instead of the native eta-lambda; field_relationship is accepted for compatibility but ignored.
+- Total/subtotal labels follow the UI language (Korean UI: 합계/총합계, English UI: Total/Grand Total). Subtotal rows are labeled with the first key value.
+- When field_headers is omitted, a header row is auto-detected if the first row is all text and non-text values appear below it.
 - Supported: Excel 2010+. Registered as `GROUPBY` (drop-in) on hosts without the native function, and as `EG.GROUPBY` on modern Excel that has it.

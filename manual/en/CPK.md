@@ -20,15 +20,17 @@ Process capability index Cpk from measurements and spec limits.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the process capability index Cpk = min((USL-μ)/3σ, (μ-LSL)/3σ) as a scalar number. Missing data or both limits missing returns #VALUE!; fewer than 2 numeric values returns #NUM!; a zero standard deviation returns #DIV/0!.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=CPK(...)` | | <!-- TODO --> |
+| `=CPK({1;2;3;4;5},5,0)` | 0.421637021 | Cpk for spec limits 0 to 5 |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Uses the sample standard deviation (n-1).
+- If only one limit is given, only that side is evaluated.
+- Related function: CP
 - Supported: Excel 2010+. Always registered as `CPK` on every Excel version.

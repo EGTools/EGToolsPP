@@ -19,15 +19,18 @@ Parses JSON text into a two-column (path, value) table.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a two-column (path, value) spilled array — numbers stay numeric, true/false become booleans, null becomes an empty string. Returns #VALUE! when the text is empty, JSON parsing fails, or key_path is not found, and #N/A when the target is an empty object/array.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=JSONFILTER(...)` | | <!-- TODO --> |
+| `=JSONFILTER("{""a"":1,""b"":[true,null]}")` | {"a",1;"b[0]",TRUE;"b[1]",""} | Flatten the whole document |
+| `=JSONFILTER("{""a"":{""b"":5,""c"":""x""}}","a")` | {"b",5;"c","x"} | Only below key_path |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Uses its own lightweight parser, no external library.
+- The whole text must be valid JSON; comments and trailing commas are not supported.
+- key_path uses the "a.b[0].c" form; array indexes are 0-based.
 - Supported: Excel 2010+. Always registered as `JSONFILTER` on every Excel version.

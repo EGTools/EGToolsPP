@@ -21,15 +21,18 @@ Returns the position of a lookup value within an array.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the 1-based position as a numeric scalar. Returns #N/A when the array is empty or nothing matches, and #VALUE! on internal errors.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=XMATCH(...)` | | <!-- TODO --> |
+| `=XMATCH(3,{1;2;3;4})` | 3 | Exact match position |
+| `=XMATCH(2.5,{1;2;3},1)` | 3 | Next larger match |
+| `=XMATCH(5,{1;2;3})` | #N/A | No match gives #N/A |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- match_mode 2 (wildcard) and search_mode 2/-2 (binary search) are not supported.
+- Related functions: XLOOKUP.
 - Supported: Excel 2010+. Registered as `XMATCH` (drop-in) on hosts without the native function, and as `EG.XMATCH` on modern Excel that has it.

@@ -20,15 +20,18 @@ Returns the list of Korean public holidays for a year (substitute-holiday rules 
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Spills a two-column array of [date serial, holiday name] rows (dates only when holiday_name=FALSE). A year outside 919-2050 returns a #VALUE! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=KOREANHOLIDAYS(...)` | | <!-- TODO --> |
+| `=ROWS(KOREANHOLIDAYS(2025))` | 18 | Holiday rows for 2025 |
+| `=INDEX(KOREANHOLIDAYS(2025,FALSE),1,1)` | 45658 | First holiday (Jan 1) serial |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Substitute-holiday rules are applied per their effective years (Children's Day 2014+, Mar 1/Liberation/Foundation Day 2022+, Buddha's Birthday and Christmas 2023+).
+- Holiday names follow the add-in language setting (Korean/English); holidays falling on the same day are merged with commas.
+- Lunar holidays (Lunar New Year, Buddha's Birthday, Chuseok) use the built-in lunar table (918-2050).
 - Supported: Excel 2010+. Always registered as `KOREANHOLIDAYS` on every Excel version.

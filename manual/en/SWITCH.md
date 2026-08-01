@@ -22,15 +22,17 @@ Compares an expression to values and returns the first matching result (or defau
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the result paired with the first value equal to the expression (or the trailing default), as-is. Returns #N/A when no value matches and no default is given.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SWITCH(...)` | | <!-- TODO --> |
+| `=SWITCH(2,1,"one",2,"two","other")` | two | Matching value's result |
+| `=SWITCH(9,1,"one","other")` | other | Default returned |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Leaving a middle argument empty truncates the list; later value/result pairs are ignored.
+- Related functions: IFS.
 - Supported: Excel 2010+. Registered as `SWITCH` (drop-in) on hosts without the native function, and as `EG.SWITCH` on modern Excel that has it.

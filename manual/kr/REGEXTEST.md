@@ -20,15 +20,18 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+일치 여부를 나타내는 논리값 TRUE/FALSE(스칼라)를 반환합니다. 정규식이 잘못되면 #VALUE!를 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=REGEXTEST(...)` | | <!-- TODO --> |
+| `=REGEXTEST("abc123","\d+")` | TRUE | 숫자 포함 |
+| `=REGEXTEST("ABC","[a-z]+",1)` | TRUE | 대소문자 무시 |
+| `=REGEXTEST("abc","^\d")` | FALSE | 일치 없음 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- 정규식 문법은 std::wregex의 ECMAScript입니다(네이티브 365의 PCRE2와 일부 다를 수 있습니다).
+- 관련 함수: REGEXEXTRACT, REGEXREPLACE
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `REGEXTEST` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.REGEXTEST`으로 등록됩니다.

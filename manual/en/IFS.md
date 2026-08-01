@@ -20,15 +20,17 @@ Checks conditions in order and returns the value for the first TRUE condition.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the value paired with the first TRUE condition, as-is (scalar or array). Returns #N/A when no condition is TRUE; an error value in a condition is returned as-is.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IFS(...)` | | <!-- TODO --> |
+| `=IFS(1>2,"a",2>1,"b")` | b | First TRUE condition wins |
+| `=IFS(1>2,"a")` | #N/A | No TRUE condition |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Text or blank conditions are treated as FALSE (native returns #VALUE!).
+- Related functions: SWITCH.
 - Supported: Excel 2010+. Registered as `IFS` (drop-in) on hosts without the native function, and as `EG.IFS` on modern Excel that has it.

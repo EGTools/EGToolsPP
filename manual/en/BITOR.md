@@ -19,15 +19,17 @@ Returns a bitwise OR of two numbers.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the bitwise OR of two numbers as a scalar number. Returns #NUM! if an argument is not a number/logical, is negative or fractional, or exceeds 2^48-1 (281,474,976,710,655).
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=BITOR(...)` | | <!-- TODO --> |
+| `=BITOR(23,10)` | 31 | 10111 OR 01010 = 11111 |
+| `=BITOR(1.5,2)` | #NUM! | Fractional operand is an error |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Non-numeric arguments also return #NUM!, not #VALUE!.
+- Related functions: BITAND, BITXOR
 - Supported: Excel 2010+. Registered as `BITOR` (drop-in) on hosts without the native function, and as `EG.BITOR` on modern Excel that has it.

@@ -23,15 +23,19 @@ Returns the ISO 2859-1 sample size (n) for a lot size and AQL.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the ISO 2859-1 sample size n as a scalar number. An AQL outside 0-1000 or an invalid level/plan/round returns #VALUE!; a lot size below 2 or an AQL below 0.01 returns #NUM!; #N/A when no table value can be reached.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SAMPLINGSIZE(...)` | | <!-- TODO --> |
+| `=SAMPLINGSIZE(1000,1)` | 80 | G2, normal, single, AQL 1.0 |
+| `=SAMPLINGSIZE(1000,1,"G2",0,2,1)` | 50 | Double sampling, first sample |
+| `=SAMPLINGSIZE(30,0.065)` | 30 | Capped at the lot size |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- If the tabled n exceeds the lot size, the lot size is returned; a lot size of 1 returns 1.
+- Adding 10 to plan forces that plan, ignoring the table's switch marks (*, ++).
+- Related functions: SAMPLINGLABEL, SAMPLINGAC, SAMPLINGRE
 - Supported: Excel 2010+. Always registered as `SAMPLINGSIZE` on every Excel version.

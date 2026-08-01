@@ -21,15 +21,17 @@ Calls a REST API and returns the response text.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the response body as a single text scalar (decoded as UTF-8). Returns #VALUE! when the URL is missing or empty, or the HTTP request fails.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=RESTAPI(...)` | | <!-- TODO --> |
+| `=RESTAPI("https://api.example.com/users","GET")` |  | Result depends on the server response |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Uses WinHTTP and requires a network connection; the receive timeout is 30 seconds.
+- The response body is returned as-is, regardless of the HTTP status code.
+- Registered non-macro and thread-safe, so it can recalculate in parallel.
 - Supported: Excel 2010+. Always registered as `RESTAPI` on every Excel version.

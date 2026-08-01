@@ -23,15 +23,18 @@ Returns the ISO 2859-1 rejection number (Re).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the ISO 2859-1 rejection number Re as a scalar number. An AQL outside 0-1000 or an invalid level/plan/round returns #VALUE!; a lot size below 2 or an AQL below 0.01 returns #NUM!; #N/A when no table value can be reached.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SAMPLINGRE(...)` | | <!-- TODO --> |
+| `=SAMPLINGRE(1000,1)` | 3 | G2, normal, single, AQL 1.0 |
+| `=SAMPLINGRE(1000,1,"G2",0,2,1)` | 3 | Double sampling, first-round Re |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- For single sampling, Re = Ac + 1.
+- A lot size of 1 returns 1.
+- Related functions: SAMPLINGSIZE, SAMPLINGAC, SAMPLINGLABEL
 - Supported: Excel 2010+. Always registered as `SAMPLINGRE` on every Excel version.

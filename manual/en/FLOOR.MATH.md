@@ -20,15 +20,18 @@ Rounds a number down to the nearest integer or multiple of significance.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the number rounded down to a multiple of significance (scalar). A non-numeric number returns a #VALUE! error; a significance of 0 returns 0.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=FLOOR.MATH(...)` | | <!-- TODO --> |
+| `=FLOOR.MATH(6.7)` | 6 | Round down to default multiple 1 |
+| `=FLOOR.MATH(-5.5,2)` | -6 | Negatives round away from zero |
+| `=FLOOR.MATH(-5.5,2,1)` | -4 | Nonzero mode: toward zero |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The sign of significance is ignored (absolute value used).
+- Related function: CEILING.MATH
 - Supported: Excel 2010+. Registered as `FLOOR.MATH` (drop-in) on hosts without the native function, and as `EG.FLOOR.MATH` on modern Excel that has it.

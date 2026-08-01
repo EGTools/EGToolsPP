@@ -19,15 +19,17 @@ Concatenates text from values and ranges (no delimiter).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a single text value (scalar) concatenating every argument (including ranges/arrays) in order. The implementation itself returns no error values.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=CONCAT(...)` | | <!-- TODO --> |
+| `=CONCAT("A",1,"B")` | A1B | concatenate values as-is |
+| `=CONCAT({1,2;3,4})` | 1234 | array joined row-major |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- No delimiter is inserted; use TEXTJOIN when you need one.
+- Up to 255 arguments are supported.
 - Supported: Excel 2010+. Registered as `CONCAT` (drop-in) on hosts without the native function, and as `EG.CONCAT` on modern Excel that has it.

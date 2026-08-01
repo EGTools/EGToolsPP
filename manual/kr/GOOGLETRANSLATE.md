@@ -20,15 +20,17 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+번역된 텍스트를 스칼라로 반환합니다. HTTP 요청 자체가 실패하면 #VALUE!, 서비스 오류·페이지 형식 변경·잘못된 언어 코드·5000자 초과는 "ERROR:…" 텍스트로 반환하며, 빈 텍스트를 입력하면 빈 문자열을 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=GOOGLETRANSLATE(...)` | | <!-- TODO --> |
+| `=GOOGLETRANSLATE("Hello","en","ko")` |  | 번역 결과에 따름 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- 비공식 translate.google.com/m 페이지를 스크래핑합니다 — Google이 형식을 바꾸면 동작하지 않을 수 있으며 인터넷 연결이 필요합니다.
+- source_language 기본값은 auto, target_language 기본값은 추가기능 UI 언어입니다.
+- 범위/배열 입력은 줄바꿈으로 이어붙여 한 번에 번역하며, 5000자를 넘으면 "ERROR:Exceed max length"를 반환합니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `GOOGLETRANSLATE` 이름 그대로 등록됩니다.

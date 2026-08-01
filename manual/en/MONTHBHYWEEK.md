@@ -20,15 +20,18 @@ The month a date's week belongs to, by week-start and owner weekday.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the month (1-12, scalar number) the date's week belongs to. An unparseable date or a weekday argument outside 1-7 returns a #VALUE! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=MONTHBHYWEEK(...)` | | <!-- TODO --> |
+| `=MONTHBHYWEEK(DATE(2026,2,1))` | 1 | Sun Feb 1's week belongs to January |
+| `=MONTHBHYWEEK(DATE(2026,2,2))` | 2 | Feb 2's week belongs to February |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Weekday numbers are 1=Sun to 7=Sat; defaults are Monday start and Thursday owner.
+- A week's month is the month containing its owner weekday.
+- Related function: WEEKNUMOFMONTH
 - Supported: Excel 2010+. Always registered as `MONTHBHYWEEK` on every Excel version.

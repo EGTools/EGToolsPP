@@ -23,15 +23,18 @@ Splits one column by delimiter(s), expanding into rows or columns; other columns
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the exploded table as a 2-D spilled array. Returns #VALUE! when the array argument is not an array, and #NUM! when col_number is outside 1..number-of-columns.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=EXPLODE(...)` | | <!-- TODO --> |
+| `=EXPLODE({"A","x,y";"B","z"},2,",")` | {"A","x";"A","y";"B","z"} | Split column 2 into rows |
+| `=EXPLODE({"A","x,y";"B","z"},2,",",TRUE)` | {"A","x","y";"B","z",""} | Spread across columns, padded |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Multiple delimiters are allowed; longer delimiters are applied first (default: space).
+- With by_col TRUE, short rows are padded with pad_with (default "").
+- ignore_empty TRUE drops empty parts (one empty string is kept if all parts are empty).
 - Supported: Excel 2010+. Always registered as `EXPLODE` on every Excel version.

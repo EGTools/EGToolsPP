@@ -20,15 +20,15 @@ Returns an equivalent interest rate for the growth of an investment.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the equivalent interest rate per period for the growth of an investment (scalar number). Returns a #NUM! error if an argument is non-numeric, nper is not positive, or pv is 0.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=RRI(...)` | | <!-- TODO --> |
+| `=RRI(96,10000,11000)` | 0.000993307 | Rate for 10000 to 11000 over 96 periods |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Related function: PDURATION
 - Supported: Excel 2010+. Registered as `RRI` (drop-in) on hosts without the native function, and as `EG.RRI` on modern Excel that has it.

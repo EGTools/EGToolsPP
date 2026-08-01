@@ -21,15 +21,17 @@ Imports CSV/TSV data from a URL or local file path.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the CSV/TSV content of a URL or local file as a spilled 2-D array; numeric and date text is auto-converted to values. A missing path, download/read failure, or invalid delimiter spec gives #VALUE!; empty content gives #N/A.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IMPORTDATA(...)` | | <!-- TODO --> |
+| `=IMPORTDATA("https://example.com/data.csv")` |  | result depends on the external data |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- When delimiter is omitted it auto-detects: tab if the first line contains a tab, otherwise comma.
+- Legacy calls passing a charset name as the second argument (IMPORTDATA(url,"euc-kr")) are still accepted for backward compatibility.
+- Interior empty lines are kept; only trailing empty lines are dropped.
 - Supported: Excel 2010+. Always registered as `IMPORTDATA` on every Excel version.

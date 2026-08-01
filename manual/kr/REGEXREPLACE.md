@@ -22,15 +22,19 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+치환된 단일 텍스트(스칼라)를 반환합니다. 정규식이 잘못되면 #VALUE!를 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=REGEXREPLACE(...)` | | <!-- TODO --> |
+| `=REGEXREPLACE("a1b2c3","\d","-")` | a-b-c- | 전체 치환 |
+| `=REGEXREPLACE("a1b2c3","\d","-",2)` | a1b-c3 | 2번째만 치환 |
+| `=REGEXREPLACE("john smith","(\w+) (\w+)","$2 $1")` | smith john | 역참조 치환 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- 대체 텍스트에서 $1, $2 역참조를 지원합니다.
+- 발생 0(기본)은 전체를, N>0은 N번째 일치만 치환합니다.
+- 정규식 문법은 std::wregex의 ECMAScript입니다.
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `REGEXREPLACE` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.REGEXREPLACE`으로 등록됩니다.

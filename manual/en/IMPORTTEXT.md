@@ -23,15 +23,17 @@ Imports data from a text-based file (local path or URL) as an array.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a text file (local path or URL) split by delimiter or fixed widths as a spilled 2-D array; numeric and date text is auto-converted. A missing path, read/download failure, or invalid delimiter/fixed-width spec gives #VALUE!; if no rows remain after skip/take the result is #N/A.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IMPORTTEXT(...)` | | <!-- TODO --> |
+| `=IMPORTTEXT("C:\data\log.txt",";",1)` |  | result depends on the file |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The default delimiter is tab. String value(s) are delimiters; a numeric array ({1,11,21}) is interpreted as 1-based ascending fixed-width column start positions.
+- encoding accepts charset names like "euc-kr" or a codepage number; a BOM takes precedence.
+- Negative skip_rows/take_rows count from the end.
 - Supported: Excel 2010+. Registered as `IMPORTTEXT` (drop-in) on hosts without the native function, and as `EG.IMPORTTEXT` on modern Excel that has it.

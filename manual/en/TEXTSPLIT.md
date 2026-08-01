@@ -23,15 +23,19 @@ Splits text into an array using column and row delimiters.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns an array of the split text, spilling on dynamic-array hosts. Ragged rows are padded with pad_with (default #N/A); returns #VALUE! when the split result is empty.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TEXTSPLIT(...)` | | <!-- TODO --> |
+| `=TEXTSPLIT("a,b,c",",")` | {a,b,c} | split into columns |
+| `=TEXTSPLIT("a,b;c",",",";")` | {a,b;c,#N/A} | rows and columns, padded |
+| `=TEXTSPLIT("1,,2",",",,TRUE)` | {1,2} | ignore empty values |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Each delimiter argument accepts a single text only (the native array-of-delimiters form is not supported).
+- match_mode=1 ignores case.
+- Related functions: TEXTBEFORE, TEXTAFTER, TEXTJOIN
 - Supported: Excel 2010+. Registered as `TEXTSPLIT` (drop-in) on hosts without the native function, and as `EG.TEXTSPLIT` on modern Excel that has it.

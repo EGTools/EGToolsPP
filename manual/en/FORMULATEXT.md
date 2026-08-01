@@ -18,15 +18,16 @@ Returns the formula of the referenced cell as text.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the referenced cell's formula as a text scalar. Returns #N/A when the reference is omitted, the cell has no formula, or the lookup fails.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=FORMULATEXT(...)` | | <!-- TODO --> |
+| `=FORMULATEXT(A1)` |  | Depends on cell A1's content |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Registered as a macro-sheet function.
+- Related functions: ISFORMULA.
 - Supported: Excel 2010+. Registered as `FORMULATEXT` (drop-in) on hosts without the native function, and as `EG.FORMULATEXT` on modern Excel that has it.

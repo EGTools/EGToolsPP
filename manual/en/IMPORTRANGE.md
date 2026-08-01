@@ -19,15 +19,17 @@ Imports data from a shared Google Sheets spreadsheet.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the values of a shared Google Sheets spreadsheet as a spilled 2-D array; numeric and date text is auto-converted. An empty URL or one without the /d/<ID> pattern gives #VALUE!; a download failure, an unshared sheet (HTML login page), an empty sheet, or a range outside the data gives #N/A.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=IMPORTRANGE(...)` | | <!-- TODO --> |
+| `=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1AbCdEf.../edit#gid=0","A1:C10")` |  | result depends on the sheet |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Only link-shared Google Sheets can be imported — unshared documents return an HTML login page, which yields #N/A.
+- The sheet is selected by the gid in the URL (default gid=0); any sheet-name part of range_address is ignored.
+- Data comes from the TSV export endpoint, so only values are imported, without formatting.
 - Supported: Excel 2010+. Always registered as `IMPORTRANGE` on every Excel version.

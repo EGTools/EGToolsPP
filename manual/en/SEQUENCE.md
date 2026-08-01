@@ -21,15 +21,17 @@ Generates a sequence of numbers as an array.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a rows-by-cols array of sequential numbers filled row by row; on dynamic-array hosts it spills. Returns #VALUE! when rows or cols is 0 or less.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SEQUENCE(...)` | | <!-- TODO --> |
+| `=SEQUENCE(3)` | {1;2;3} | Basic 3-row sequence |
+| `=SEQUENCE(2,3,0,10)` | {0,10,20;30,40,50} | Custom start and step |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Omitting rows defaults it to 1 (native requires it).
+- Related functions: RANDARRAY.
 - Supported: Excel 2010+. Registered as `SEQUENCE` (drop-in) on hosts without the native function, and as `EG.SEQUENCE` on modern Excel that has it.

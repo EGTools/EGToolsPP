@@ -21,15 +21,18 @@ Sorts rows in natural order (text and embedded numbers compared separately).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a sorted array of the same shape as the input, spilling on dynamic-array hosts. A non-array single value is returned unchanged. Returns #VALUE! when the array is missing, the key column is out of range, or sort_order is not 1/-1.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TEXTNUMSORT(...)` | | <!-- TODO --> |
+| `=TEXTNUMSORT({"a10";"a2";"a1"})` | {a1;a2;a10} | natural sort ascending |
+| `=TEXTNUMSORT({"a1";"a10";"a2"},1,-1)` | {a10;a2;a1} | descending |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Text and number runs are compared separately; numbers compare numerically (a2 < a10).
+- Commas inside numbers are ignored as thousands separators; '.' is treated as a decimal point.
+- The sort is stable, so rows with equal keys keep their order.
 - Supported: Excel 2010+. Always registered as `TEXTNUMSORT` on every Excel version.

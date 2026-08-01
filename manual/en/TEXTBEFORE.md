@@ -23,15 +23,19 @@ Returns the text before a delimiter.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the single text (scalar) before the delimiter. Returns #VALUE! when instance_num is 0, and the if_not_found value (default #N/A) when the delimiter is not found.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TEXTBEFORE(...)` | | <!-- TODO --> |
+| `=TEXTBEFORE("red-blue-green","-")` | red | before first delimiter |
+| `=TEXTBEFORE("a,b,c",",",-1)` | a,b | before last delimiter |
+| `=TEXTBEFORE("abc","x")` | #N/A | delimiter not found |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- match_end=1 treats the end of the text (positive instance) or its start (negative instance) as one virtual delimiter.
+- match_mode=1 ignores case.
+- Related functions: TEXTAFTER, TEXTSPLIT
 - Supported: Excel 2010+. Registered as `TEXTBEFORE` (drop-in) on hosts without the native function, and as `EG.TEXTBEFORE` on modern Excel that has it.

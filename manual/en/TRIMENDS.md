@@ -19,15 +19,18 @@ Removes leading/trailing whitespace only (keeps inner spaces).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the text with both ends trimmed (scalar); an array/range input is processed element-wise and spills. Returns #VALUE! when options is outside 0..7; empty cells become an empty string.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TRIMENDS(...)` | | <!-- TODO --> |
+| `=TRIMENDS("  a  b  ")` | a  b | trim ends only |
+| `=TRIMENDS("a",8)` | #VALUE! | options out of range |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Even with options 0, spaces, tabs, CR and LF are always trimmed from both ends.
+- Unlike TRIM, inner spaces are kept as-is.
+- Options are additive: +1 control chars, +2 NBSP, +4 invisible Unicode spaces (ZWSP, full-width space, etc.).
 - Supported: Excel 2010+. Always registered as `TRIMENDS` on every Excel version.

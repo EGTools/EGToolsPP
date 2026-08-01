@@ -20,15 +20,17 @@ Wraps a vector into a 2D array, a set number of values per row.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the vector wrapped into a 2-D array with wrap_count values per row, filled left to right; on dynamic-array hosts the result spills. Missing cells in the last row are filled with pad_with (default #N/A). Returns #VALUE! if the vector is empty or wrap_count is 0 or less.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=WRAPROWS(...)` | | <!-- TODO --> |
+| `=WRAPROWS({1,2,3,4,5},2)` | {1,2;3,4;5,#N/A} | Two values per row |
+| `=WRAPROWS({1,2,3,4,5},2,0)` | {1,2;3,4;5,0} | Pad with 0 |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- A 2-D array input is also accepted and flattened row-major.
+- Related function: WRAPCOLS
 - Supported: Excel 2010+. Registered as `WRAPROWS` (drop-in) on hosts without the native function, and as `EG.WRAPROWS` on modern Excel that has it.

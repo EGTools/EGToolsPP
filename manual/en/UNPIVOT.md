@@ -23,15 +23,18 @@ Converts a cross-tab (pivoted) table into a normalized data table.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the normalized table, including the title row, as a 2-D spilled array. Returns #VALUE! when the input is not an array, fixed_col/fixed_row are negative, out of range, or both 0, or a sort_order entry is 0 or outside the result columns.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=UNPIVOT(...)` | | <!-- TODO --> |
+| `=UNPIVOT({"Item","Jan","Feb";"A",10,20;"B",30,40},1,1,,{"Item","Month","Qty"})` | {"Item","Month","Qty";"A","Jan",10;"A","Feb",20;"B","Jan",30;"B","Feb",40} | Unpivot a cross-tab |
+| `=UNPIVOT({"Item","Jan","Feb";"A",10,20;"B",30,40},1,1,-3,{"Item","Month","Qty"})` | {"Item","Month","Qty";"B","Feb",40;"B","Jan",30;"A","Feb",20;"A","Jan",10} | Sort by column 3 descending |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Works on values only; filling merged cells is not supported.
+- Entries whose value cells are all empty are dropped from the result.
+- When col_names is omitted, default titles depend on the UI language (Korean/English).
 - Supported: Excel 2010+. Always registered as `UNPIVOT` on every Excel version.

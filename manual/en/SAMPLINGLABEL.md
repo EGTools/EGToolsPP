@@ -19,15 +19,18 @@ Returns the ISO 2859-1 sample size code letter for a lot size and inspection lev
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the ISO 2859-1 sample size code letter as a one-character text scalar. A lot size below 2 returns #NUM!; an inspection level other than S1-S4/G1-G3 returns #VALUE!.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SAMPLINGLABEL(...)` | | <!-- TODO --> |
+| `=SAMPLINGLABEL(1000)` | J | Default G2, lot 1000 |
+| `=SAMPLINGLABEL(1000,"S3")` | E | Special level S-3 |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Hyphens and spaces in the level are ignored ("G-2" = "G2").
+- Based on the built-in ISO 2859-1:1999 tables.
+- Related functions: SAMPLINGSIZE, SAMPLINGAC, SAMPLINGRE
 - Supported: Excel 2010+. Always registered as `SAMPLINGLABEL` on every Excel version.

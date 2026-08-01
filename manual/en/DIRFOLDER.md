@@ -22,15 +22,17 @@ Lists the files (and optionally folders) of a directory.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a spilled array of item names; with sub_folder TRUE the columns are staggered by folder depth. Returns #VALUE! when the path is missing or empty, and #N/A when nothing matches.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=DIRFOLDER(...)` | | <!-- TODO --> |
+| `=DIRFOLDER("C:\Data","*.xlsx;*.csv",FALSE,TRUE)` |  | Result depends on the folder contents |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Non-macro function; reads the folder directly through the Win32 API.
+- Several filters can be given separated by ";"; * and ? wildcards are supported.
+- Hidden items are excluded by default; set hidden to TRUE to include them.
 - Supported: Excel 2010+. Always registered as `DIRFOLDER` on every Excel version.

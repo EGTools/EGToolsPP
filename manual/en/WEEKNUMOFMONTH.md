@@ -20,15 +20,18 @@ Week number within the month, by week-start and owner weekday.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the week number within the month as a scalar number. An unparseable date or a weekday argument outside 1-7 returns a #VALUE! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=WEEKNUMOFMONTH(...)` | | <!-- TODO --> |
+| `=WEEKNUMOFMONTH(DATE(2026,1,15))` | 3 | Third week of January |
+| `=WEEKNUMOFMONTH(DATE(2026,2,1))` | 5 | Feb 1 falls in week 5 of January |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Weekday numbers are 1=Sun to 7=Sat; defaults are Monday start and Thursday owner.
+- The owning month and week are decided by the week's owner weekday.
+- Related function: MONTHBHYWEEK
 - Supported: Excel 2010+. Always registered as `WEEKNUMOFMONTH` on every Excel version.

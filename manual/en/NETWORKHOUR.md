@@ -20,15 +20,19 @@ Calculates net working hours minus break times.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Spills an array the same shape as start/end (scalar for single values); values are day fractions (1 = 24 hours). Mismatched start/end shapes or a break array with fewer than 2 columns return #VALUE!; non-numeric start/end cells yield empty text, and a date-bearing end earlier than its start yields #VALUE! for that cell.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=NETWORKHOUR(...)` | | <!-- TODO --> |
+| `=NETWORKHOUR(TIME(9,0,0),TIME(18,0,0))*24` | 9 | Working hours 9:00 to 18:00 |
+| `=NETWORKHOUR(TIME(9,0,0),TIME(18,0,0),HSTACK(TIME(12,0,0),TIME(13,0,0)))*24` | 8 | Minus a one-hour lunch break |
+| `=NETWORKHOUR(TIME(22,0,0),TIME(6,0,0))*24` | 8 | Overnight shift |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Results are in days; multiply by 24 for hours.
+- With time-only values, an end smaller than its start is treated as crossing midnight.
+- Overlapping break intervals are merged; breaks crossing midnight are split.
 - Supported: Excel 2010+. Always registered as `NETWORKHOUR` on every Excel version.

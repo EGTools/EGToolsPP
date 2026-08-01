@@ -20,15 +20,19 @@ Removes rows/columns from the start or end of an array.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the array with the given number of rows/columns removed; on dynamic-array hosts the result spills. Returns #VALUE! if the array is empty or nothing remains after dropping.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=DROP(...)` | | <!-- TODO --> |
+| `=DROP({1,2,3;4,5,6;7,8,9},1)` | {4,5,6;7,8,9} | Drop the first row |
+| `=DROP({1,2,3;4,5,6;7,8,9},1,-1)` | {4,5;7,8} | Drop first row, last column |
+| `=DROP({1,2},5)` | #VALUE! | Error when everything is dropped |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Negative rows/cols drop from the end.
+- An empty result returns #VALUE! instead of the native #CALC!.
+- Related function: TAKE
 - Supported: Excel 2010+. Registered as `DROP` (drop-in) on hosts without the native function, and as `EG.DROP` on modern Excel that has it.

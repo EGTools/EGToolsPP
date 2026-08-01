@@ -19,15 +19,17 @@ Expands one BOM level and sums required quantities per item.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a spilled array with one item-name column plus one summed column per quantity column, sorted by item name ascending. Returns #VALUE! when fewer than 5 columns are given, column lengths differ, or usage/quantity is not numeric; #NUM! for negative quantities; #N/A when nothing is aggregated.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SUMBYBOM(...)` | | <!-- TODO --> |
+| `=SUMBYBOM({"X","P",2,"X",1;"X","Q",3,"P",5})` | {"P",7;"Q",3} | Expand X one level and sum |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Only one BOM level is expanded (not multi-level).
+- Item names are aggregated case-insensitively; the result is sorted by name ascending.
+- Non-parent items with zero quantity are dropped from the result.
 - Supported: Excel 2010+. Always registered as `SUMBYBOM` on every Excel version.

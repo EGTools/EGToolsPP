@@ -21,15 +21,19 @@ Compares lists and returns a chosen set: 0 union, N only-in-list-N, -1 in-exactl
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the items of the chosen set as a spilled array (multiple columns when by_row is TRUE, otherwise one column). Returns #VALUE! when no list is given or unique_type is outside -3..number-of-lists, and #N/A when the result set is empty.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=COMPARELIST(...)` | | <!-- TODO --> |
+| `=COMPARELIST(0,FALSE,{"a";"b"},{"b";"c"})` | {"a";"b";"c"} | Union without duplicates |
+| `=COMPARELIST(-2,FALSE,{"a";"b"},{"b";"c"})` | b | Items in every list |
+| `=COMPARELIST(1,FALSE,{"a";"b"},{"b";"c"})` | a | Items only in list 1 |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Comparison is case-insensitive; numbers are compared by value.
+- The result keeps the order in which items first appear.
+- With by_row TRUE, whole rows are compared as one key (trailing empty cells ignored).
 - Supported: Excel 2010+. Always registered as `COMPARELIST` on every Excel version.

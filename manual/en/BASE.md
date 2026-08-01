@@ -20,15 +20,18 @@ Converts a number into text in the given radix (base).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the representation in the given radix as text (scalar). A negative or non-numeric number, or a radix outside 2 to 36, returns a #NUM! error.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=BASE(...)` | | <!-- TODO --> |
+| `=BASE(255,16)` | FF | 255 in hexadecimal |
+| `=BASE(15,2,8)` | 00001111 | Zero-padded to min_length |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The fractional part of number is truncated (floor).
+- Results shorter than min_length are left-padded with zeros.
+- Related function: DECIMAL
 - Supported: Excel 2010+. Registered as `BASE` (drop-in) on hosts without the native function, and as `EG.BASE` on modern Excel that has it.

@@ -19,15 +19,17 @@
 
 ## 반환
 
-<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->
+공유된 Google Sheets의 값을 2차원 배열로 스필하여 반환하며 숫자·날짜 텍스트는 자동 변환됩니다. URL이 비었거나 /d/<ID> 형식이 아니면 #VALUE!, 다운로드 실패·공유 미설정(HTML 응답)·빈 시트·범위가 데이터 밖이면 #N/A를 반환합니다.
 
 ## 예제
 
 | 수식 | 결과 | 설명 |
 |---|---|---|
-| `=IMPORTRANGE(...)` | | <!-- TODO --> |
+| `=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1AbCdEf.../edit#gid=0","A1:C10")` |  | 시트 내용에 따름 |
 
 ## 참고
 
-<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
+- 링크 공유가 켜진 Google Sheets만 가져올 수 있습니다 — 미공유 문서는 로그인 페이지(HTML)가 내려와 #N/A가 됩니다.
+- 시트는 URL의 gid로 선택합니다(기본 gid=0). range_address의 시트 이름 부분은 무시됩니다.
+- TSV export 엔드포인트를 사용하므로 값만 가져오며 서식은 유지되지 않습니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `IMPORTRANGE` 이름 그대로 등록됩니다.

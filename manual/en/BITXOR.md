@@ -19,15 +19,17 @@ Returns a bitwise XOR of two numbers.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the bitwise XOR of two numbers as a scalar number. Returns #NUM! if an argument is not a number/logical, is negative or fractional, or exceeds 2^48-1 (281,474,976,710,655).
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=BITXOR(...)` | | <!-- TODO --> |
+| `=BITXOR(5,3)` | 6 | 101 XOR 011 = 110 |
+| `=BITXOR(5,"a")` | #NUM! | Non-numeric operand is an error |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Non-numeric arguments also return #NUM!, not #VALUE!.
+- Related functions: BITAND, BITOR
 - Supported: Excel 2010+. Registered as `BITXOR` (drop-in) on hosts without the native function, and as `EG.BITXOR` on modern Excel that has it.

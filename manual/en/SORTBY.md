@@ -21,15 +21,18 @@ Sorts an array by values in other arrays.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the array with its rows reordered by the key arrays; on dynamic-array hosts it spills. Returns #VALUE! when no valid key array (same row count as array) is given.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SORTBY(...)` | | <!-- TODO --> |
+| `=SORTBY({"a";"b";"c"},{3;1;2})` | {b;c;a} | Sort by key array |
+| `=SORTBY({1;2;3},{2;2;1},1,{9;1;5},-1)` | {3;1;2} | Second key descending |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Key arrays must be column vectors with the same row count as array; only row sorting is supported (no by-column sorting).
+- Key arrays with a mismatched row count are silently ignored.
+- Related functions: SORT.
 - Supported: Excel 2010+. Registered as `SORTBY` (drop-in) on hosts without the native function, and as `EG.SORTBY` on modern Excel that has it.

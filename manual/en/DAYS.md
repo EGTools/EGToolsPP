@@ -19,15 +19,16 @@ Returns the number of days between two dates (end − start).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns end_date minus start_date in days as a scalar number. The time-of-day part of each date is truncated. Returns #VALUE! if an argument is omitted.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=DAYS(...)` | | <!-- TODO --> |
+| `=DAYS(DATE(2026,3,1),DATE(2026,1,15))` | 45 | Days between two dates |
+| `=DAYS(DATE(2026,1,1),DATE(2026,1,31))` | -30 | Negative when end is earlier |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Date text such as "2026-01-15" is not parsed; non-numeric values are treated as 0.
 - Supported: Excel 2010+. Registered as `DAYS` (drop-in) on hosts without the native function, and as `EG.DAYS` on modern Excel that has it.

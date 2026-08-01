@@ -19,15 +19,17 @@ Looks up the KRW standard exchange rate for a date (up to 10 days back).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the KRW standard exchange rate as a numeric scalar. Returns #VALUE! for a future date, and #N/A for an unsupported currency code or when no published rate is found within the 10-day look-back.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=EXRATE(...)` | | <!-- TODO --> |
+| `=EXRATE("USD")` |  | Result depends on date and network |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Fetches the standard rate from smbs.biz (Seoul Money Brokerage) over HTTP — a network connection is required.
+- If no rate is published for the date, it looks back up to 10 days (holidays).
+- CNY is mapped to CNH automatically. Registered non-macro and thread-safe for parallel recalculation.
 - Supported: Excel 2010+. Always registered as `EXRATE` on every Excel version.

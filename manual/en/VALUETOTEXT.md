@@ -19,15 +19,18 @@ Returns the text representation of a value.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the text representation of the value as a single text (scalar). The implementation itself returns no error values.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=VALUETOTEXT(...)` | | <!-- TODO --> |
+| `=VALUETOTEXT(1.5)` | 1.5 | number unchanged |
+| `=VALUETOTEXT("abc",1)` | "abc" | strict quotes text |
+| `=VALUETOTEXT(TRUE)` | TRUE | logical value |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- In strict (1) format, quotes inside text are doubled ("").
+- Related function: ARRAYTOTEXT
 - Supported: Excel 2010+. Registered as `VALUETOTEXT` (drop-in) on hosts without the native function, and as `EG.VALUETOTEXT` on modern Excel that has it.

@@ -18,15 +18,16 @@ Returns the sheet number of a reference (or the current sheet).
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns the 1-based position of the sheet containing the reference (or the calling cell when omitted) as a number. Returns #N/A when the sheet cannot be found and #VALUE! when the sheet list lookup fails.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SHEET(...)` | | <!-- TODO --> |
+| `=SHEET()` |  | Depends on workbook and calling sheet |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Accepts only a cell reference (native also accepts a sheet name as text).
+- Registered as a macro-sheet function.
 - Supported: Excel 2010+. Registered as `SHEET` (drop-in) on hosts without the native function, and as `EG.SHEET` on modern Excel that has it.

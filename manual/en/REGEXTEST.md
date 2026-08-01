@@ -20,15 +20,18 @@ Tests whether text matches a regular expression.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a logical TRUE/FALSE (scalar) indicating whether a match exists. Returns #VALUE! for an invalid pattern.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=REGEXTEST(...)` | | <!-- TODO --> |
+| `=REGEXTEST("abc123","\d+")` | TRUE | contains digits |
+| `=REGEXTEST("ABC","[a-z]+",1)` | TRUE | case-insensitive |
+| `=REGEXTEST("abc","^\d")` | FALSE | no match |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The regex flavor is std::wregex ECMAScript (may differ from native 365's PCRE2 in places).
+- Related functions: REGEXEXTRACT, REGEXREPLACE
 - Supported: Excel 2010+. Registered as `REGEXTEST` (drop-in) on hosts without the native function, and as `EG.REGEXTEST` on modern Excel that has it.

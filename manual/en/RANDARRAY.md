@@ -22,15 +22,16 @@ Returns an array of random numbers.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a rows-by-cols array of random numbers; on dynamic-array hosts it spills. Returns #VALUE! when rows or cols is 0 or less, or when max is less than min.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=RANDARRAY(...)` | | <!-- TODO --> |
+| `=RANDARRAY(2,3,1,10,TRUE)` |  | Random; result varies each recalc |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- With integer=TRUE, generates integers from min to max inclusive; otherwise reals in [min, max).
+- Related functions: SEQUENCE.
 - Supported: Excel 2010+. Registered as `RANDARRAY` (drop-in) on hosts without the native function, and as `EG.RANDARRAY` on modern Excel that has it.

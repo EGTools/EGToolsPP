@@ -20,15 +20,15 @@ Short alias of GOOGLETRANSLATE — translates text via Google.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Identical to GOOGLETRANSLATE: returns the translated text as a scalar. An HTTP request failure gives #VALUE!; service errors, invalid language codes and texts over 5000 characters return "ERROR:…" text values; empty input returns an empty string.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=GTRS(...)` | | <!-- TODO --> |
+| `=GTRS("안녕하세요","ko","en")` |  | result depends on the translation service |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Short alias of GOOGLETRANSLATE sharing the same implementation; see GOOGLETRANSLATE for details.
 - Supported: Excel 2010+. Always registered as `GTRS` on every Excel version.

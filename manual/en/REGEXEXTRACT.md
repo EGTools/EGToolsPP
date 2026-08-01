@@ -21,15 +21,18 @@ Extracts matches of a regular expression from text.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+return_mode 0 returns the first match (scalar text), 1 returns all matches (one-column array, spills), 2 returns the capture groups of the first match (one-row array, spills). Returns #N/A when there is no match (or no groups in mode 2) and #VALUE! for an invalid pattern.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=REGEXEXTRACT(...)` | | <!-- TODO --> |
+| `=REGEXEXTRACT("abc123def45","\d+")` | 123 | first match |
+| `=REGEXEXTRACT("abc123def45","\d+",1)` | {123;45} | all matches (column) |
+| `=REGEXEXTRACT("2026-08-01","(\d+)-(\d+)",2)` | {2026,08} | capture groups (row) |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- The regex flavor is std::wregex ECMAScript (may differ from native 365's PCRE2 in places).
+- Related functions: REGEXTEST, REGEXREPLACE
 - Supported: Excel 2010+. Registered as `REGEXEXTRACT` (drop-in) on hosts without the native function, and as `EG.REGEXEXTRACT` on modern Excel that has it.

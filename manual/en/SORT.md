@@ -21,15 +21,19 @@ Sorts an array by a row/column.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a same-size array sorted by the given column (or row); on dynamic-array hosts it spills. Returns #VALUE! when sort_index is outside the array or on internal errors.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=SORT(...)` | | <!-- TODO --> |
+| `=SORT({3;1;2})` | {1;2;3} | Ascending sort |
+| `=SORT({1,3;2,1;3,2},2)` | {2,1;3,2;1,3} | Sort by column 2 |
+| `=SORT({5;3;9},1,-1)` | {9;5;3} | Descending sort |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Any negative sort_order sorts descending; anything else (including 0) sorts ascending (native accepts only 1/-1).
+- Equal keys keep their original order (stable sort).
+- Related functions: SORTBY, UNIQUE.
 - Supported: Excel 2010+. Registered as `SORT` (drop-in) on hosts without the native function, and as `EG.SORT` on modern Excel that has it. On some legacy hosts it registers as `xSORT` due to a keyword conflict.

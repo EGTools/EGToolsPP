@@ -18,15 +18,16 @@ Returns TRUE if the referenced cell contains a formula.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns TRUE when the referenced cell contains a formula, otherwise FALSE. Returns #VALUE! when the reference is omitted or the lookup fails.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=ISFORMULA(...)` | | <!-- TODO --> |
+| `=ISFORMULA(A1)` |  | Depends on cell A1's content |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Registered as a macro-sheet function.
+- Related functions: FORMULATEXT.
 - Supported: Excel 2010+. Registered as `ISFORMULA` (drop-in) on hosts without the native function, and as `EG.ISFORMULA` on modern Excel that has it.

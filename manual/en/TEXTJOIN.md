@@ -21,15 +21,19 @@ Joins text using a delimiter, optionally ignoring empty cells.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+Returns a single text value (scalar) joined with the delimiter. The implementation itself returns no error values.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=TEXTJOIN(...)` | | <!-- TODO --> |
+| `=TEXTJOIN("-",TRUE,"a","","b")` | a-b | skip empty values |
+| `=TEXTJOIN("-",FALSE,"a","","b")` | a--b | keep empty values |
+| `=TEXTJOIN(",",TRUE,{1,2;3,4})` | 1,2,3,4 | join array elements |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Omitting ignore_empty is treated as TRUE.
+- Up to 255 text arguments are supported.
+- Related function: CONCAT
 - Supported: Excel 2010+. Registered as `TEXTJOIN` (drop-in) on hosts without the native function, and as `EG.TEXTJOIN` on modern Excel that has it.

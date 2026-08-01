@@ -19,15 +19,18 @@ Converts Korean/Hanja money notation (e.g. 일금 오만원) to a number.
 
 ## Returns
 
-<!-- TODO: return shape (scalar / spilled array), meaning, error conditions (#VALUE!, #N/A ...) -->
+By default (number_only=TRUE) returns a number (scalar); when the integer part exceeds 15 digits the result is returned as text to preserve precision. With number_only=FALSE returns formatted text like "금1,234원". Returns #VALUE! when the text is empty or contains two or more consecutive Arabic digits/dots.
 
 ## Examples
 
 | Formula | Result | Description |
 |---|---|---|
-| `=HANTONUMBER(...)` | | <!-- TODO --> |
+| `=HANTONUMBER("일금오만원정")` | 50000 | Korean money to number |
+| `=HANTONUMBER("삼억이천오백만")` | 325000000 | eok/man units |
+| `=HANTONUMBER("일금오만원정",FALSE)` | 일금50,000원정 | formatted text output |
 
 ## Notes
 
-<!-- TODO: differences from the Excel/Google original, related functions -->
+- Hanja notation and variant forms (一二三, 壹貳參, 拾佰仟萬, etc.) are recognized.
+- Spaces and commas in the input are ignored; the 금/일금 and 원/원정 prefix/suffix are restored when number_only=FALSE.
 - Supported: Excel 2010+. Always registered as `HANTONUMBER` on every Excel version.
