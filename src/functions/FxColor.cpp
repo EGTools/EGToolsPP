@@ -23,6 +23,7 @@
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
 #include "../core/LateCom.h"
+#include "../core/Aggregate.h"
 #include "ImageInsert.h"
 
 #include <xlOil/xlOil.h>
@@ -286,9 +287,11 @@ namespace egtools::functions
             },
             /*macro*/ true, /*threadsafe*/ false);
 
-        // ── VISIBLEAGGR(range, [func]) ───────────────────────────────────────
+        // ── VISIBLEAGGR(range, [func], [option]) ─────────────────────────────
+        // VB 동등 집계자 세트(core/Aggregate.h). option: TEXTJOIN 구분자,
+        // LARGE/SMALL k, PERCENTILE*/QUARTILE* 기준값.
         core::registerFn(L"VISIBLEAGGR",
-            [](const RangeArg& ref, const ExcelObj& funcA) -> ExcelObj*
+            [](const RangeArg& ref, const ExcelObj& funcA, const ExcelObj& optA) -> ExcelObj*
             {
                 const auto nR = (long)ref.nRows(), nC = (long)ref.nCols();
                 if ((size_t)nR * nC > kMaxCells) return returnValue(CellError::Value);
@@ -328,9 +331,13 @@ namespace egtools::functions
                         (ExcelArrayBuilder::row_t)outR, (ExcelArrayBuilder::col_t)outC, flat));
                 }
 
-                // aggregate visible, non-error cells
-                double sum = 0, mn = 0, mx = 0, cnt = 0, cntA = 0, prod = 1;
-                bool first = true;
+                // GROUPBY 전용(PERCENTOF)은 여기서 지원하지 않는다.
+                if (fn == L"PERCENTOF") return returnValue(CellError::Value);
+
+                // collect visible cells; VB rule — a visible error is returned
+                // as-is unless the aggregator is COUNT/COUNTA
+                std::vector<ExcelObj> owned;
+                owned.reserve((size_t)nR * nC);
                 for (long i = 0; i < nR; ++i)
                 {
                     if (rHid[(size_t)i]) continue;
@@ -338,27 +345,17 @@ namespace egtools::functions
                     {
                         if (cHid[(size_t)j]) continue;
                         ExcelObj v = valueAt(i, j);
-                        const auto t = v.type();
-                        if (t == ExcelType::Err) continue;
-                        if (!(t == ExcelType::Nil || t == ExcelType::Missing ||
-                              (t == ExcelType::Str && v.stringLength() == 0)))
-                            ++cntA;
-                        if (t != ExcelType::Num) continue;
-                        const double d = v.get<double>(0.0);
-                        sum += d; prod *= d; ++cnt;
-                        if (first) { mn = mx = d; first = false; }
-                        else { mn = std::min(mn, d); mx = std::max(mx, d); }
+                        if (v.type() == ExcelType::Err && fn.find(L"COUNT") == std::wstring::npos)
+                            return returnValue(std::move(v));
+                        owned.emplace_back(std::move(v));
                     }
                 }
-                if (fn == L"SUM") return returnValue(ExcelObj(sum));
-                if (fn == L"COUNT") return returnValue(ExcelObj(cnt));
-                if (fn == L"COUNTA") return returnValue(ExcelObj(cntA));
-                if (fn == L"AVERAGE")
-                    return cnt > 0 ? returnValue(ExcelObj(sum / cnt)) : returnValue(CellError::Div0);
-                if (fn == L"MAX") return returnValue(ExcelObj(first ? 0.0 : mx));
-                if (fn == L"MIN") return returnValue(ExcelObj(first ? 0.0 : mn));
-                if (fn == L"PRODUCT") return returnValue(ExcelObj(cnt > 0 ? prod : 0.0));
-                return returnValue(CellError::Value);
+                std::vector<const ExcelObj*> vals;
+                vals.reserve(owned.size());
+                for (auto& o : owned) vals.push_back(&o);
+
+                return returnValue(core::aggregateObjs(fn, vals,
+                    optA.isMissing() ? nullptr : &optA));
             },
             /*macro*/ true, /*threadsafe*/ false);
 

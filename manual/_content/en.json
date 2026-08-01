@@ -1639,7 +1639,7 @@
                                      ]
                                  ],
                     "notes":  [
-                                  "The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF only (anything else returns #VALUE!). field_relationship is accepted for compatibility but ignored.",
+                                  "The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native) (anything else returns #VALUE!). field_relationship is accepted for compatibility but ignored.",
                                   "Total/subtotal labels follow the UI language (Korean UI: 합계/총합계, English UI: Total/Grand Total). Subtotal rows are labeled with the first key value.",
                                   "When field_headers is omitted, a header row is auto-detected if the first row is all text and non-text values appear below it."
                               ]
@@ -1654,7 +1654,7 @@
                                      ]
                                  ],
                     "notes":  [
-                                  "row_fields, col_fields and values each support only a single column (no multi-column nesting). The supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF only (anything else returns #VALUE!).",
+                                  "row_fields, col_fields and values each support only a single column (no multi-column nesting). The supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native) (anything else returns #VALUE!).",
                                   "For PERCENTOF, this implementation supports relative_to 0 (column totals, default) / 1 (row totals) / 2 (grand total) only; 3 and 4 (parent totals) return #VALUE!.",
                                   "Total row/column labels follow the UI language (Korean UI: 합계, English UI: Total)."
                               ]
@@ -2133,331 +2133,337 @@
                                  ]
                    },
     "TRIMRANGE":  {
-        "ret": "Returns the array with blank edge rows/columns removed, spilled. Returns #VALUE! when the array is empty, a trim mode is outside 0-3, or every cell is blank.",
-        "examples": [
-            [
-                "=TRIMRANGE({\"\",\"\";\"a\",1;\"\",\"\"})",
-                "{\"a\",1}",
-                "Trim blank edge rows and columns"
-            ],
-            [
-                "=TRIMRANGE({\"\";1;\"\"},1)",
-                "{1;\"\"}",
-                "Trim leading blank rows only"
-            ]
-        ],
-        "notes": [
-            "Native TRIMRANGE trims a reference; this implementation is value-based, so array literals and formula results work too.",
-            "Empty strings (\"\") count as blank."
-        ]
-    },
+                      "ret":  "Returns the array with blank edge rows/columns removed, spilled. Returns #VALUE! when the array is empty, a trim mode is outside 0-3, or every cell is blank.",
+                      "examples":  [
+                                       [
+                                           "=TRIMRANGE({\"\",\"\";\"a\",1;\"\",\"\"})",
+                                           "{\"a\",1}",
+                                           "Trim blank edge rows and columns"
+                                       ],
+                                       [
+                                           "=TRIMRANGE({\"\";1;\"\"},1)",
+                                           "{1;\"\"}",
+                                           "Trim leading blank rows only"
+                                       ]
+                                   ],
+                      "notes":  [
+                                    "Native TRIMRANGE trims a reference; this implementation is value-based, so array literals and formula results work too.",
+                                    "Empty strings (\"\") count as blank."
+                                ]
+                  },
     "DECODEURL":  {
-        "ret": "Returns the text decoded from UTF-8 percent-encoding. An array input is processed element-wise and spills as an array of the same size.",
-        "examples": [
-            [
-                "=DECODEURL(\"a%20b%26c\")",
-                "a b&c",
-                "Decode percent-encoding"
-            ],
-            [
-                "=DECODEURL(\"%ED%95%9C%EA%B8%80\")",
-                "한글",
-                "Decode UTF-8 Korean text"
-            ]
-        ],
-        "notes": [
-            "Invalid % sequences are passed through unchanged.",
-            "A + sign is not converted to a space (no form encoding).",
-            "Inverse of ENCODEURL."
-        ]
-    },
+                      "ret":  "Returns the text decoded from UTF-8 percent-encoding. An array input is processed element-wise and spills as an array of the same size.",
+                      "examples":  [
+                                       [
+                                           "=DECODEURL(\"a%20b%26c\")",
+                                           "a b&c",
+                                           "Decode percent-encoding"
+                                       ],
+                                       [
+                                           "=DECODEURL(\"%ED%95%9C%EA%B8%80\")",
+                                           "한글",
+                                           "Decode UTF-8 Korean text"
+                                       ]
+                                   ],
+                      "notes":  [
+                                    "Invalid % sequences are passed through unchanged.",
+                                    "A + sign is not converted to a space (no form encoding).",
+                                    "Inverse of ENCODEURL."
+                                ]
+                  },
     "BARCODE":  {
-        "ret": "Returns an empty string (\"\") on success; the barcode picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty, the type is not recognized, or the text cannot be encoded in that format, and #REF! when the calling cell cannot be determined.",
-        "examples": [
-            [
-                "=BARCODE(\"12345678\",\"CODE128\")",
-                "",
-                "Insert a Code 128 picture (image insertion, environment-dependent)"
-            ],
-            [
-                "=BARCODE(\"https://example.com\")",
-                "",
-                "Insert the default QR code (image insertion, environment-dependent)"
-            ]
-        ],
-        "notes": [
-            "Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).",
-            "The option argument is a margin when numeric (2D types) or TRUE to draw the text below the bars (1D types).",
-            "The image is sized to the calling cell; 2D types keep their aspect ratio."
-        ]
-    },
+                    "ret":  "Returns an empty string (\"\") on success; the barcode picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty, the type is not recognized, or the text cannot be encoded in that format, and #REF! when the calling cell cannot be determined.",
+                    "examples":  [
+                                     [
+                                         "=BARCODE(\"12345678\",\"CODE128\")",
+                                         "",
+                                         "Insert a Code 128 picture (image insertion, environment-dependent)"
+                                     ],
+                                     [
+                                         "=BARCODE(\"https://example.com\")",
+                                         "",
+                                         "Insert the default QR code (image insertion, environment-dependent)"
+                                     ]
+                                 ],
+                    "notes":  [
+                                  "Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).",
+                                  "The option argument is a margin when numeric (2D types) or TRUE to draw the text below the bars (1D types).",
+                                  "The image is sized to the calling cell; 2D types keep their aspect ratio."
+                              ]
+                },
     "QRCODE":  {
-        "ret": "Returns an empty string (\"\") on success; the QR code picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
-        "examples": [
-            [
-                "=QRCODE(\"https://example.com\")",
-                "",
-                "Insert a QR code picture (image insertion, environment-dependent)"
-            ]
-        ],
-        "notes": [
-            "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
-            "The image keeps its square aspect ratio within the calling cell."
-        ]
-    },
+                   "ret":  "Returns an empty string (\"\") on success; the QR code picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
+                   "examples":  [
+                                    [
+                                        "=QRCODE(\"https://example.com\")",
+                                        "",
+                                        "Insert a QR code picture (image insertion, environment-dependent)"
+                                    ]
+                                ],
+                   "notes":  [
+                                 "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
+                                 "The image keeps its square aspect ratio within the calling cell."
+                             ]
+               },
     "DATAMATRIX":  {
-        "ret": "Returns an empty string (\"\") on success; the DataMatrix picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
-        "examples": [
-            [
-                "=DATAMATRIX(\"LOT-2026-08\")",
-                "",
-                "Insert a DataMatrix picture (image insertion, environment-dependent)"
-            ]
-        ],
-        "notes": [
-            "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
-            "The image keeps its square aspect ratio within the calling cell."
-        ]
-    },
+                       "ret":  "Returns an empty string (\"\") on success; the DataMatrix picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
+                       "examples":  [
+                                        [
+                                            "=DATAMATRIX(\"LOT-2026-08\")",
+                                            "",
+                                            "Insert a DataMatrix picture (image insertion, environment-dependent)"
+                                        ]
+                                    ],
+                       "notes":  [
+                                     "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
+                                     "The image keeps its square aspect ratio within the calling cell."
+                                 ]
+                   },
     "CODE128":  {
-        "ret": "Returns an empty string (\"\") on success; the Code 128 barcode picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
-        "examples": [
-            [
-                "=CODE128(\"ABC-1234\",TRUE)",
-                "",
-                "Insert with the text drawn below the bars (image insertion, environment-dependent)"
-            ],
-            [
-                "=CODE128(\"(01)04012345678901(10)LOT42\",FALSE,TRUE)",
-                "",
-                "Insert as GS1-128 with FNC1 (image insertion, environment-dependent)"
-            ]
-        ],
-        "notes": [
-            "gs1=TRUE encodes (AI)value text as fully FNC1-compliant GS1-128 (symbology identifier ]C1).",
-            "The image fills the calling cell (1D format).",
-            "text_size is a relative value that scales the text band height."
-        ]
-    },
+                    "ret":  "Returns an empty string (\"\") on success; the Code 128 barcode picture is inserted separately, sized to the calling cell. Returns #VALUE! when the text is empty or GS1 conversion/encoding fails, and #REF! when the calling cell cannot be determined.",
+                    "examples":  [
+                                     [
+                                         "=CODE128(\"ABC-1234\",TRUE)",
+                                         "",
+                                         "Insert with the text drawn below the bars (image insertion, environment-dependent)"
+                                     ],
+                                     [
+                                         "=CODE128(\"(01)04012345678901(10)LOT42\",FALSE,TRUE)",
+                                         "",
+                                         "Insert as GS1-128 with FNC1 (image insertion, environment-dependent)"
+                                     ]
+                                 ],
+                    "notes":  [
+                                  "gs1=TRUE encodes (AI)value text as fully FNC1-compliant GS1-128 (symbology identifier ]C1).",
+                                  "The image fills the calling cell (1D format).",
+                                  "text_size is a relative value that scales the text band height."
+                              ]
+                },
     "READBARCODE":  {
-        "ret": "Returns the decoded barcode content shaped like the result_type argument (spills for an array like {1,3}). Returns #VALUE! for an empty source or an invalid result_type item, #NULL! when a URL download fails, and #N/A when the file is missing, the image cannot be read, or no barcode is found.",
-        "examples": [
-            [
-                "=READBARCODE(\"C:\\barcodes\\qr.png\")",
-                "",
-                "Barcode text in the image (result depends on the file)"
-            ],
-            [
-                "=READBARCODE(\"https://example.com/code.png\",{1,3})",
-                "",
-                "Text and format together (network-dependent)"
-            ]
-        ],
-        "notes": [
-            "Reads WIC-supported formats (PNG/JPG/BMP/GIF) from a local file path or an http(s) URL.",
-            "result_type: 1 text (default), 2 code text (control characters shown as <GS> etc.), 3 format, 4 symbology id, 5 raw hex.",
-            "Tries rotated/low-quality images too (TryHarder/TryRotate) but decodes only one barcode."
-        ]
-    },
+                        "ret":  "Returns the decoded barcode content shaped like the result_type argument (spills for an array like {1,3}). Returns #VALUE! for an empty source or an invalid result_type item, #NULL! when a URL download fails, and #N/A when the file is missing, the image cannot be read, or no barcode is found.",
+                        "examples":  [
+                                         [
+                                             "=READBARCODE(\"C:\\barcodes\\qr.png\")",
+                                             "",
+                                             "Barcode text in the image (result depends on the file)"
+                                         ],
+                                         [
+                                             "=READBARCODE(\"https://example.com/code.png\",{1,3})",
+                                             "",
+                                             "Text and format together (network-dependent)"
+                                         ]
+                                     ],
+                        "notes":  [
+                                      "Reads WIC-supported formats (PNG/JPG/BMP/GIF) from a local file path or an http(s) URL.",
+                                      "result_type: 1 text (default), 2 code text (control characters shown as <GS> etc.), 3 format, 4 symbology id, 5 raw hex.",
+                                      "Tries rotated/low-quality images too (TryHarder/TryRotate) but decodes only one barcode."
+                                  ]
+                    },
     "READGS1":  {
-        "ret": "Splits GS1 text into a spilled N-by-2 array of (AI) and value (one joined (AI)value string with concat=TRUE). Returns #VALUE! for empty input, #NUM! when an unknown AI is met in a decoded stream, and #N/A when nothing can be split.",
-        "examples": [
-            [
-                "=READGS1(\"(01)04012345678901(10)LOT42\")",
-                "{\"(01)\",\"04012345678901\";\"(10)\",\"LOT42\"}",
-                "Split into (AI), value rows"
-            ],
-            [
-                "=READGS1(\"(01)04012345678901(10)LOT42\",TRUE)",
-                "(01)04012345678901(10)LOT42",
-                "Join back into one string"
-            ]
-        ],
-        "notes": [
-            "Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators.",
-            "Uses the fixed-length and variable-length GS1 AI tables to split a stream."
-        ]
-    },
+                    "ret":  "Splits GS1 text into a spilled N-by-2 array of (AI) and value (one joined (AI)value string with concat=TRUE). Returns #VALUE! for empty input, #NUM! when an unknown AI is met in a decoded stream, and #N/A when nothing can be split.",
+                    "examples":  [
+                                     [
+                                         "=READGS1(\"(01)04012345678901(10)LOT42\")",
+                                         "{\"(01)\",\"04012345678901\";\"(10)\",\"LOT42\"}",
+                                         "Split into (AI), value rows"
+                                     ],
+                                     [
+                                         "=READGS1(\"(01)04012345678901(10)LOT42\",TRUE)",
+                                         "(01)04012345678901(10)LOT42",
+                                         "Join back into one string"
+                                     ]
+                                 ],
+                    "notes":  [
+                                  "Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators.",
+                                  "Uses the fixed-length and variable-length GS1 AI tables to split a stream."
+                              ]
+                },
     "DISPLAYCOLOR":  {
-        "ret": "Returns the displayed fill color (font color when font=TRUE) of each cell as a spilled numeric array of the same size. Returns #VALUE! when the range exceeds 100,000 cells or the COM connection/color read fails.",
-        "examples": [
-            [
-                "=DISPLAYCOLOR(A1:B2)",
-                "",
-                "Displayed color number of each cell (depends on cell formatting)"
-            ]
-        ],
-        "notes": [
-            "Based on DisplayFormat, so the returned color reflects conditional formatting.",
-            "Changing a format alone does not trigger recalculation — press F9.",
-            "Macro-type function, excluded from multithreaded recalculation."
-        ]
-    },
+                         "ret":  "Returns the displayed fill color (font color when font=TRUE) of each cell as a spilled numeric array of the same size. Returns #VALUE! when the range exceeds 100,000 cells or the COM connection/color read fails.",
+                         "examples":  [
+                                          [
+                                              "=DISPLAYCOLOR(A1:B2)",
+                                              "",
+                                              "Displayed color number of each cell (depends on cell formatting)"
+                                          ]
+                                      ],
+                         "notes":  [
+                                       "Based on DisplayFormat, so the returned color reflects conditional formatting.",
+                                       "Changing a format alone does not trigger recalculation — press F9.",
+                                       "Macro-type function, excluded from multithreaded recalculation."
+                                   ]
+                     },
     "COUNTIFCOLOR":  {
-        "ret": "Returns the number of cells whose displayed color matches the reference cell. Returns #VALUE! on COM failure, unreadable reference color, or more than 100,000 scanned cells, and 0 when the range does not overlap the used range.",
-        "examples": [
-            [
-                "=COUNTIFCOLOR(A1:A10,C1)",
-                "",
-                "Cells with the same fill color as C1 (depends on cell formatting)"
-            ]
-        ],
-        "notes": [
-            "With font=TRUE only non-empty cells are counted.",
-            "DisplayFormat-based, so colors from conditional formatting are compared as displayed.",
-            "Format changes alone do not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
-        ]
-    },
+                         "ret":  "Returns the number of cells whose displayed color matches the reference cell. Returns #VALUE! on COM failure, unreadable reference color, or more than 100,000 scanned cells, and 0 when the range does not overlap the used range.",
+                         "examples":  [
+                                          [
+                                              "=COUNTIFCOLOR(A1:A10,C1)",
+                                              "",
+                                              "Cells with the same fill color as C1 (depends on cell formatting)"
+                                          ]
+                                      ],
+                         "notes":  [
+                                       "With font=TRUE only non-empty cells are counted.",
+                                       "DisplayFormat-based, so colors from conditional formatting are compared as displayed.",
+                                       "Format changes alone do not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
+                                   ]
+                     },
     "SUMIFCOLOR":  {
-        "ret": "Returns the sum of numeric cells whose displayed color matches the reference cell. Returns #VALUE! on COM failure, unreadable reference color, or more than 100,000 scanned cells; an error value in a matching cell is returned as-is.",
-        "examples": [
-            [
-                "=SUMIFCOLOR(A1:A10,C1)",
-                "",
-                "Sum of cells with the same fill color as C1 (depends on cell formatting)"
-            ]
-        ],
-        "notes": [
-            "DisplayFormat-based, so colors from conditional formatting are compared as displayed.",
-            "Format changes alone do not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
-        ]
-    },
+                       "ret":  "Returns the sum of numeric cells whose displayed color matches the reference cell. Returns #VALUE! on COM failure, unreadable reference color, or more than 100,000 scanned cells; an error value in a matching cell is returned as-is.",
+                       "examples":  [
+                                        [
+                                            "=SUMIFCOLOR(A1:A10,C1)",
+                                            "",
+                                            "Sum of cells with the same fill color as C1 (depends on cell formatting)"
+                                        ]
+                                    ],
+                       "notes":  [
+                                     "DisplayFormat-based, so colors from conditional formatting are compared as displayed.",
+                                     "Format changes alone do not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
+                                 ]
+                   },
     "ISVISIBLE":  {
-        "ret": "Returns a spilled array of the same size that is TRUE where the cell is visible and FALSE where its row or column is hidden. Returns #VALUE! when the range exceeds 100,000 cells or the COM connection fails.",
-        "examples": [
-            [
-                "=ISVISIBLE(A1:A5)",
-                "",
-                "Visibility of each cell (depends on hidden state)"
-            ]
-        ],
-        "notes": [
-            "Hiding or unhiding rows/columns alone does not trigger recalculation — press F9.",
-            "Macro-type function, excluded from multithreaded recalculation."
-        ]
-    },
+                      "ret":  "Returns a spilled array of the same size that is TRUE where the cell is visible and FALSE where its row or column is hidden. Returns #VALUE! when the range exceeds 100,000 cells or the COM connection fails.",
+                      "examples":  [
+                                       [
+                                           "=ISVISIBLE(A1:A5)",
+                                           "",
+                                           "Visibility of each cell (depends on hidden state)"
+                                       ]
+                                   ],
+                      "notes":  [
+                                    "Hiding or unhiding rows/columns alone does not trigger recalculation — press F9.",
+                                    "Macro-type function, excluded from multithreaded recalculation."
+                                ]
+                  },
     "VISIBLEAGGR":  {
-        "ret": "With function omitted, spills an array of only the visible cells; with SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT returns the aggregate over visible cells. Returns #N/A when no cell is visible, #VALUE! for an unknown function name, and #DIV/0! for AVERAGE with no numbers.",
-        "examples": [
-            [
-                "=VISIBLEAGGR(A1:A10,\"SUM\")",
-                "",
-                "Sum of visible cells (depends on hidden state)"
-            ],
-            [
-                "=VISIBLEAGGR(A1:B10)",
-                "",
-                "List only visible cells (depends on hidden state)"
-            ]
-        ],
-        "notes": [
-            "Error cells are skipped when aggregating.",
-            "Changing hidden state alone does not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
-        ]
-    },
+                        "ret":  "Without a function, spills the visible cells as a 2-D array; with a function, returns a scalar aggregate. No visible cells gives #N/A; a visible error cell is returned as-is except for COUNT/COUNTA; an unsupported function name gives #VALUE!.",
+                        "examples":  [
+                                         [
+                                             "=VISIBLEAGGR(A1:B10)",
+                                             "",
+                                             "spill visible cells (depends on hidden state)"
+                                         ],
+                                         [
+                                             "=VISIBLEAGGR(A1:A10,\"SUM\")",
+                                             "",
+                                             "sum of visible cells (depends on hidden state)"
+                                         ],
+                                         [
+                                             "=VISIBLEAGGR(A1:A10,\"LARGE\",2)",
+                                             "",
+                                             "2nd largest among visible values"
+                                         ]
+                                     ],
+                        "notes":  [
+                                      "Supported aggregators (21): SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/TEXTJOIN/LARGE/SMALL/PERCENTILE(.INC/.EXC)/QUARTILE(.INC/.EXC). Anything else returns #VALUE!.",
+                                      "Option argument: TEXTJOIN = delimiter, LARGE/SMALL = k, PERCENTILE family = p (0-1), QUARTILE family = 0-4.",
+                                      "Changing row/column visibility alone does not recalculate - press F9. Macro-type, excluded from multithreaded recalculation."
+                                  ]
+                    },
     "ILOOKUP":  {
-        "ret": "Finds a match and, on success, returns an empty string (\"\") while the picture anchored at the matched cell is inserted separately, sized to the calling cell. Returns #REF! when lookup_array and image_range differ in size, the if_not_found value (default #N/A) when there is no match or no picture, and #VALUE! for an invalid regex or a COM/clipboard failure.",
-        "examples": [
-            [
-                "=ILOOKUP(\"apple\",A1:A5,B1:B5)",
-                "",
-                "Copy the picture of the matched row (image insertion, environment-dependent)"
-            ]
-        ],
-        "notes": [
-            "Copies the picture (msoPicture/msoLinkedPicture) whose TopLeftCell is the matched cell in image_range, via the clipboard.",
-            "match_mode: 0 exact (default), -1 next smaller, 1 next larger, 2 wildcard, 3 regex; search_mode: 1 first-to-last (default), -1 last-to-first.",
-            "Moving pictures or changing formats alone does not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
-        ]
-    },
+                    "ret":  "Finds a match and, on success, returns an empty string (\"\") while the picture anchored at the matched cell is inserted separately, sized to the calling cell. Returns #REF! when lookup_array and image_range differ in size, the if_not_found value (default #N/A) when there is no match or no picture, and #VALUE! for an invalid regex or a COM/clipboard failure.",
+                    "examples":  [
+                                     [
+                                         "=ILOOKUP(\"apple\",A1:A5,B1:B5)",
+                                         "",
+                                         "Copy the picture of the matched row (image insertion, environment-dependent)"
+                                     ]
+                                 ],
+                    "notes":  [
+                                  "Copies the picture (msoPicture/msoLinkedPicture) whose TopLeftCell is the matched cell in image_range, via the clipboard.",
+                                  "match_mode: 0 exact (default), -1 next smaller, 1 next larger, 2 wildcard, 3 regex; search_mode: 1 first-to-last (default), -1 last-to-first.",
+                                  "Moving pictures or changing formats alone does not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation."
+                              ]
+                },
     "SEARCHADDRESS":  {
-        "ret": "Returns the matching addresses as a spilled text array with the selected info columns (row=0 returns all rows, up to 100 results). Returns #VALUE! for an empty keyword or an info column outside 1-27 and #N/A when nothing is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
-        "examples": [
-            [
-                "=SEARCHADDRESS(\"세종대로 110\")",
-                "",
-                "Road-address search (needs network and an API key)"
-            ],
-            [
-                "=SEARCHADDRESS(\"세종대로 110\",{1,2},1)",
-                "",
-                "Zip + road address of row 1 (needs network and an API key)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored under HKCU\\Software\\EGTools\\ApiKeys and can be omitted afterwards.",
-            "When the service rejects the key (expired/unregistered), the stored key is deleted automatically and a reissue guide is returned.",
-            "info columns: 1 zip, 2 road address (default), 3 jibun, 4 English — 27 fields in total."
-        ]
-    },
+                          "ret":  "Returns the matching addresses as a spilled text array with the selected info columns (row=0 returns all rows, up to 100 results). Returns #VALUE! for an empty keyword or an info column outside 1-27 and #N/A when nothing is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
+                          "examples":  [
+                                           [
+                                               "=SEARCHADDRESS(\"세종대로 110\")",
+                                               "",
+                                               "Road-address search (needs network and an API key)"
+                                           ],
+                                           [
+                                               "=SEARCHADDRESS(\"세종대로 110\",{1,2},1)",
+                                               "",
+                                               "Zip + road address of row 1 (needs network and an API key)"
+                                           ]
+                                       ],
+                          "notes":  [
+                                        "No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored under HKCU\\Software\\EGTools\\ApiKeys and can be omitted afterwards.",
+                                        "When the service rejects the key (expired/unregistered), the stored key is deleted automatically and a reissue guide is returned.",
+                                        "info columns: 1 zip, 2 road address (default), 3 jibun, 4 English — 27 fields in total."
+                                    ]
+                      },
     "BRNSTATUS":  {
-        "ret": "Returns the tax-type text (tax_type) for each business registration number in the same shape as the input (spills for an array). Returns #VALUE! for empty input; a missing key, network, or service failure returns an \"ERROR: ...\" text, and unresolved numbers show the text \"#N/A\".",
-        "examples": [
-            [
-                "=BRNSTATUS(\"123-45-67890\")",
-                "",
-                "Business-registration status (needs network and an API key)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys and reused afterwards.",
-            "When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.",
-            "Requests are batched 100 numbers per POST, so bulk lookups are efficient; hyphens are removed automatically and blank inputs return empty strings."
-        ]
-    },
+                      "ret":  "Returns the tax-type text (tax_type) for each business registration number in the same shape as the input (spills for an array). Returns #VALUE! for empty input; a missing key, network, or service failure returns an \"ERROR: ...\" text, and unresolved numbers show the text \"#N/A\".",
+                      "examples":  [
+                                       [
+                                           "=BRNSTATUS(\"123-45-67890\")",
+                                           "",
+                                           "Business-registration status (needs network and an API key)"
+                                       ]
+                                   ],
+                      "notes":  [
+                                    "No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys and reused afterwards.",
+                                    "When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.",
+                                    "Requests are batched 100 numbers per POST, so bulk lookups are efficient; hyphens are removed automatically and blank inputs return empty strings."
+                                ]
+                  },
     "GEOSEARCH":  {
-        "ret": "Returns the x,y coordinates of the results as a spilled array (n-by-3 including an address column when there are multiple hits). Returns #VALUE! for an empty keyword or invalid search_type/EPSG and #N/A when nothing is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
-        "examples": [
-            [
-                "=GEOSEARCH(\"서울특별시청\",2)",
-                "",
-                "Place-search coordinates (needs network and an API key)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
-            "Address search (search_type 1) retries road then parcel (jibun) automatically."
-        ]
-    },
+                      "ret":  "Returns the x,y coordinates of the results as a spilled array (n-by-3 including an address column when there are multiple hits). Returns #VALUE! for an empty keyword or invalid search_type/EPSG and #N/A when nothing is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
+                      "examples":  [
+                                       [
+                                           "=GEOSEARCH(\"서울특별시청\",2)",
+                                           "",
+                                           "Place-search coordinates (needs network and an API key)"
+                                       ]
+                                   ],
+                      "notes":  [
+                                    "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                    "Address search (search_type 1) retries road then parcel (jibun) automatically."
+                                ]
+                  },
     "GEOCODER":  {
-        "ret": "Returns a spilled 1-by-3 array of {x, y, refined address}. Returns #VALUE! for an empty address or invalid EPSG and #N/A when no coordinate is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
-        "examples": [
-            [
-                "=GEOCODER(\"세종대로 110\")",
-                "",
-                "GPS coordinate of an address (needs network and an API key)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
-            "Tries the road-address geocoder first, then falls back to parcel (jibun)."
-        ]
-    },
+                     "ret":  "Returns a spilled 1-by-3 array of {x, y, refined address}. Returns #VALUE! for an empty address or invalid EPSG and #N/A when no coordinate is found; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
+                     "examples":  [
+                                      [
+                                          "=GEOCODER(\"세종대로 110\")",
+                                          "",
+                                          "GPS coordinate of an address (needs network and an API key)"
+                                      ]
+                                  ],
+                     "notes":  [
+                                   "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                   "Tries the road-address geocoder first, then falls back to parcel (jibun)."
+                               ]
+                 },
     "GEOADDRESS":  {
-        "ret": "Returns the address text at the coordinate (return_type=3 spills jibun and road addresses as two rows). Returns #VALUE! when return_type is outside 1-3, EPSG is invalid, or the coordinate is out of range for EPSG 4326, and #N/A when no address exists; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
-        "examples": [
-            [
-                "=GEOADDRESS(126.9779,37.5663)",
-                "",
-                "Jibun address at the coordinate (needs network and an API key)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide."
-        ]
-    },
+                       "ret":  "Returns the address text at the coordinate (return_type=3 spills jibun and road addresses as two rows). Returns #VALUE! when return_type is outside 1-3, EPSG is invalid, or the coordinate is out of range for EPSG 4326, and #N/A when no address exists; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
+                       "examples":  [
+                                        [
+                                            "=GEOADDRESS(126.9779,37.5663)",
+                                            "",
+                                            "Jibun address at the coordinate (needs network and an API key)"
+                                        ]
+                                    ],
+                       "notes":  [
+                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide."
+                                 ]
+                   },
     "ADDRESSMAP":  {
-        "ret": "Returns an empty string (\"\") on success; a cadastral map picture (VWorld WMS) around the address is inserted separately, sized to the calling cell. Returns #VALUE! for an empty address or a scale outside 1-10, #N/A when the address cannot be geocoded, and #REF! when the calling cell cannot be determined; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
-        "examples": [
-            [
-                "=ADDRESSMAP(\"세종대로 110\",7)",
-                "",
-                "Insert a cadastral map picture (image insertion, network and API key needed)"
-            ]
-        ],
-        "notes": [
-            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
-            "Geocodes the address (road then parcel) and fetches a WMS map that includes the continuous cadastral layers."
-        ]
-    }
+                       "ret":  "Returns an empty string (\"\") on success; a cadastral map picture (VWorld WMS) around the address is inserted separately, sized to the calling cell. Returns #VALUE! for an empty address or a scale outside 1-10, #N/A when the address cannot be geocoded, and #REF! when the calling cell cannot be determined; a missing key, network, or service failure returns an \"ERROR: ...\" text.",
+                       "examples":  [
+                                        [
+                                            "=ADDRESSMAP(\"세종대로 110\",7)",
+                                            "",
+                                            "Insert a cadastral map picture (image insertion, network and API key needed)"
+                                        ]
+                                    ],
+                       "notes":  [
+                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                     "Geocodes the address (road then parcel) and fetches a WMS map that includes the continuous cadastral layers."
+                                 ]
+                   }
 }

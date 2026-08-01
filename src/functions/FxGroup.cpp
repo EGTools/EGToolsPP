@@ -27,6 +27,7 @@
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
 #include "../core/I18n.h"
+#include "../core/Aggregate.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -58,63 +59,13 @@ namespace egtools::functions
             return false;
         }
 
-        // 집계. grandTotal은 PERCENTOF 분모.
+        // 집계 — 공용 코어(core/Aggregate.h) 위임. grandTotal은 PERCENTOF 분모.
+        // 지원 목록은 네이티브 GROUPBY/PIVOTBY와 동일한 16종
+        // (core::isGroupByAggregator).
         ExcelObj aggregate(const std::wstring& fnUpper, const std::vector<const ExcelObj*>& vals,
                            double grandTotal = 0.0)
         {
-            const std::wstring& f = fnUpper;
-            if (f == L"PERCENTOF")
-            {
-                double s = 0, d;
-                for (auto* o : vals) if (asNum(*o, d)) s += d;
-                if (grandTotal == 0.0) return ExcelObj(CellError::Div0);
-                return ExcelObj(s / grandTotal);
-            }
-            if (f == L"COUNT")
-            {
-                int c = 0; double d;
-                for (auto* o : vals) if (asNum(*o, d)) ++c;
-                return ExcelObj((double)c);
-            }
-            if (f == L"COUNTA")
-            {
-                int c = 0;
-                for (auto* o : vals)
-                {
-                    auto t = o->type();
-                    if (!(t == ExcelType::Missing || t == ExcelType::Nil
-                          || (t == ExcelType::Str && o->stringLength() == 0))) ++c;
-                }
-                return ExcelObj((double)c);
-            }
-            if (f == L"SUM")
-            {
-                double s = 0, d;
-                for (auto* o : vals) if (asNum(*o, d)) s += d;
-                return ExcelObj(s);
-            }
-            if (f == L"AVERAGE")
-            {
-                double s = 0, d; int c = 0;
-                for (auto* o : vals) if (asNum(*o, d)) { s += d; ++c; }
-                return c ? ExcelObj(s / c) : ExcelObj(CellError::Div0);
-            }
-            if (f == L"MAX" || f == L"MIN")
-            {
-                const bool mx = (f == L"MAX");
-                double best = mx ? -std::numeric_limits<double>::infinity()
-                                 :  std::numeric_limits<double>::infinity();
-                bool any = false; double d;
-                for (auto* o : vals) if (asNum(*o, d)) { any = true; best = mx ? (d > best ? d : best) : (d < best ? d : best); }
-                return ExcelObj(any ? best : 0.0);
-            }
-            if (f == L"PRODUCT")
-            {
-                double p = 1, d; bool any = false;
-                for (auto* o : vals) if (asNum(*o, d)) { any = true; p *= d; }
-                return ExcelObj(any ? p : 0.0);
-            }
-            return ExcelObj(CellError::Value);
+            return egtools::core::aggregateObjs(fnUpper, vals, nullptr, grandTotal);
         }
 
         // 그룹 동등성 정규화 키(숫자=수치, 문자열=대소문자 무시, 타입 구분).
@@ -222,13 +173,9 @@ namespace egtools::functions
             }
 
             const std::wstring fn = upper(in.fn->toString());
-            {
-                static const wchar_t* kFns[] = { L"SUM", L"AVERAGE", L"COUNT", L"COUNTA",
-                                                 L"MAX", L"MIN", L"PRODUCT", L"PERCENTOF" };
-                bool ok = false;
-                for (auto* f : kFns) if (fn == f) { ok = true; break; }
-                if (!ok) return returnValue(CellError::Value);
-            }
+            // 네이티브 정합 16종 화이트리스트 (core/Aggregate.h).
+            if (!egtools::core::isGroupByAggregator(fn))
+                return returnValue(CellError::Value);
 
             // relative_to (PERCENTOF): 0 총합(기본), 1 행합, 2 열합.
             const int relativeTo = readInt(in.relativeTo, 0);

@@ -175,6 +175,13 @@ target_link_libraries(eg_barcode_selftest PRIVATE ZXing::ZXing)
 set_property(TARGET eg_barcode_selftest PROPERTY
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# Numeric-aggregation core self-test (AggCore.h, no Excel/xlOil) — results are
+# diffed against native Excel formulas by tests. Never shipped.
+add_executable(eg_agg_selftest EXCLUDE_FROM_ALL tools/aggregate_selftest.cpp)
+target_include_directories(eg_agg_selftest PRIVATE src)
+set_property(TARGET eg_agg_selftest PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 # --- Place artifact into dist/ (Release: UPX-packed by default) --------------
 # Deployment default = UPX-compressed dist (~-65%, decided 2026-07-31 after the
 # AV/function verification in plan/16 §4A; revisit only if a problem shows up).

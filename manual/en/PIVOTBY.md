@@ -17,7 +17,7 @@ Pivots data by row and column keys. Aggregator is text (SUM, COUNT, …).
 | row_fields | Required | row key column |
 | col_fields | Required | column key column |
 | values | Required | values to aggregate |
-| function | Required | aggregator text: one of SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF |
+| function | Required | aggregator text: one of SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF |
 | field_headers | Optional | 0 none/hide, 1 has/hide, 2 none/show, 3 has/show (default auto) |
 | row_total_depth | Optional | 0 none, 1 grand total (default); negative = at top |
 | row_sort_order | Optional | row sort: column number, negative descending |
@@ -38,7 +38,7 @@ Returns a spilled 2-D cross-tab: a column-key header row, one row per row key, a
 
 ## Notes
 
-- row_fields, col_fields and values each support only a single column (no multi-column nesting). The supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF only (anything else returns #VALUE!).
+- row_fields, col_fields and values each support only a single column (no multi-column nesting). The supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native) (anything else returns #VALUE!).
 - For PERCENTOF, this implementation supports relative_to 0 (column totals, default) / 1 (row totals) / 2 (grand total) only; 3 and 4 (parent totals) return #VALUE!.
 - Total row/column labels follow the UI language (Korean UI: 합계, English UI: Total).
 - Supported: Excel 2010+. Registered as `PIVOTBY` (drop-in) on hosts without the native function, and as `EG.PIVOTBY` on modern Excel that has it.
