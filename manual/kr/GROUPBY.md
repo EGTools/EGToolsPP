@@ -16,7 +16,7 @@
 |---|---|---|
 | 행필드 | 필수 | 키 열(들) |
 | 값 | 필수 | 집계할 값 열(들) |
-| 함수 | 필수 | 집계자 텍스트, 예 "SUM" |
+| 함수 | 필수 | 집계자 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF 중 하나 |
 | 필드머리글 | 선택 | 0 없음·숨김, 1 있음·숨김, 2 없음·생성표시, 3 있음·표시 (기본 자동) |
 | 총계깊이 | 선택 | 0 없음, 1 총계(기본), 2 총계+부분합; 음수=상단 배치 |
 | 정렬순서 | 선택 | 출력 열 번호(들), 음수는 내림차순, 예 {2,-1} |
@@ -36,7 +36,7 @@
 
 ## 참고
 
-- function 인수는 네이티브의 람다 대신 텍스트("SUM", "PERCENTOF" 등)로 지정하며, field_relationship 인수는 받되 무시됩니다.
+- function 인수는 네이티브의 람다 대신 텍스트로 지정하며, 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF 8종입니다(그 외는 #VALUE!). field_relationship 인수는 받되 무시됩니다.
 - 총계·부분합 라벨은 UI 언어를 따릅니다(한국어 UI: 합계/총합계, 영어 UI: Total/Grand Total). 부분합 행의 라벨은 첫 번째 키 값입니다.
 - field_headers를 생략하면 첫 행이 모두 텍스트이고 그 아래에 비텍스트 값이 있을 때 헤더로 자동 인식합니다.
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `GROUPBY` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.GROUPBY`으로 등록됩니다.

@@ -1639,7 +1639,7 @@
                                      ]
                                  ],
                     "notes":  [
-                                  "The function argument is text (\"SUM\", \"PERCENTOF\", ...) instead of the native eta-lambda; field_relationship is accepted for compatibility but ignored.",
+                                  "The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF only (anything else returns #VALUE!). field_relationship is accepted for compatibility but ignored.",
                                   "Total/subtotal labels follow the UI language (Korean UI: 합계/총합계, English UI: Total/Grand Total). Subtotal rows are labeled with the first key value.",
                                   "When field_headers is omitted, a header row is auto-detected if the first row is all text and non-text values appear below it."
                               ]
@@ -1654,7 +1654,7 @@
                                      ]
                                  ],
                     "notes":  [
-                                  "row_fields, col_fields and values each support only a single column (no multi-column nesting).",
+                                  "row_fields, col_fields and values each support only a single column (no multi-column nesting). The supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/PERCENTOF only (anything else returns #VALUE!).",
                                   "For PERCENTOF, this implementation supports relative_to 0 (column totals, default) / 1 (row totals) / 2 (grand total) only; 3 and 4 (parent totals) return #VALUE!.",
                                   "Total row/column labels follow the UI language (Korean UI: 합계, English UI: Total)."
                               ]
