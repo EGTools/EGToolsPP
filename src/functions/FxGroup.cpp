@@ -173,14 +173,32 @@ namespace egtools::functions
             }
 
             const std::wstring fn = upper(in.fn->toString());
-            // 네이티브 정합 16종 화이트리스트 (core/Aggregate.h).
-            if (!egtools::core::isGroupByAggregator(fn))
+            // 네이티브 16종 + 파라미터형 확장 9종 (core/Aggregate.h).
+            if (!egtools::core::isGroupByAggregatorEx(fn))
                 return returnValue(CellError::Value);
 
-            // relative_to (PERCENTOF): 0 총합(기본), 1 행합, 2 열합.
-            const int relativeTo = readInt(in.relativeTo, 0);
-            if (relativeTo < 0 || relativeTo > 2) return returnValue(CellError::Value);
-            if (relativeTo != 0 && fn != L"PERCENTOF") { /* 무시 (네이티브도 PERCENTOF 외 무의미) */ }
+            // relative_to 이중 용도:
+            //   * PERCENTOF — 분모 모드 0 열합(기본)/1 행합/2 총합 (네이티브 정합)
+            //   * 파라미터형 확장(LARGE/SMALL/PERCENTILE*/QUARTILE*/TEXTJOIN) —
+            //     집계 파라미터(k/p/quart/구분자)를 그대로 전달
+            const bool paramAgg = egtools::core::isParamAggregator(fn);
+            const ExcelObj* aggParam =
+                (paramAgg && in.relativeTo && !in.relativeTo->isMissing()) ? in.relativeTo : nullptr;
+            int relativeTo = 0;
+            if (fn == L"PERCENTOF")
+            {
+                relativeTo = readInt(in.relativeTo, 0);
+                if (relativeTo < 0 || relativeTo > 2) return returnValue(CellError::Value);
+            }
+
+            // 이후의 모든 집계는 파라미터를 실어 나르는 이 람다를 쓴다(외부
+            // aggregate()를 가린다 — MTR 안전을 위해 전역 상태 없이 캡처).
+            const auto aggregate = [aggParam](const std::wstring& f,
+                                              const std::vector<const ExcelObj*>& vals,
+                                              double grandTotal = 0.0)
+            {
+                return egtools::core::aggregateObjs(f, vals, aggParam, grandTotal);
+            };
 
             // ---- field_headers: 생략=자동 감지 ----
             int fieldHeaders;
@@ -573,11 +591,14 @@ namespace egtools::functions
 
     void registerGroup()
     {
+        // 9번째 relative_to는 EGTools 확장(네이티브 GROUPBY는 8인수): 파라미터형
+        // 집계자(LARGE/SMALL/PERCENTILE*/QUARTILE*/TEXTJOIN)의 k/p/quart/구분자.
         egtools::core::registerFn(L"GROUPBY",
             [](const ExcelObj& rowF, const ExcelObj& values, const ExcelObj& fn,
                const ExcelObj& fieldHeaders, const ExcelObj& totalDepth,
                const ExcelObj& sortOrder, const ExcelObj& filterArray,
-               const ExcelObj& /*fieldRelationship — 미지원, 무시*/) -> ExcelObj*
+               const ExcelObj& /*fieldRelationship — 미지원, 무시*/,
+               const ExcelObj& relativeTo) -> ExcelObj*
             {
                 try
                 {
@@ -585,6 +606,7 @@ namespace egtools::functions
                     a.rowF = &rowF; a.values = &values; a.fn = &fn;
                     a.fieldHeaders = &fieldHeaders; a.rowDepth = &totalDepth;
                     a.rowSort = &sortOrder; a.filter = &filterArray;
+                    a.relativeTo = &relativeTo;
                     return pivotEngine(a);
                 }
                 catch (...) { return returnValue(CellError::Value); }

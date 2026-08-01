@@ -2,12 +2,12 @@
 
 **종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
 
-키로 행을 그룹화해 값을 집계합니다. 집계자는 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF.
+키로 행을 그룹화해 값을 집계합니다. 집계자는 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 확장(파라미터=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC).
 
 ## 구문
 
 ```
-=GROUPBY(행필드, 값, 함수, [필드머리글], [총계깊이], [정렬순서], [필터배열], [필드관계])
+=GROUPBY(행필드, 값, 함수, [필드머리글], [총계깊이], [정렬순서], [필터배열], [필드관계], [기준값])
 ```
 
 ## 인수
@@ -16,12 +16,13 @@
 |---|---|---|
 | 행필드 | 필수 | 키 열(들) |
 | 값 | 필수 | 집계할 값 열(들) |
-| 함수 | 필수 | 집계자 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 중 하나 |
+| 함수 | 필수 | 집계자 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 확장(파라미터=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) 중 하나 |
 | 필드머리글 | 선택 | 0 없음·숨김, 1 있음·숨김, 2 없음·생성표시, 3 있음·표시 (기본 자동) |
 | 총계깊이 | 선택 | 0 없음, 1 총계(기본), 2 총계+부분합; 음수=상단 배치 |
 | 정렬순서 | 선택 | 출력 열 번호(들), 음수는 내림차순, 예 {2,-1} |
 | 필터배열 | 선택 | 행별 TRUE/FALSE 포함 여부 |
 | 필드관계 | 선택 | 호환용으로 받되 무시됨 |
+| 기준값 | 선택 | 확장 집계자 파라미터: TEXTJOIN 구분자, LARGE/SMALL k, PERCENTILE p(0~1), QUARTILE 0~4 |
 
 ## 반환
 
@@ -36,7 +37,7 @@
 
 ## 참고
 
-- function 인수는 네이티브의 람다 대신 텍스트로 지정하며, 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 16종(네이티브와 동일)입니다(그 외는 #VALUE!). field_relationship 인수는 받되 무시됩니다.
+- function 인수는 네이티브의 람다 대신 텍스트로 지정하며, 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 16종(네이티브와 동일)이며, EGTools 확장으로 TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) 도 지원합니다 - 확장 집계자의 파라미터(TEXTJOIN 구분자, LARGE/SMALL k, PERCENTILE p, QUARTILE 0~4)는 relative_to 인수로 전달합니다(그 외 이름은 #VALUE!). field_relationship 인수는 받되 무시됩니다.
 - 총계·부분합 라벨은 UI 언어를 따릅니다(한국어 UI: 합계/총합계, 영어 UI: Total/Grand Total). 부분합 행의 라벨은 첫 번째 키 값입니다.
 - field_headers를 생략하면 첫 행이 모두 텍스트이고 그 아래에 비텍스트 값이 있을 때 헤더로 자동 인식합니다.
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `GROUPBY` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.GROUPBY`으로 등록됩니다.

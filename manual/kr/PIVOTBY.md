@@ -17,14 +17,14 @@
 | 행필드 | 필수 | 행 키 열 |
 | 열필드 | 필수 | 열 키 열 |
 | 값 | 필수 | 집계할 값 |
-| 함수 | 필수 | 집계자 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 중 하나 |
+| 함수 | 필수 | 집계자 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 확장(파라미터=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) 중 하나 |
 | 필드머리글 | 선택 | 0 없음·숨김, 1 있음·숨김, 2 없음·표시, 3 있음·표시 (기본 자동) |
 | 행총계깊이 | 선택 | 0 없음, 1 총계(기본); 음수=상단 |
 | 행정렬순서 | 선택 | 행 정렬: 열 번호, 음수는 내림차순 |
 | 열총계깊이 | 선택 | 0 없음, 1 총계 열(기본); 음수=왼쪽 |
 | 열정렬순서 | 선택 | 열 정렬: 1 오름, -1 내림 |
 | 필터배열 | 선택 | 행별 TRUE/FALSE 포함 여부 |
-| 기준 | 선택 | PERCENTOF 분모: 0 총합(기본), 1 행합, 2 열합 |
+| 기준 | 선택 | PERCENTOF 분모 0~2(0 총합 기본); 확장 집계자는 파라미터: TEXTJOIN 구분자, LARGE/SMALL k, PERCENTILE p(0~1), QUARTILE 0~4 |
 
 ## 반환
 
@@ -38,7 +38,7 @@
 
 ## 참고
 
-- row_fields·col_fields·values는 각각 1열만 지원합니다(다중 열 중첩 미지원). 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 16종(네이티브와 동일)입니다(그 외는 #VALUE!).
+- row_fields·col_fields·values는 각각 1열만 지원합니다(다중 열 중첩 미지원). 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 16종(네이티브와 동일)이며, EGTools 확장으로 TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) 도 지원합니다 - 확장 집계자의 파라미터(TEXTJOIN 구분자, LARGE/SMALL k, PERCENTILE p, QUARTILE 0~4)는 relative_to 인수로 전달합니다(그 외 이름은 #VALUE!).
 - PERCENTOF의 relative_to는 이 구현에서 0(열 합계 기준, 기본)/1(행 합계 기준)/2(총합계 기준)만 지원하며 3·4(부모 기준)는 #VALUE!를 반환합니다.
 - 합계 행/열 라벨은 UI 언어를 따릅니다(한국어 UI: 합계, 영어 UI: Total).
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `PIVOTBY` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.PIVOTBY`으로 등록됩니다.

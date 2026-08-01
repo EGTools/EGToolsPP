@@ -2,12 +2,12 @@
 
 **Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
 
-Groups rows by key(s) and aggregates values. Aggregator is text: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF.
+Groups rows by key(s) and aggregates values. Aggregator is text: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + extensions (param via relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC).
 
 ## Syntax
 
 ```
-=GROUPBY(row_fields, values, function, [field_headers], [total_depth], [sort_order], [filter_array], [field_relationship])
+=GROUPBY(row_fields, values, function, [field_headers], [total_depth], [sort_order], [filter_array], [field_relationship], [relative_to])
 ```
 
 ## Arguments
@@ -16,12 +16,13 @@ Groups rows by key(s) and aggregates values. Aggregator is text: SUM/AVERAGE/COU
 |---|---|---|
 | row_fields | Required | key column(s) |
 | values | Required | value column(s) to aggregate |
-| function | Required | aggregator text: one of SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF |
+| function | Required | aggregator text: one of SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + extensions (param via relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) |
 | field_headers | Optional | 0 none/hide, 1 has/hide, 2 none/show generated, 3 has/show (default auto) |
 | total_depth | Optional | 0 none, 1 grand total (default), 2 grand+subtotals; negative = at top |
 | sort_order | Optional | output column number(s), negative descending, e.g. {2,-1} |
 | filter_array | Optional | TRUE/FALSE per row to include |
 | field_relationship | Optional | accepted for compatibility, ignored |
+| relative_to | Optional | extension-aggregator parameter: TEXTJOIN delimiter, LARGE/SMALL k, PERCENTILE p (0-1), QUARTILE 0-4 |
 
 ## Returns
 
@@ -36,7 +37,7 @@ Returns a spilled 2-D array of group key columns plus aggregated value columns. 
 
 ## Notes
 
-- The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native) (anything else returns #VALUE!). field_relationship is accepted for compatibility but ignored.
+- The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native), plus EGTools extensions TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) - the extension parameter (TEXTJOIN delimiter, LARGE/SMALL k, PERCENTILE p, QUARTILE 0-4) is passed via relative_to (any other name returns #VALUE!). field_relationship is accepted for compatibility but ignored.
 - Total/subtotal labels follow the UI language (Korean UI: 합계/총합계, English UI: Total/Grand Total). Subtotal rows are labeled with the first key value.
 - When field_headers is omitted, a header row is auto-detected if the first row is all text and non-text values appear below it.
 - Supported: Excel 2010+. Registered as `GROUPBY` (drop-in) on hosts without the native function, and as `EG.GROUPBY` on modern Excel that has it.

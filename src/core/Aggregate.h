@@ -64,6 +64,25 @@ namespace egtools::core
         return false;
     }
 
+    // Aggregators that take their parameter from relative_to (TEXTJOIN delimiter,
+    // LARGE/SMALL k, PERCENTILE*/QUARTILE* p/quart) — EGTools extension in
+    // GROUPBY/PIVOTBY (the native functions reject these names).
+    inline bool isParamAggregator(const std::wstring& fnUpper)
+    {
+        static const wchar_t* k[] = {
+            L"TEXTJOIN", L"LARGE", L"SMALL",
+            L"PERCENTILE", L"PERCENTILE.INC", L"PERCENTILE.EXC",
+            L"QUARTILE", L"QUARTILE.INC", L"QUARTILE.EXC" };
+        for (auto* s : k) if (fnUpper == s) return true;
+        return false;
+    }
+
+    // Full GROUPBY/PIVOTBY set: native 16 + parameterised extensions.
+    inline bool isGroupByAggregatorEx(const std::wstring& fnUpper)
+    {
+        return isGroupByAggregator(fnUpper) || isParamAggregator(fnUpper);
+    }
+
     // Aggregate `vals` with fnUpper. `param` feeds TEXTJOIN's delimiter and
     // LARGE/SMALL/PERCENTILE*/QUARTILE*'s k/p/quart (VISIBLEAGGR only).
     // grandTotal is the PERCENTOF denominator (GROUPBY/PIVOTBY only).
