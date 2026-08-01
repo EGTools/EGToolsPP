@@ -119,3 +119,12 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 - [UNPIVOT](UNPIVOT.md)
 - [WEEKNUMOFMONTH](WEEKNUMOFMONTH.md)
 
+## Ribbon Menu
+
+Features on the `EGTools++` ribbon tab. See the [ribbon overview](ribbon/README.md) for the full layout.
+
+### EGTools (formula conversion)
+
+- [Apply Legacy Compatibility](ribbon/apply-compat.md)
+- [Restore Native Functions](ribbon/restore-native.md)
+

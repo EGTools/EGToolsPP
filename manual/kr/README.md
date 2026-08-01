@@ -119,3 +119,12 @@
 - [UNPIVOT](UNPIVOT.md)
 - [WEEKNUMOFMONTH](WEEKNUMOFMONTH.md)
 
+## 리본 메뉴
+
+리본 `EGTools++` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.
+
+### EGTools (수식 변환)
+
+- [구버전 호환 적용](ribbon/apply-compat.md)
+- [내장 함수로 복원](ribbon/restore-native.md)
+
