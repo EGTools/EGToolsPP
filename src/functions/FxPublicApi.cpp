@@ -10,8 +10,9 @@
 //
 // API keys (user decision 2026-08-01): NO key ships with the add-in. The last
 // optional argument takes a key; on first use it is stored under
-// HKCU\Software\EGTools++\ApiKeys (value: juso / odcloud / vworld) and reused
-// when the argument is omitted. When a service rejects the key
+// HKCU\Software\EGTools\ApiKeys (value: juso / odcloud / vworld) and reused
+// when the argument is omitted. The path is deliberately "EGTools" (not
+// "EGTools++") so the VB/VBA editions can share the same stored keys. When a service rejects the key
 // (expired/unregistered), the stored value is deleted and the error tells the
 // user where to get a new key. Dev keys live in the repo-root .env
 // (gitignored, test-only — production code never reads it).
@@ -87,7 +88,8 @@ namespace egtools::functions
         }
 
         // ── API-key registry store ──────────────────────────────────────────
-        constexpr const wchar_t* kKeyPath = L"Software\\EGTools++\\ApiKeys";
+        // shared with the VB/VBA editions — keep "EGTools", not "EGTools++"
+        constexpr const wchar_t* kKeyPath = L"Software\\EGTools\\ApiKeys";
 
         std::wstring regGetKey(const wchar_t* service)
         {
@@ -132,18 +134,24 @@ namespace egtools::functions
             return regGetKey(service);
         }
 
-        ExcelObj* keyMissingError(const wchar_t* service, const wchar_t* issuer)
+        // Key-guidance errors (user request 2026-08-01): always include the
+        // issuer's application-page URL so the user can go get a key directly.
+        ExcelObj* keyMissingError(const wchar_t* service, const wchar_t* issuerName,
+                                  const wchar_t* issuerUrl)
         {
-            std::wstring msg = std::wstring(L"ERROR: API 키 필요 — ") + issuer +
-                L" 에서 발급 후 마지막 인수로 1회 입력하면 저장됩니다(서비스: " + service + L")";
+            std::wstring msg = std::wstring(L"ERROR: ") + service +
+                L" API 키가 없습니다. " + issuerName + L"에서 발급 후 마지막 인수로 1회 입력하면 저장됩니다. 발급 안내: " +
+                issuerUrl;
             return returnValue(ExcelObj(std::wstring_view(msg)));
         }
 
-        ExcelObj* keyRejectedError(const wchar_t* service, const wchar_t* issuer)
+        ExcelObj* keyRejectedError(const wchar_t* service, const wchar_t* issuerName,
+                                   const wchar_t* issuerUrl)
         {
             regDelKey(service);
-            std::wstring msg = std::wstring(L"ERROR: API 키가 거부되어(만료/미등록) 저장된 키를 삭제했습니다 — ")
-                + issuer + L" 에서 재발급 후 마지막 인수로 다시 입력하세요(서비스: " + service + L")";
+            std::wstring msg = std::wstring(L"ERROR: ") + service +
+                L" API 키가 거부되어(만료/미등록) 저장된 키를 삭제했습니다. " + issuerName +
+                L"에서 재발급 후 마지막 인수로 다시 입력하세요. 발급 안내: " + issuerUrl;
             return returnValue(ExcelObj(std::wstring_view(msg)));
         }
 
@@ -266,9 +274,12 @@ namespace egtools::functions
             for (long v : kEpsgList) if (v == e) return true;
             return false;
         }
-        constexpr const wchar_t* kVworldIssuer = L"vworld.kr(공간정보 오픈플랫폼)";
-        constexpr const wchar_t* kJusoIssuer = L"business.juso.go.kr(주소기반산업지원서비스)";
-        constexpr const wchar_t* kDataIssuer = L"data.go.kr(공공데이터포털, 국세청 사업자등록정보 상태조회)";
+        constexpr const wchar_t* kVworldIssuer = L"공간정보 오픈플랫폼(vworld)";
+        constexpr const wchar_t* kVworldUrl = L"https://www.vworld.kr";
+        constexpr const wchar_t* kJusoIssuer = L"주소기반산업지원서비스";
+        constexpr const wchar_t* kJusoUrl = L"https://www.juso.go.kr";
+        constexpr const wchar_t* kDataIssuer = L"공공데이터포털(국세청 사업자등록정보 상태조회)";
+        constexpr const wchar_t* kDataUrl = L"https://www.data.go.kr";
 
         // GET + JSON parse for VWorld; returns false + err on transport failure.
         bool vworldGet(const std::wstring& url, json& j, std::wstring& err)
@@ -312,7 +323,7 @@ namespace egtools::functions
                 const std::wstring text = trimWs(textA.toString());
                 if (text.empty()) return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"juso");
-                if (key.empty()) return keyMissingError(L"juso", kJusoIssuer);
+                if (key.empty()) return keyMissingError(L"juso", kJusoIssuer, kJusoUrl);
 
                 // output column selection (1..27), default {2}=roadAddr
                 std::vector<int> info;
@@ -346,7 +357,7 @@ namespace egtools::functions
                 if (!errCode.empty() && errCode != L"0")
                 {
                     if (looksLikeKeyError(errMsg) || errCode == L"E0001")
-                        return keyRejectedError(L"juso", kJusoIssuer);
+                        return keyRejectedError(L"juso", kJusoIssuer, kJusoUrl);
                     return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + errMsg)));
                 }
                 const std::wstring total = doc.text(L"/results/common/totalCount");
@@ -422,7 +433,7 @@ namespace egtools::functions
             [](const ExcelObj& numsA, const ExcelObj& keyA) -> ExcelObj*
             {
                 std::wstring key = resolveKey(keyA, L"odcloud");
-                if (key.empty()) return keyMissingError(L"odcloud", kDataIssuer);
+                if (key.empty()) return keyMissingError(L"odcloud", kDataIssuer, kDataUrl);
                 // accept both encoded and raw keys (raw contains '/', '+', '=')
                 if (key.find(L'%') == std::wstring::npos &&
                     key.find_first_of(L"+/=") != std::wstring::npos)
@@ -470,20 +481,20 @@ namespace egtools::functions
                     if (!httpCall(url, L"POST", req.dump(), L"application/json", body, &status))
                         return returnValue(ExcelObj(std::wstring_view(L"ERROR: 네트워크 요청 실패")));
                     if (status == 401 || status == 403)
-                        return keyRejectedError(L"odcloud", kDataIssuer);
+                        return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
                     json j;
                     try { j = json::parse(body); }
                     catch (...)
                     {
                         const std::wstring wb = fromUtf8Pa(body);
-                        if (looksLikeKeyError(wb)) return keyRejectedError(L"odcloud", kDataIssuer);
+                        if (looksLikeKeyError(wb)) return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
                         return returnValue(ExcelObj(std::wstring_view(
                             L"ERROR: 응답 파싱 실패(HTTP " + std::to_wstring(status) + L")")));
                     }
                     if (!j.contains("data") || !j["data"].is_array())
                     {
                         std::wstring m = j.contains("msg") ? jstr(j["msg"]) : L"응답 형식 오류";
-                        if (looksLikeKeyError(m)) return keyRejectedError(L"odcloud", kDataIssuer);
+                        if (looksLikeKeyError(m)) return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
                         return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                     }
                     const auto& data = j["data"];
@@ -521,7 +532,7 @@ namespace egtools::functions
                 if (epsg == 0) epsg = 4326;
                 if (!epsgOk(epsg)) return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"vworld");
-                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer);
+                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer, kVworldUrl);
 
                 auto makeUrl = [&](bool parcel) {
                     std::wstring u = L"https://api.vworld.kr/req/search?key=" + key +
@@ -551,7 +562,7 @@ namespace egtools::functions
                     std::wstring m;
                     try { m = fromUtf8Pa(j["response"]["error"]["text"].get<std::string>()); }
                     catch (...) { m = L"응답 오류"; }
-                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer);
+                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer, kVworldUrl);
                     return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                 }
 
@@ -604,7 +615,7 @@ namespace egtools::functions
                 if (epsg == 0) epsg = 4326;
                 if (!epsgOk(epsg)) return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"vworld");
-                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer);
+                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer, kVworldUrl);
 
                 auto makeUrl = [&](const wchar_t* type) {
                     return L"https://api.vworld.kr/req/address?key=" + key +
@@ -629,7 +640,7 @@ namespace egtools::functions
                     std::wstring m;
                     try { m = fromUtf8Pa(j["response"]["error"]["text"].get<std::string>()); }
                     catch (...) { m = L"응답 오류"; }
-                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer);
+                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer, kVworldUrl);
                     return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                 }
                 try
@@ -663,7 +674,7 @@ namespace egtools::functions
                 if (epsg == 4326 && (std::abs(y) > 90 || std::abs(x) > 180))
                     return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"vworld");
-                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer);
+                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer, kVworldUrl);
 
                 std::wstring url = L"https://api.vworld.kr/req/address?key=" + key +
                     L"&service=address&version=2.0&request=GetAddress&format=json&crs=EPSG:" +
@@ -682,7 +693,7 @@ namespace egtools::functions
                     std::wstring m;
                     try { m = fromUtf8Pa(j["response"]["error"]["text"].get<std::string>()); }
                     catch (...) { m = L"응답 오류"; }
-                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer);
+                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer, kVworldUrl);
                     return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                 }
                 try
@@ -714,7 +725,7 @@ namespace egtools::functions
                 if (scale == 0) scale = 5;
                 if (scale < 1 || scale > 10) return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"vworld");
-                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer);
+                if (key.empty()) return keyMissingError(L"vworld", kVworldIssuer, kVworldUrl);
 
                 // geocode (road → parcel), same as GEOCODER
                 auto makeUrl = [&](const wchar_t* type) {
@@ -741,7 +752,7 @@ namespace egtools::functions
                     std::wstring m;
                     try { m = fromUtf8Pa(j["response"]["error"]["text"].get<std::string>()); }
                     catch (...) { m = L"응답 오류"; }
-                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer);
+                    if (looksLikeKeyError(m)) return keyRejectedError(L"vworld", kVworldIssuer, kVworldUrl);
                     return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                 }
 

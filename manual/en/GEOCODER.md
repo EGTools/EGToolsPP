@@ -30,6 +30,6 @@ Returns a spilled 1-by-3 array of {x, y, refined address}. Returns #VALUE! for a
 
 ## Notes
 
-- No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\Software\EGTools++\ApiKeys, and a rejected key is deleted automatically with a reissue guide.
+- No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\Software\EGTools\ApiKeys, and a rejected key is deleted automatically with a reissue guide.
 - Tries the road-address geocoder first, then falls back to parcel (jibun).
 - Supported: Excel 2010+. Always registered as `GEOCODER` on every Excel version.

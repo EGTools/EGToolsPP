@@ -32,5 +32,5 @@
 
 ## 참고
 
-- API 키는 배포되지 않습니다. vworld.kr(공간정보 오픈플랫폼)에서 발급받아 마지막 인수로 1회 입력하면 레지스트리(HKCU\Software\EGTools++\ApiKeys)에 저장되며, 키가 거부되면 자동 삭제 후 재발급 안내를 반환합니다.
+- API 키는 배포되지 않습니다. 공간정보 오픈플랫폼(https://www.vworld.kr)에서 발급받아 마지막 인수로 1회 입력하면 레지스트리(HKCU\Software\EGTools\ApiKeys)에 저장되며, 키가 거부되면 자동 삭제 후 재발급 안내를 반환합니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `GEOADDRESS` 이름 그대로 등록됩니다.

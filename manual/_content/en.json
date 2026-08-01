@@ -2385,7 +2385,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at business.juso.go.kr and pass it once as the last argument; it is stored under HKCU\\Software\\EGTools++\\ApiKeys and can be omitted afterwards.",
+            "No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored under HKCU\\Software\\EGTools\\ApiKeys and can be omitted afterwards.",
             "When the service rejects the key (expired/unregistered), the stored key is deleted automatically and a reissue guide is returned.",
             "info columns: 1 zip, 2 road address (default), 3 jibun, 4 English — 27 fields in total."
         ]
@@ -2400,7 +2400,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\\Software\\EGTools++\\ApiKeys and reused afterwards.",
+            "No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys and reused afterwards.",
             "When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.",
             "Requests are batched 100 numbers per POST, so bulk lookups are efficient; hyphens are removed automatically and blank inputs return empty strings."
         ]
@@ -2415,7 +2415,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools++\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
             "Address search (search_type 1) retries road then parcel (jibun) automatically."
         ]
     },
@@ -2429,7 +2429,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools++\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
             "Tries the road-address geocoder first, then falls back to parcel (jibun)."
         ]
     },
@@ -2443,7 +2443,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools++\\ApiKeys, and a rejected key is deleted automatically with a reissue guide."
+            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide."
         ]
     },
     "ADDRESSMAP":  {
@@ -2456,7 +2456,7 @@
             ]
         ],
         "notes": [
-            "No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools++\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+            "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
             "Geocodes the address (road then parcel) and fetches a WMS map that includes the continuous cadastral layers."
         ]
     }

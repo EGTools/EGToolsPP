@@ -29,7 +29,7 @@ Returns the tax-type text (tax_type) for each business registration number in th
 
 ## Notes
 
-- No API key ships with the add-in. Get one at data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\Software\EGTools++\ApiKeys and reused afterwards.
+- No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\Software\EGTools\ApiKeys and reused afterwards.
 - When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.
 - Requests are batched 100 numbers per POST, so bulk lookups are efficient; hyphens are removed automatically and blank inputs return empty strings.
 - Supported: Excel 2010+. Always registered as `BRNSTATUS` on every Excel version.

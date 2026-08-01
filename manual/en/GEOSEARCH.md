@@ -31,6 +31,6 @@ Returns the x,y coordinates of the results as a spilled array (n-by-3 including 
 
 ## Notes
 
-- No API key ships with the add-in. Get one at vworld.kr and pass it once as the last argument; stored under HKCU\Software\EGTools++\ApiKeys, and a rejected key is deleted automatically with a reissue guide.
+- No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\Software\EGTools\ApiKeys, and a rejected key is deleted automatically with a reissue guide.
 - Address search (search_type 1) retries road then parcel (jibun) automatically.
 - Supported: Excel 2010+. Always registered as `GEOSEARCH` on every Excel version.
