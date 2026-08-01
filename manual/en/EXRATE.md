@@ -30,4 +30,4 @@ Looks up the KRW standard exchange rate for a date (up to 10 days back).
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `EXRATE` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `EXRATE` on every Excel version.

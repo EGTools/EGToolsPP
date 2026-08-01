@@ -33,4 +33,4 @@ Builds a BOM tree from parent/child/quantity lists.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `BOMTREE` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `BOMTREE` on every Excel version.

@@ -31,4 +31,4 @@ Runs a SQL query over the data (table name: EGTOOLS).
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `QUERY` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `QUERY` on every Excel version.

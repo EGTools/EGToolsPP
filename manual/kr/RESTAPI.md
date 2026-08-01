@@ -32,4 +32,4 @@ REST API를 호출해 응답 텍스트를 반환합니다.
 ## 참고
 
 <!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
-- 지원: Excel 2010+. 모든 Excel 버전에서 `RESTAPI` 이름 그대로 등록됩니다(`EG.`/`x` 접두어 없음).
+- 지원: Excel 2010+. 모든 Excel 버전에서 `RESTAPI` 이름 그대로 등록됩니다.

@@ -30,4 +30,4 @@ ISO 2859-1의 LOT 크기·검사수준에 따른 시료 문자를 구합니다.
 ## 참고
 
 <!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
-- 지원: Excel 2010+. 모든 Excel 버전에서 `SAMPLINGLABEL` 이름 그대로 등록됩니다(`EG.`/`x` 접두어 없음).
+- 지원: Excel 2010+. 모든 Excel 버전에서 `SAMPLINGLABEL` 이름 그대로 등록됩니다.

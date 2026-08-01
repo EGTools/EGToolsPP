@@ -32,4 +32,4 @@ Calls a REST API and returns the response text.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `RESTAPI` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `RESTAPI` on every Excel version.

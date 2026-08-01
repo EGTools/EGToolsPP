@@ -31,4 +31,4 @@ GOOGLETRANSLATE의 짧은 별칭 — 구글로 텍스트를 번역합니다.
 ## 참고
 
 <!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->
-- 지원: Excel 2010+. 모든 Excel 버전에서 `GTRS` 이름 그대로 등록됩니다(`EG.`/`x` 접두어 없음).
+- 지원: Excel 2010+. 모든 Excel 버전에서 `GTRS` 이름 그대로 등록됩니다.

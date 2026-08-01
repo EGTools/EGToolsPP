@@ -31,4 +31,4 @@ Short alias of GOOGLETRANSLATE — translates text via Google.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `GTRS` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `GTRS` on every Excel version.

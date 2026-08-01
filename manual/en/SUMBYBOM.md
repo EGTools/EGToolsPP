@@ -30,4 +30,4 @@ Expands one BOM level and sums required quantities per item.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `SUMBYBOM` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `SUMBYBOM` on every Excel version.

@@ -31,4 +31,4 @@ The month a date's week belongs to, by week-start and owner weekday.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `MONTHBHYWEEK` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `MONTHBHYWEEK` on every Excel version.

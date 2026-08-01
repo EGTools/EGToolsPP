@@ -34,4 +34,4 @@ Splits one column by delimiter(s), expanding into rows or columns; other columns
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `EXPLODE` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `EXPLODE` on every Excel version.

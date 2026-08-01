@@ -32,4 +32,4 @@ Sorts rows in natural order (text and embedded numbers compared separately).
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `TEXTNUMSORT` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `TEXTNUMSORT` on every Excel version.

@@ -32,4 +32,4 @@ Compares lists and returns a chosen set: 0 union, N only-in-list-N, -1 in-exactl
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `COMPARELIST` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `COMPARELIST` on every Excel version.

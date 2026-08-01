@@ -31,4 +31,4 @@ Filters a table with an Advanced-Filter style criteria grid (rows=OR, columns=AN
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `ADVANCEDFILTER` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `ADVANCEDFILTER` on every Excel version.

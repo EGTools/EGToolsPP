@@ -30,4 +30,4 @@ Converts Korean/Hanja money notation (e.g. 일금 오만원) to a number.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `HANTONUMBER` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `HANTONUMBER` on every Excel version.

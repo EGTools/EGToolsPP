@@ -29,4 +29,4 @@ Total number of pages with the current print settings (recalculate before printi
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `TOTALPAGES` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `TOTALPAGES` on every Excel version.

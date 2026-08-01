@@ -34,4 +34,4 @@ Returns the ISO 2859-1 sample size (n) for a lot size and AQL.
 ## Notes
 
 <!-- TODO: differences from the Excel/Google original, related functions -->
-- Supported: Excel 2010+. Always registered as `SAMPLINGSIZE` on every Excel version (no `EG.`/`x` prefix).
+- Supported: Excel 2010+. Always registered as `SAMPLINGSIZE` on every Excel version.
