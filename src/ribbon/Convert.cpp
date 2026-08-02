@@ -10,14 +10,34 @@
 //     genuine native `_xlfn.IMAGE` is left alone.
 //   Class G (GROUPBY/PIVOTBY): the function NAME goes to bare (both directions),
 //     and the aggregator argument toggles quotes — Direction A adds them
-//     ("SUM"→text), Direction B removes them (SUM→function ref) — but ONLY for the
-//     supported aggregator whitelist and ONLY when no trailing optional args make
-//     the positions diverge; otherwise the whole call is left untouched.
+//     (SUM / _xleta.SUM → "SUM"), Direction B removes them (SUM→function ref) —
+//     but ONLY for the native 16-aggregator set (core::isGroupByAggregator);
+//     lambdas and unknown names leave the whole call untouched. Trailing
+//     optional args are fine: argument order is native-parity since plan/21 R1.
 //
 // The conversion-target set is core::shadowedFunctionNames() (single source of
 // truth with registration). Formula rewriting is identifier-aware and skips
 // string literals (adapted from FxLet.cpp splitTopLevel / replaceName), so bare
 // names never match partially or inside text.
+//
+// CSE arrays: a modern spill down-converts to a multi-cell CSE array formula on
+// legacy hosts, which rejects per-cell Formula writes ("cannot change part of an
+// array" — swallowed inside the COM put, so it LOOKS converted but isn't). Such
+// regions are detected via HasArray/CurrentArray, visited once per region, and
+// re-entered whole-region (FormulaArray on legacy hosts, native spill from the
+// anchor on dynamic-array hosts) — see setArrayFormula().
+//
+// Performance (measured on tests/sample_200k.xlsx, 20k formula cells — scan
+// 7.9s → 0.63s): the workbook is scanned exactly ONCE (collectTargets builds a
+// work list of address → rewritten formula) and the apply pass resolves just
+// those addresses. Within the scan, the load-bearing pieces are:
+//   * bulk area reads — each SpecialCells(Formulas) AREA's .Formula arrives as
+//     one 2-D variant array (~50ms for 20k cells) instead of per-cell reads;
+//   * the queuedRects skip — once a CSE region is queued, its remaining ~10⁴
+//     member cells are rejected in memory, not via 4-5 COM probes each;
+//   * TransformPlan — token rules built once per run, and an upper-cased
+//     find() prescreen so replaceToken's char-walk only runs on formulas that
+//     can actually contain the token.
 //
 // COM: typed xlOil AppObjects (thisApp / Workbook / Worksheet / ExcelRange) are
 // safe here — Ribbon callbacks run on Excel's main thread, unlike the deferred
@@ -26,6 +46,7 @@
 
 #include "Convert.h"
 #include "../core/Version.h"
+#include "../core/Aggregate.h"
 
 #include <xlOil/AppObjects.h>
 #include <xlOil/ExcelUI.h>      // statusBarMsg
@@ -34,11 +55,11 @@
 #include <windows.h>
 #include <oleauto.h>
 #include <shlobj.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
 #include <set>
-#include <functional>
 #include <algorithm>
 #include <cwctype>
 
@@ -183,14 +204,6 @@ namespace egtools::ribbon
         bool isImageName(const std::wstring& bareUpper)
         { return bareUpper == L"IMAGE"; }
 
-        const std::set<std::wstring>& aggWhitelist()
-        {   // Mirror of FxGroup.cpp aggregate() supported text aggregators.
-            static const std::set<std::wstring> w = {
-                L"SUM", L"AVERAGE", L"COUNT", L"COUNTA",
-                L"MAX", L"MIN", L"PRODUCT", L"PERCENTOF" };
-            return w;
-        }
-
         std::wstring stripKnownPrefix(std::wstring upperIdent)
         {
             const wchar_t* pfx[] = { L"_XLFN._XLWS.", L"_XLFN.", L"EG." };
@@ -209,20 +222,28 @@ namespace egtools::ribbon
                              bool toCompat, std::wstring& rebuiltInside)
         {
             std::vector<std::wstring> args = splitTopLevel(inside);
-            const size_t aggIdx = (bare == L"GROUPBY") ? 2 : 3;   // 3rd / 4th arg
-            // Leave when malformed OR when trailing optional args are present
-            // (e.g. EGTools sort_order vs native field_headers → position diverges).
-            if (args.size() != aggIdx + 1) return false;
+            const size_t aggIdx  = (bare == L"GROUPBY") ? 2 : 3;   // 3rd / 4th arg
+            const size_t maxArgs = (bare == L"GROUPBY") ? 8 : 11;  // native signature
+            // Trailing optional args are position-compatible (native-parity order,
+            // plan/21 R1) — only reject when the aggregator slot is missing or
+            // there are more args than the native signature allows (malformed).
+            if (args.size() < aggIdx + 1 || args.size() > maxArgs) return false;
 
             std::wstring a = trim(args[aggIdx]);
             const bool quoted = a.size() >= 2 && a.front() == L'"' && a.back() == L'"';
-            std::wstring inner = quoted ? a.substr(1, a.size() - 2) : a;
-            const std::wstring up = upperOf(trim(inner));
-            if (aggWhitelist().find(up) == aggWhitelist().end()) return false;  // lambda / unsupported
+            std::wstring bareAgg = trim(quoted ? a.substr(1, a.size() - 2) : a);
+            // A modern-authored eta-lambda aggregator surfaces on a legacy host
+            // as `_xleta.SUM` — strip the prefix before the whitelist check.
+            const wchar_t kEta[] = L"_XLETA.";
+            const size_t  nEta   = wcslen(kEta);
+            const bool hadEta = upperOf(bareAgg).compare(0, nEta, kEta) == 0;
+            if (hadEta) bareAgg = bareAgg.substr(nEta);
+            if (!core::isGroupByAggregator(upperOf(bareAgg)))
+                return false;   // lambda / parameterised extension / unsupported
 
             std::wstring newAgg = toCompat
-                ? (quoted ? a : (L"\"" + trim(inner) + L"\""))   // ensure quoted (text)
-                : (quoted ? trim(inner) : a);                    // ensure bare (function ref)
+                ? ((quoted && !hadEta) ? a : (L"\"" + bareAgg + L"\""))  // ensure quoted (text)
+                : ((quoted || hadEta) ? bareAgg : a);                    // ensure bare (function ref)
 
             std::wstring res;
             for (size_t x = 0; x < args.size(); ++x)
@@ -301,53 +322,102 @@ namespace egtools::ribbon
         }
 
         // ── full per-formula transform ───────────────────────────────────────
-        // Returns the rewritten formula and increments `counts`. `forceReset` is
-        // set when a Direction-B formula still holds a bare native Class-N name
-        // that should be re-tokenised even without a text change.
-        std::wstring transform(const std::wstring& formula, bool toCompat,
-                               std::map<std::wstring, int>& counts, bool& forceReset)
+        // The (from → to) token rules are host- and direction-dependent but
+        // formula-independent, so they are built ONCE per conversion run
+        // (TransformPlan) instead of re-deriving storedName/needsXPrefix/
+        // hasNativeFunction for every one of possibly 10⁵ formulas. Each rule
+        // carries its upper-cased needle: transform() upper-cases the formula
+        // once and runs a plain find() prescreen, so the expensive
+        // character-by-character replaceToken pass only runs for formulas that
+        // can actually contain the token (case-insensitive superset — a false
+        // positive just wastes one pass).
+        struct TokenRepl { std::wstring from, to, fromUpper; };
+        struct TokenRule
         {
-            std::wstring f = convertGroupCalls(formula, toCompat, counts);
+            std::wstring F;                 // bare name (counts key, upper)
+            std::vector<TokenRepl> repl;
+            bool retokenBare = false;       // Direction B: bare native F → forceReset
+        };
+        struct TransformPlan
+        {
+            bool toCompat = true;
+            std::vector<TokenRule> rules;
+        };
 
+        TransformPlan buildPlan(bool toCompat)
+        {
+            TransformPlan plan{ toCompat, {} };
             for (const auto& F : core::shadowedFunctionNames())
             {
-                if (isGroupName(F)) continue;               // handled above
+                if (isGroupName(F)) continue;               // convertGroupCalls
+
+                TokenRule r{ F, {}, false };
+                auto add = [&r](std::wstring from, std::wstring to)
+                {
+                    std::wstring up = upperOf(from);
+                    r.repl.push_back({ std::move(from), std::move(to), std::move(up) });
+                };
 
                 if (isImageName(F))
                 {
                     if (toCompat)
                     {
-                        counts[F] += replaceToken(f, core::storedName(F), F);  // _xlfn.IMAGE → IMAGE
-                        counts[F] += replaceToken(f, L"EG." + F, F);            // EG.IMAGE   → IMAGE
+                        add(core::storedName(F), F);        // _xlfn.IMAGE → IMAGE
+                        add(L"EG." + F, F);                 // EG.IMAGE   → IMAGE
+                    }
+                    else if (core::hasNativeFunction(F))
+                        add(F, L"EG." + F);                 // bare IMAGE → EG.IMAGE
+                }
+                else
+                {
+                    // Class N. Keyword-conflict names (SORT/FILTER/LET) register
+                    // as x<F> on legacy hosts — direction A must target xF (bare
+                    // F is refused/hijacked by modern-binary hosts with older
+                    // licenses), and direction B must accept xF as a source.
+                    const bool xPfx = core::needsXPrefix(F);
+                    const std::wstring compatName = xPfx ? (L"x" + F) : F;
+                    if (toCompat)
+                    {
+                        add(core::storedName(F), compatName);  // _xlfn[._xlws].F → F/xF
+                        add(L"EG." + F, compatName);           // EG.F            → F/xF
+                        if (xPfx) add(F, compatName);          // old-doc bare F  → xF
                     }
                     else if (core::hasNativeFunction(F))
                     {
-                        counts[F] += replaceToken(f, F, L"EG." + F);            // bare IMAGE → EG.IMAGE
+                        add(L"EG." + F, F);                    // EG.F → F (native)
+                        if (xPfx) add(L"x" + F, F);            // xF   → F (native)
+                        r.retokenBare = true;                  // bare F → re-tokenise
                     }
-                    continue;
                 }
+                if (!r.repl.empty() || r.retokenBare)
+                    plan.rules.push_back(std::move(r));
+            }
+            return plan;
+        }
 
-                // Class N. Keyword-conflict names (SORT/FILTER/LET) register as
-                // x<F> on legacy hosts — direction A must target xF (bare F is
-                // refused/hijacked by modern-binary hosts with older licenses),
-                // and direction B must accept xF as a source token.
-                const bool xPfx = core::needsXPrefix(F);
-                const std::wstring compatName = xPfx ? (L"x" + F) : F;
-                if (toCompat)
+        // Returns the rewritten formula and increments `counts`. `forceReset` is
+        // set when a Direction-B formula still holds a bare native Class-N name
+        // that should be re-tokenised even without a text change.
+        std::wstring transform(const std::wstring& formula, const TransformPlan& plan,
+                               std::map<std::wstring, int>& counts, bool& forceReset)
+        {
+            const std::wstring fu = upperOf(formula);       // prescreen needle-space
+
+            std::wstring f = (fu.find(L"GROUPBY") != std::wstring::npos ||
+                              fu.find(L"PIVOTBY") != std::wstring::npos)
+                ? convertGroupCalls(formula, plan.toCompat, counts)
+                : formula;
+
+            for (const auto& rule : plan.rules)
+            {
+                if (rule.retokenBare && fu.find(rule.F) != std::wstring::npos)
                 {
-                    counts[F] += replaceToken(f, core::storedName(F), compatName); // _xlfn[._xlws].F → F/xF
-                    counts[F] += replaceToken(f, L"EG." + F, compatName);          // EG.F            → F/xF
-                    if (xPfx)
-                        counts[F] += replaceToken(f, F, compatName);               // old-doc bare F  → xF
+                    const int bare = countToken(f, rule.F);  // legacy bare-F (native)
+                    if (bare > 0) { counts[rule.F] += bare; forceReset = true; }
                 }
-                else if (core::hasNativeFunction(F))
-                {
-                    const int bare = countToken(f, F);                          // legacy bare-F (native)
-                    counts[F] += replaceToken(f, L"EG." + F, F) + bare;         // EG.F → F (native)
-                    if (xPfx)
-                        counts[F] += replaceToken(f, L"x" + F, F);              // xF   → F (native)
-                    if (bare > 0) forceReset = true;                            // force re-tokenise
-                }
+                for (const auto& rp : rule.repl)
+                    if (fu.find(rp.fromUpper) != std::wstring::npos)
+                        counts[rule.F] += replaceToken(f, rp.from, rp.to);
             }
             return f;
         }
@@ -386,6 +456,16 @@ namespace egtools::ribbon
             return obj;
         }
 
+        bool getBoolProp(IDispatch* d, const wchar_t* name)
+        {
+            VARIANT r; VariantInit(&r);
+            if (!invokeRaw(d, name, DISPATCH_PROPERTYGET, &r, nullptr, 0)) return false;
+            VARIANT o; VariantInit(&o);
+            bool v = SUCCEEDED(VariantChangeType(&o, &r, 0, VT_BOOL)) && o.boolVal != VARIANT_FALSE;
+            VariantClear(&o); VariantClear(&r);
+            return v;
+        }
+
         long getLong(IDispatch* d, const wchar_t* name)
         {
             VARIANT r; VariantInit(&r);
@@ -406,11 +486,12 @@ namespace egtools::ribbon
             return s;
         }
 
-        void putBStr(IDispatch* d, const wchar_t* name, const std::wstring& val)
+        bool putBStr(IDispatch* d, const wchar_t* name, const std::wstring& val)
         {
             VARIANT a; VariantInit(&a); a.vt = VT_BSTR; a.bstrVal = SysAllocString(val.c_str());
-            invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
+            bool ok = invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
             VariantClear(&a);
+            return ok;
         }
 
         bool callBstr(IDispatch* d, const wchar_t* name, const std::wstring& val)
@@ -430,42 +511,293 @@ namespace egtools::ribbon
             return d;
         }
 
-        // ── iteration over every formula-bearing location ────────────────────
-        using Setter  = std::function<void(const std::wstring&)>;
-        using Visitor = std::function<void(const std::wstring&, const Setter&)>;
-
-        void forEachFormula(ExcelWorkbook& wb, const Visitor& visit)
+        // ── CSE array-region re-entry ────────────────────────────────────────
+        // A multi-cell CSE array (how a modern spill surfaces on a legacy host)
+        // refuses per-cell Formula writes ("cannot change part of an array"), so
+        // the rewritten formula must go back over the WHOLE region. Ordering is
+        // chosen so a failure never wipes the region: whole-region FormulaArray
+        // first (replacing an entire array is legal without clearing), clear+
+        // retry second, plain anchor entry last (the legacy spill engine in
+        // core/Spill re-expands it to CSE on recalc). Throws when nothing stuck
+        // so the caller does not count the location as converted.
+        void setArrayFormula(IDispatch* region, const std::wstring& nf)
         {
-            // Cell formulas — only formula cells via SpecialCells(xlCellTypeFormulas).
-            for (auto ws : wb.worksheets().list())
+            VARIANT one2[2];
+            for (auto& v : one2) { VariantInit(&v); v.vt = VT_I4; v.lVal = 1; }
+
+            if (core::supportsDynamicArrays())
             {
-                try
+                // Native-spill host: dissolve the CSE, let the anchor spill.
+                invokeRaw(region, L"ClearContents", DISPATCH_METHOD, nullptr, nullptr, 0);
+                IDispatch* anchor = getObject(region, L"Item", one2, 2);
+                if (!anchor) throw std::runtime_error("array anchor");
+                Releaser ar{ anchor };
+                // Formula2 avoids implicit-intersection '@' insertion; hosts
+                // without it fall through to the classic Formula property.
+                if (!putBStr(anchor, L"Formula2", nf) && !putBStr(anchor, L"Formula", nf))
+                    throw std::runtime_error("anchor formula");
+                return;
+            }
+
+            if (putBStr(region, L"FormulaArray", nf)) return;
+            invokeRaw(region, L"ClearContents", DISPATCH_METHOD, nullptr, nullptr, 0);
+            if (putBStr(region, L"FormulaArray", nf)) return;
+            // FormulaArray rejects >255-char formulas — plain anchor entry.
+            IDispatch* anchor = getObject(region, L"Item", one2, 2);
+            if (!anchor) throw std::runtime_error("array anchor");
+            Releaser ar{ anchor };
+            if (!putBStr(anchor, L"Formula", nf))
+                throw std::runtime_error("anchor formula");
+        }
+
+        // ── scan → work list → apply ─────────────────────────────────────────
+        // The workbook is scanned ONCE: every formula is transformed in memory
+        // and only the changed locations are recorded (address + rewritten
+        // formula). The apply pass then touches just those targets — no second
+        // full-sheet iteration, and the HasArray/CurrentArray COM probes run
+        // only for cells whose formula actually changes.
+        struct Target
+        {
+            enum class Kind { Cell, Array, Name };
+            Kind kind;
+            std::wstring sheet;     // Cell / Array
+            std::wstring address;   // local address on `sheet` ($D$1 or $D$1:$E$4)
+            long nameIndex;         // Name — workbook Names.Item index
+            std::wstring formula;   // rewritten formula to write
+        };
+
+        // Decide cell-vs-array-region for a CHANGED cell and fetch its address.
+        // CSE array members refuse per-cell writes ("cannot change part of an
+        // array" is silently swallowed in the COM put), so those queue the WHOLE
+        // CurrentArray region — once (seenArrays dedupe; every member cell
+        // reports the same formula). Returns false when already queued.
+        bool resolveTarget(IDispatch* cd, const std::wstring& wsName,
+                           std::set<std::wstring>& seenArrays,
+                           bool& isArray, std::wstring& addr)
+        {
+            isArray = false; addr.clear();
+            if (!cd) return false;
+            if (getBoolProp(cd, L"HasArray"))
+            {
+                if (IDispatch* region = getObject(cd, L"CurrentArray"))
                 {
-                    ExcelRange formulaCells = ws.usedRange().specialCells(SpecialCells::Formulas);
-                    // No formula cells (COM error 0x800A03EC) does NOT throw:
-                    // xlOil swallows it and returns a NULL ExcelRange. In Release
-                    // AppObject::com() skips its null check (TCheck=false), so
-                    // begin() below would be a raw null dereference — an SEH
-                    // access violation the catch(...) cannot stop (Excel crash).
-                    if (!formulaCells.valid()) continue;
-                    try { statusBarMsg(std::wstring(L"EGTools++: ") + ws.name()); } catch (...) {}
-                    // ComIterator has operator== but no operator!= (and we build as
-                    // C++17), so drive the loop with an explicit == comparison.
-                    for (auto it = formulaCells.begin(); !(it == formulaCells.end()); ++it)
+                    Releaser rr{ region };
+                    isArray = true;
+                    addr = getBStr(region, L"Address");
+                    return !addr.empty() &&
+                           seenArrays.insert(wsName + L"!" + addr).second;
+                }
+            }
+            addr = getBStr(cd, L"Address");
+            return !addr.empty();
+        }
+
+        // Parse a single-rectangle A1 address ("$D$2:$E$5002" or "$D$2") into
+        // 1-based row/col bounds. Returns false on anything unexpected.
+        struct Rect { long r1, c1, r2, c2; };
+        bool parseA1Rect(const std::wstring& addr, Rect& out)
+        {
+            long r[2] = { 0, 0 }, c[2] = { 0, 0 };
+            int part = 0;
+            for (size_t i = 0; i < addr.size(); ++i)
+            {
+                wchar_t ch = addr[i];
+                if (ch == L'$') continue;
+                if (ch == L':') { if (++part > 1) return false; continue; }
+                if (ch >= L'A' && ch <= L'Z') c[part] = c[part] * 26 + (ch - L'A' + 1);
+                else if (ch >= L'a' && ch <= L'z') c[part] = c[part] * 26 + (ch - L'a' + 1);
+                else if (ch >= L'0' && ch <= L'9') r[part] = r[part] * 10 + (ch - L'0');
+                else return false;   // sheet-qualified / R1C1 / union — bail
+            }
+            if (r[0] <= 0 || c[0] <= 0) return false;
+            if (part == 0) { r[1] = r[0]; c[1] = c[0]; }
+            else if (r[1] <= 0 || c[1] <= 0) return false;
+            out = { r[0], c[0], r[1], c[1] };
+            return true;
+        }
+
+        // Fallback scanner: per-cell iteration over SpecialCells(Formulas).
+        // One COM round-trip per formula cell — kept as the fallback when the
+        // bulk Areas path is unavailable, and as the benchmark baseline.
+        void scanSheetPerCell(ExcelWorksheet& ws, const std::wstring& wsName,
+                              const TransformPlan& plan, std::map<std::wstring, int>& counts,
+                              std::vector<Target>& targets)
+        {
+            std::set<std::wstring> seenArrays;      // regions never span sheets
+            ExcelRange formulaCells = ws.usedRange().specialCells(SpecialCells::Formulas);
+            // No formula cells (COM error 0x800A03EC) does NOT throw:
+            // xlOil swallows it and returns a NULL ExcelRange. In Release
+            // AppObject::com() skips its null check (TCheck=false), so
+            // begin() below would be a raw null dereference — an SEH
+            // access violation the catch(...) cannot stop (Excel crash).
+            if (!formulaCells.valid()) return;
+            // ComIterator has operator== but no operator!= (and we build as
+            // C++17), so drive the loop with an explicit == comparison.
+            for (auto it = formulaCells.begin(); !(it == formulaCells.end()); ++it)
+            {
+                ExcelRange cell = *it;
+                std::wstring fml;
+                try { fml = cell.formula().toString(); } catch (...) { continue; }
+                if (fml.empty()) continue;
+
+                bool fr = false;
+                std::map<std::wstring, int> local;
+                std::wstring nf = transform(fml, plan, local, fr);
+                if (nf == fml && !fr) continue;             // not a target
+
+                IDispatch* cd = asDisp(cell);
+                Releaser cr{ cd };
+                bool isArray = false; std::wstring addr;
+                if (!resolveTarget(cd, wsName, seenArrays, isArray, addr)) continue;
+
+                for (auto& kv : local) counts[kv.first] += kv.second;
+                targets.push_back({ isArray ? Target::Kind::Array : Target::Kind::Cell,
+                                    wsName, addr, 0, nf });
+            }
+        }
+
+        // Bulk scanner: read each SpecialCells(Formulas) AREA's .Formula as one
+        // 2-D variant array — one COM round-trip per contiguous area instead of
+        // one per cell. Per-cell COM (the HasArray probe in resolveTarget) then
+        // runs only for cells whose formula actually changes. Returns false to
+        // make the caller fall back to scanSheetPerCell; counts/targets are only
+        // written on success (all-or-nothing so the fallback cannot double-queue).
+        bool scanSheetBulk(ExcelWorksheet& ws, const std::wstring& wsName,
+                           const TransformPlan& plan, std::map<std::wstring, int>& counts,
+                           std::vector<Target>& targets)
+        {
+            ExcelRange formulaCells = ws.usedRange().specialCells(SpecialCells::Formulas);
+            if (!formulaCells.valid()) return true;         // no formulas — done
+
+            IDispatch* fc = asDisp(formulaCells);
+            if (!fc) return false;
+            Releaser fr_{ fc };
+            IDispatch* areas = getObject(fc, L"Areas");
+            if (!areas) return false;
+            Releaser ar_{ areas };
+            const long nAreas = getLong(areas, L"Count");
+            if (nAreas <= 0) return true;
+
+            IDispatch* wsDisp = asDisp(ws);
+            if (!wsDisp) return false;
+            Releaser wr_{ wsDisp };
+            IDispatch* cells = getObject(wsDisp, L"Cells");
+            if (!cells) return false;
+            Releaser cr_{ cells };
+
+            std::set<std::wstring> seenArrays;
+            std::map<std::wstring, int> localCounts;
+            std::vector<Target> localTargets;
+            // Rectangles of CSE regions already queued: every member cell of a
+            // multi-cell array WILL transform to the same change, so once the
+            // region is queued the remaining ~10⁴ member cells are skipped here
+            // in memory — without this, each of them costs 4-5 COM probes in
+            // resolveTarget just to be rejected by the seenArrays dedupe.
+            std::vector<Rect> queuedRects;
+
+            // Transform one formula; on change, probe the live cell for its
+            // CSE-region/cell address and queue the target.
+            auto handleOne = [&](long row, long col, const std::wstring& fml)
+            {
+                if (fml.empty() || fml[0] != L'=') return;
+                for (const auto& q : queuedRects)
+                    if (row >= q.r1 && row <= q.r2 && col >= q.c1 && col <= q.c2)
+                        return;                             // inside a queued CSE region
+                bool frs = false;
+                std::map<std::wstring, int> local;
+                std::wstring nf = transform(fml, plan, local, frs);
+                if (nf == fml && !frs) return;              // not a target
+
+                VARIANT rc[2];
+                for (auto& v : rc) VariantInit(&v);
+                rc[0].vt = VT_I4; rc[0].lVal = row;
+                rc[1].vt = VT_I4; rc[1].lVal = col;
+                IDispatch* cd = getObject(cells, L"Item", rc, 2);
+                Releaser cdr{ cd };
+                bool isArray = false; std::wstring addr;
+                if (!resolveTarget(cd, wsName, seenArrays, isArray, addr)) return;
+                if (isArray)
+                {
+                    Rect q;
+                    if (parseA1Rect(addr, q)) queuedRects.push_back(q);
+                }
+
+                for (auto& kv : local) localCounts[kv.first] += kv.second;
+                localTargets.push_back({ isArray ? Target::Kind::Array : Target::Kind::Cell,
+                                         wsName, addr, 0, nf });
+            };
+
+            for (long a = 1; a <= nAreas; ++a)
+            {
+                VARIANT ix; VariantInit(&ix); ix.vt = VT_I4; ix.lVal = a;
+                IDispatch* area = getObject(areas, L"Item", &ix, 1);
+                VariantClear(&ix);
+                if (!area) return false;
+                Releaser al_{ area };
+                const long row0 = getLong(area, L"Row");
+                const long col0 = getLong(area, L"Column");
+                if (row0 <= 0 || col0 <= 0) return false;
+
+                VARIANT fv; VariantInit(&fv);
+                if (!invokeRaw(area, L"Formula", DISPATCH_PROPERTYGET, &fv, nullptr, 0))
+                    return false;
+
+                if (fv.vt == VT_BSTR)                        // 1×1 area → scalar
+                    handleOne(row0, col0, fv.bstrVal ? fv.bstrVal : L"");
+                else if (fv.vt == (VT_ARRAY | VT_VARIANT) && fv.parray &&
+                         SafeArrayGetDim(fv.parray) == 2)
+                {
+                    SAFEARRAY* sa = fv.parray;
+                    LONG rlb = 0, rub = -1, clb = 0, cub = -1;
+                    SafeArrayGetLBound(sa, 1, &rlb); SafeArrayGetUBound(sa, 1, &rub);
+                    SafeArrayGetLBound(sa, 2, &clb); SafeArrayGetUBound(sa, 2, &cub);
+                    VARIANT* data = nullptr;
+                    if (SUCCEEDED(SafeArrayAccessData(sa, (void**)&data)))
                     {
-                        ExcelRange cell = *it;
-                        std::wstring fml;
-                        try { fml = cell.formula().toString(); } catch (...) { continue; }
-                        if (fml.empty()) continue;
-                        // ExcelObj overload only: the wstring_view overload always
-                        // calls PutFormula2, which fails (0x800A03EC) on every
-                        // pre-dynamic-array host, silently converting 0 cells.
-                        // This one falls back to PutFormula when the host lacks
-                        // dynamic arrays (supportsDynamicArrays check in xlOil).
-                        visit(fml, [&cell](const std::wstring& nf) { cell.setFormula(ExcelObj(nf)); });
+                        const LONG nR = rub - rlb + 1, nC = cub - clb + 1;
+                        // SAFEARRAY is column-major: element (i,j) = data[j*nR + i].
+                        for (LONG j = 0; j < nC; ++j)
+                            for (LONG i = 0; i < nR; ++i)
+                            {
+                                const VARIANT& v = data[(size_t)j * nR + i];
+                                if (v.vt == VT_BSTR && v.bstrVal)
+                                    handleOne(row0 + i, col0 + j, v.bstrVal);
+                            }
+                        SafeArrayUnaccessData(sa);
                     }
                 }
-                catch (...) { continue; }   // sheet has no formula cells / COM error
+                VariantClear(&fv);
+            }
+
+            for (auto& kv : localCounts) counts[kv.first] += kv.second;
+            targets.insert(targets.end(), localTargets.begin(), localTargets.end());
+            return true;
+        }
+
+        void collectTargets(ExcelWorkbook& wb, bool toCompat,
+                            std::map<std::wstring, int>& counts,
+                            std::vector<Target>& targets, bool bulkScan = true)
+        {
+            const TransformPlan plan = buildPlan(toCompat);
+
+            // Cell formulas — bulk area scan first, per-cell iteration fallback.
+            for (auto ws : wb.worksheets().list())
+            {
+                std::wstring wsName;
+                try { wsName = ws.name(); } catch (...) {}
+                try { statusBarMsg(L"EGTools++: " + wsName); } catch (...) {}
+
+                bool done = false;
+                if (bulkScan)
+                {
+                    try { done = scanSheetBulk(ws, wsName, plan, counts, targets); }
+                    catch (...) { done = false; }
+                }
+                if (!done)
+                {
+                    try { scanSheetPerCell(ws, wsName, plan, counts, targets); }
+                    catch (...) {}
+                }
             }
 
             // Defined names — RefersTo formula text (late-bound).
@@ -486,8 +818,87 @@ namespace egtools::ribbon
                 std::wstring refers;
                 try { refers = getBStr(nm, L"RefersTo"); } catch (...) { continue; }
                 if (refers.empty()) continue;
-                visit(refers, [nm](const std::wstring& nf) { putBStr(nm, L"RefersTo", nf); });
+
+                bool fr = false;
+                std::map<std::wstring, int> local;
+                std::wstring nf = transform(refers, plan, local, fr);
+                if (nf == refers && !fr) continue;
+                for (auto& kv : local) counts[kv.first] += kv.second;
+                targets.push_back({ Target::Kind::Name, L"", L"", ix, nf });
             }
+        }
+
+        size_t applyTargets(ExcelWorkbook& wb, const std::vector<Target>& targets)
+        {
+            size_t applied = 0;
+            IDispatch* wbDisp = asDisp(wb);
+            if (!wbDisp) return 0;
+            Releaser wbr{ wbDisp };
+            IDispatch* sheets = getObject(wbDisp, L"Worksheets");
+            Releaser sr{ sheets };
+            IDispatch* names = getObject(wbDisp, L"Names");
+            Releaser nr{ names };
+
+            // Targets are grouped by sheet in scan order — cache the current one.
+            IDispatch* ws = nullptr;
+            std::wstring wsName;
+            auto releaseWs = [&] { if (ws) { ws->Release(); ws = nullptr; } };
+
+            for (const auto& t : targets)
+            {
+                try
+                {
+                    if (t.kind == Target::Kind::Name)
+                    {
+                        if (!names) continue;
+                        VARIANT ix; VariantInit(&ix); ix.vt = VT_I4; ix.lVal = t.nameIndex;
+                        IDispatch* nm = getObject(names, L"Item", &ix, 1);
+                        VariantClear(&ix);
+                        if (!nm) continue;
+                        Releaser mr{ nm };
+                        if (putBStr(nm, L"RefersTo", t.formula)) ++applied;
+                        continue;
+                    }
+
+                    if (!sheets) continue;
+                    if (!ws || wsName != t.sheet)
+                    {
+                        releaseWs();
+                        VARIANT nv; VariantInit(&nv); nv.vt = VT_BSTR;
+                        nv.bstrVal = SysAllocString(t.sheet.c_str());
+                        ws = getObject(sheets, L"Item", &nv, 1);
+                        VariantClear(&nv);
+                        wsName = t.sheet;
+                    }
+                    if (!ws) continue;
+
+                    VARIANT av; VariantInit(&av); av.vt = VT_BSTR;
+                    av.bstrVal = SysAllocString(t.address.c_str());
+                    IDispatch* rng = getObject(ws, L"Range", &av, 1);
+                    VariantClear(&av);
+                    if (!rng) continue;
+                    Releaser rr{ rng };
+
+                    if (t.kind == Target::Kind::Array)
+                    {
+                        try { setArrayFormula(rng, t.formula); ++applied; } catch (...) {}
+                    }
+                    else
+                    {
+                        // Same host rule as xlOil setFormula(ExcelObj): Formula2
+                        // on dynamic-array hosts (no implicit-intersection '@'),
+                        // classic Formula elsewhere (Formula2 put fails there).
+                        const bool ok = core::supportsDynamicArrays()
+                            ? (putBStr(rng, L"Formula2", t.formula) ||
+                               putBStr(rng, L"Formula", t.formula))
+                            : putBStr(rng, L"Formula", t.formula);
+                        if (ok) ++applied;
+                    }
+                }
+                catch (...) {}
+            }
+            releaseWs();
+            return applied;
         }
 
         // ── backup (SaveCopyAs) ──────────────────────────────────────────────
@@ -644,26 +1055,15 @@ namespace egtools::ribbon
                 }
             }
 
-            // PASS 1 — scan / count (read-only).
+            // PASS 1 — scan once (read-only): transform in memory and build the
+            // work list of changed locations with their rewritten formulas.
             std::map<std::wstring, int> counts;
-            size_t locations = 0;
-            try
-            {
-                forEachFormula(wb, [&](const std::wstring& fml, const Setter&)
-                {
-                    bool fr = false;
-                    std::map<std::wstring, int> local;
-                    std::wstring nf = transform(fml, toCompat, local, fr);
-                    if (nf != fml || fr)
-                    {
-                        ++locations;
-                        for (auto& kv : local) counts[kv.first] += kv.second;
-                    }
-                });
-            }
+            std::vector<Target> targets;
+            try { collectTargets(wb, toCompat, counts, targets); }
             catch (...) {}
             try { statusBarMsg(L""); } catch (...) {}
 
+            const size_t locations = targets.size();
             if (locations == 0)
             {
                 MessageBoxW(hwnd, L"변환할 대상이 없습니다.", title, MB_OK | MB_ICONINFORMATION);
@@ -685,28 +1085,22 @@ namespace egtools::ribbon
                 return;
             }
 
-            // PASS 2 — apply.
+            // PASS 2 — apply the work list only (no re-scan).
             size_t applied = 0;
             {
                 Application& app = thisApp();
                 PauseExcel pause(app);
-                try
-                {
-                    forEachFormula(wb, [&](const std::wstring& fml, const Setter& setFormula)
-                    {
-                        bool fr = false;
-                        std::map<std::wstring, int> local;
-                        std::wstring nf = transform(fml, toCompat, local, fr);
-                        if (nf != fml || fr)
-                        {
-                            try { setFormula(nf); ++applied; } catch (...) {}
-                        }
-                    });
-                }
+                try { applied = applyTargets(wb, targets); }
                 catch (...) {}
             }
             try { statusBarMsg(L""); } catch (...) {}
-            try { thisApp().calculate(true, false); } catch (...) {}
+            // Dirty-only Calculate(): the formula writes above already dirtied
+            // the converted cells (and their dependents), and leaving Manual
+            // mode in ~PauseExcel recalculates them for auto-calc users — this
+            // call only covers users who keep Manual calculation. CalculateFull
+            // here re-computed EVERY formula in ALL open workbooks (~12s on
+            // sample_200k vs 0.03s dirty-only) — the apply phase felt slow.
+            try { thisApp().calculate(); } catch (...) {}
 
             std::wstring done = std::to_wstring(applied)
                 + L"곳을 변환했습니다.\n\n백업 파일:\n" + backupPath
