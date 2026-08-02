@@ -22,4 +22,12 @@ namespace egtools::intellisense
 
     // Case-insensitive lookup. Fills `out` and returns true if known.
     bool lookupFunction(const std::wstring& name, FuncInfo& out);
+
+    // Autocomplete-dropdown variant: true only when `name` is EXACTLY the name
+    // this add-in registered on the running host (core::registeredName). The
+    // dropdown lists native and add-in functions side by side — e.g. on a modern
+    // host both XLOOKUP (native, Excel draws its own description) and
+    // EG.XLOOKUP (ours) appear — and the description overlay must engage only
+    // for our own entries.
+    bool lookupRegistered(const std::wstring& name, FuncInfo& out);
 }

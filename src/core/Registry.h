@@ -63,6 +63,7 @@ namespace egtools::core
 
             auto builder = xloil::RegisterLambda<>(fn);   // copies fn
             builder.name(name);
+            builder.category(L"EGTools");   // 함수 마법사 전용 범주
             if (!desc.empty()) builder.help(desc);
             for (const auto& a : args)
                 builder.arg(a.name.c_str(), a.help.empty() ? nullptr : a.help.c_str());

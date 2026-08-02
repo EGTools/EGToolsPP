@@ -13,6 +13,11 @@ namespace egtools::intellisense
     // top-left at screen (x, y). Does not steal focus from the cell editor.
     void toolTipShow(int x, int y, const FuncInfo& f, int argIndex);
 
+    // Autocomplete-dropdown description mode: signature (no argument emphasis) +
+    // function description, pinned at exactly (x, y) — beside the popup list —
+    // ignoring the user-dragged/sticky position the caret-anchored mode keeps.
+    void toolTipShowAnchored(int x, int y, const FuncInfo& f);
+
     // Hide the tooltip (no-op if already hidden).
     void toolTipHide();
 

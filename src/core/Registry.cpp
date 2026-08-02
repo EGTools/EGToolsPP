@@ -76,6 +76,7 @@ namespace egtools::core
             auto info = std::make_shared<xloil::FuncInfo>();
             info->name = name;
             info->help = desc;
+            info->category = L"EGTools";   // 함수 마법사 전용 범주
             info->options = macro ? (unsigned)xloil::FuncInfo::MACRO_TYPE
                                   : (threadsafe ? (unsigned)xloil::FuncInfo::THREAD_SAFE : 0u);
             info->args.reserve(full.size());

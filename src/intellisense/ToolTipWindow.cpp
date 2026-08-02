@@ -360,13 +360,24 @@ namespace egtools::intellisense
         }
     }
 
+    namespace
+    {
+        void showImpl(int px, int py, const FuncInfo& f, int argIndex)
+        {
+            g_func = f;
+            g_argIndex = argIndex;
+            SIZE sz = measure(f, argIndex);
+            SetWindowPos(g_wnd, HWND_TOPMOST, px, py, sz.cx, sz.cy,
+                         SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            InvalidateRect(g_wnd, nullptr, TRUE);
+            UpdateWindow(g_wnd);
+        }
+    }
+
     void toolTipShow(int x, int y, const FuncInfo& f, int argIndex)
     {
         ensureWindow();
         if (!g_wnd) return;
-        g_func = f;
-        g_argIndex = argIndex;
-        SIZE sz = measure(f, argIndex);
 
         // Position priority: user-chosen position (if ever dragged) > current
         // position while visible (don't jump per keystroke) > caret anchor.
@@ -380,10 +391,16 @@ namespace egtools::intellisense
             RECT r{}; GetWindowRect(g_wnd, &r);
             px = r.left; py = r.top;
         }
-        SetWindowPos(g_wnd, HWND_TOPMOST, px, py, sz.cx, sz.cy,
-                     SWP_NOACTIVATE | SWP_SHOWWINDOW);
-        InvalidateRect(g_wnd, nullptr, TRUE);
-        UpdateWindow(g_wnd);
+        showImpl(px, py, f, argIndex);
+    }
+
+    void toolTipShowAnchored(int x, int y, const FuncInfo& f)
+    {
+        ensureWindow();
+        if (!g_wnd) return;
+        // Pinned beside the autocomplete popup: the anchor tracks the selected
+        // item, so the sticky/dragged position must not apply here.
+        showImpl(x, y, f, /*argIndex*/ -1);
     }
 
     void toolTipHide()

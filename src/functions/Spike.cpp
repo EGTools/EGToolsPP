@@ -34,6 +34,7 @@ XLO_FUNC_START( EG_VERSIONINFO() )
 XLO_FUNC_END(EG_VERSIONINFO)
     .threadsafe()
     .name(L"EG.VERSIONINFO")
+    .category(L"EGTools")
     .help(L"Diagnostic: detected Excel edition and native-function decisions.");
 
 // S6 diagnostics: inspect / switch the active UI language at runtime.
@@ -44,6 +45,7 @@ XLO_FUNC_START( EG_LANG() )
 XLO_FUNC_END(EG_LANG)
     .threadsafe()
     .name(L"EG.LANG")
+    .category(L"EGTools")
     .help(L"Returns the active EGTools++ UI language code.");
 
 XLO_FUNC_START( EG_SETLANG(const ExcelObj* code) )
@@ -53,6 +55,7 @@ XLO_FUNC_START( EG_SETLANG(const ExcelObj* code) )
 }
 XLO_FUNC_END(EG_SETLANG)
     .name(L"EG.SETLANG")
+    .category(L"EGTools")
     .help(L"Sets the EGTools++ UI language (ko/en/zh-CN/zh-TW/ja/es).")
     .arg(L"code", L"language code");
 
@@ -72,6 +75,7 @@ XLO_FUNC_START( EG_SEQ2D(const ExcelObj* rows, const ExcelObj* cols) )
 XLO_FUNC_END(EG_SEQ2D)
     .threadsafe()
     .name(L"EG.SEQ2D")
+    .category(L"EGTools")
     .help(L"S5 spike: returns a rows×cols array of 1..n (spills on modern Excel).")
     .arg(L"rows", L"number of rows")
     .arg(L"cols", L"number of columns");

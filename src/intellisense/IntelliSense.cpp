@@ -17,6 +17,7 @@
 #include "ToolTipWindow.h"
 
 #include <windows.h>
+#include <commctrl.h>   // LVM_* — read the autocomplete popup's ListView in-process
 #include <string>
 #include <algorithm>
 #include <chrono>
@@ -48,12 +49,23 @@ namespace egtools::intellisense
         HANDLE        g_thread = nullptr;
         DWORD         g_threadId = 0;
         HWINEVENTHOOK g_hook = nullptr;
+        HWINEVENTHOOK g_hookPopup = nullptr;   // CREATE..SELECTION (popup list)
         CRITICAL_SECTION g_logLock;
         bool          g_logInit = false;
         std::wstring  g_lastPrefix;
         DWORD         g_lastEventThread = 0;
         HWND          g_lastEventWnd = nullptr;
         UINT_PTR      g_timer = 0;   // pending "settled re-read" timer
+
+        // Autocomplete popup (Excel-DNA technique): Excel's formula-autocomplete
+        // dropdown is a real window (class __XLACOOUTER) whose first child is a
+        // standard ListView. Being in-process, the selected item's text/rect can
+        // be read directly with LVM_* messages — no UIA needed. While an EGTools
+        // entry is selected, its description is shown in an anchored tooltip
+        // beside the popup (Excel only renders that yellow box for built-ins).
+        HWND g_popupOuter = nullptr;   // __XLACOOUTER
+        HWND g_popupList  = nullptr;   // first child (the ListView)
+        bool g_descActive = false;     // description overlay currently shown
 
         void logLine(const std::wstring& s)
         {
@@ -156,12 +168,140 @@ namespace egtools::intellisense
             toolTipHide();
         }
 
+        // ── autocomplete-popup description overlay ───────────────────────────
+        bool hasClass(HWND h, const wchar_t* cls)
+        {
+            wchar_t buf[64]{};
+            return h && GetClassNameW(h, buf, 64) && wcscmp(buf, cls) == 0;
+        }
+
+        void descHide()
+        {
+            if (!g_descActive) return;
+            g_descActive = false;
+            toolTipHide();
+            // The popup typically closes at the exact moment the user commits
+            // the name (types '(' or Tab-completes, which inserts the paren):
+            // the VALUECHANGE for that keystroke often arrives BEFORE this HIDE
+            // and was deliberately not consumed (doUpdate skips while the desc
+            // overlay is active). Clear the last-prefix memory and schedule the
+            // settled re-read so the ARGUMENT tooltip takes over immediately.
+            g_lastPrefix.clear();
+            if (g_timer) KillTimer(nullptr, g_timer);
+            g_timer = SetTimer(nullptr, 0, 25, nullptr);
+        }
+
+        // In-process read of the popup ListView's selected item; shows/hides the
+        // description tooltip accordingly. SendMessageTimeout guards against a
+        // wedged main thread (the list lives on Excel's UI thread).
+        void updateListSelection()
+        {
+            if (!g_popupList) { descHide(); return; }
+
+            auto send = [&](UINT msg, WPARAM w, LPARAM l, LRESULT& out) -> bool
+            {
+                DWORD_PTR r = 0;
+                if (!SendMessageTimeoutW(g_popupList, msg, w, l,
+                        SMTO_ABORTIFHUNG | SMTO_BLOCK, 200, &r))
+                    return false;
+                out = (LRESULT)r;
+                return true;
+            };
+
+            LRESULT idx = -1;
+            if (!send(LVM_GETNEXTITEM, (WPARAM)-1, LVNI_SELECTED, idx) || idx < 0)
+            { descHide(); return; }
+
+            wchar_t buf[256]{};
+            LVITEMW it{};
+            it.iSubItem = 0;
+            it.pszText = buf;
+            it.cchTextMax = 256;
+            LRESULT len = 0;
+            if (!send(LVM_GETITEMTEXTW, (WPARAM)idx, (LPARAM)&it, len) || len <= 0)
+            { descHide(); return; }
+
+            FuncInfo fi;
+            if (!lookupRegistered(std::wstring(buf, (size_t)len), fi))
+            { descHide(); return; }   // built-in / not ours — Excel's own tooltip
+
+            // Anchor: right edge of the popup, at the selected item's height.
+            RECT item{ LVIR_BOUNDS, 0, 0, 0 };
+            LRESULT ok = 0;
+            send(LVM_GETITEMRECT, (WPARAM)idx, (LPARAM)&item, ok);
+            POINT tl{ item.left, item.top };
+            ClientToScreen(g_popupList, &tl);
+            RECT outer{};
+            GetWindowRect(g_popupOuter ? g_popupOuter : g_popupList, &outer);
+
+            g_descActive = true;
+            toolTipShowAnchored(outer.right + 4, ok ? tl.y : outer.top, fi);
+        }
+
+        // Routes popup-related WinEvents; returns true when consumed.
+        bool handlePopupEvent(DWORD event, HWND hwnd)
+        {
+            switch (event)
+            {
+            case EVENT_OBJECT_CREATE:
+            case EVENT_OBJECT_SHOW:
+                if (hasClass(hwnd, L"__XLACOOUTER"))
+                {
+                    g_popupOuter = hwnd;
+                    g_popupList = GetWindow(hwnd, GW_CHILD);
+                    updateListSelection();   // first match is pre-selected
+                    return true;
+                }
+                return false;
+
+            case EVENT_OBJECT_HIDE:
+            case EVENT_OBJECT_DESTROY:
+                if (hwnd && hwnd == g_popupOuter)   // class is gone on DESTROY
+                {
+                    if (event == EVENT_OBJECT_DESTROY)
+                    { g_popupOuter = nullptr; g_popupList = nullptr; }
+                    descHide();
+                    return true;
+                }
+                return false;
+
+            case EVENT_OBJECT_SELECTION:
+                // Keyboard/mouse moves through the list. Adopt the list window
+                // lazily too (popup may predate our hook and get reused).
+                if ((g_popupList && hwnd == g_popupList) ||
+                    (hwnd && hasClass(GetAncestor(hwnd, GA_PARENT), L"__XLACOOUTER")))
+                {
+                    g_popupOuter = GetAncestor(hwnd, GA_PARENT);
+                    g_popupList = hwnd;
+                    updateListSelection();
+                    return true;
+                }
+                return false;
+
+            case EVENT_OBJECT_LOCATIONCHANGE:
+                // Popup moved/resized (list filtering) — re-anchor if showing.
+                if (g_descActive && hwnd &&
+                    (hwnd == g_popupOuter || hwnd == g_popupList))
+                {
+                    updateListSelection();
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
         void doUpdate()
         {
             std::wstring prefix;
             int caret = 0;
             if (getFormulaPrefix(prefix, caret))
             {
+                // While the desc overlay owns the tooltip window, do NOT
+                // consume prefix changes — g_lastPrefix must stay stale so the
+                // re-read scheduled by descHide() still processes the keystroke
+                // that closed the popup (the '(' that starts the arguments).
+                if (g_descActive) return;
                 if (prefix != g_lastPrefix)
                 {
                     g_lastPrefix = prefix;
@@ -171,15 +311,21 @@ namespace egtools::intellisense
             else if (!g_lastPrefix.empty())
             {
                 g_lastPrefix.clear();
-                toolTipHide();
+                if (!g_descActive) toolTipHide();   // desc overlay owns the window
             }
         }
 
         void CALLBACK winEventProc(
             HWINEVENTHOOK, DWORD event, HWND hwnd,
-            LONG, LONG, DWORD idEventThread, DWORD)
+            LONG idObject, LONG, DWORD idEventThread, DWORD)
         {
             if (!hwnd) return;
+            // Popup lifecycle/selection first (window-level events only —
+            // idObject OBJID_WINDOW=0 / OBJID_CLIENT=-4 both appear here).
+            if (idObject == OBJID_WINDOW || idObject == OBJID_CLIENT)
+                if (handlePopupEvent(event, hwnd))
+                    return;
+
             if (event != EVENT_OBJECT_VALUECHANGE &&
                 event != EVENT_OBJECT_FOCUS &&
                 event != EVENT_OBJECT_LOCATIONCHANGE) return;
@@ -202,6 +348,13 @@ namespace egtools::intellisense
                 nullptr, winEventProc,
                 GetCurrentProcessId(), 0,
                 WINEVENT_OUTOFCONTEXT);
+            // Popup dropdown lifecycle + selection (CREATE 0x8000 .. SELECTION
+            // 0x8006) — separate hook so the main range stays narrow.
+            g_hookPopup = SetWinEventHook(
+                EVENT_OBJECT_CREATE, EVENT_OBJECT_SELECTION,
+                nullptr, winEventProc,
+                GetCurrentProcessId(), 0,
+                WINEVENT_OUTOFCONTEXT);
             logLine(L"--- IntelliSense thread ready (LPenHelper) ---");
 
             MSG msg;
@@ -217,6 +370,7 @@ namespace egtools::intellisense
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+            if (g_hookPopup) { UnhookWinEvent(g_hookPopup); g_hookPopup = nullptr; }
             if (g_hook) { UnhookWinEvent(g_hook); g_hook = nullptr; }
             toolTipDestroy();   // window/class cleanup on the owning thread
             return 0;

@@ -66,4 +66,5 @@ XLO_FUNC_START( EG_HELLO() )
 XLO_FUNC_END(EG_HELLO)
     .threadsafe()
     .name(L"EG.HELLO")
+    .category(L"EGTools")
     .help(L"Returns a greeting — EGTools++ connectivity test.");
