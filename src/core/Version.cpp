@@ -45,7 +45,13 @@ namespace egtools::core
             return best;
         }
 
-        struct Req { int year; bool needsDynamicArrays; };
+        // `staged`: Microsoft introduced the function but it has NOT reached
+        // general availability — a host that satisfies `year` may still lack
+        // the native name (2026-08: IMPORTTEXT/IMPORTCSV are 365-preview-only).
+        // The restore-to-native conversion converts a staged function ONLY
+        // after a positive runtime probe (see ribbon/Convert.cpp); flip the
+        // flag to false once the rollout completes.
+        struct Req { int year; bool needsDynamicArrays; bool staged = false; };
 
         // Native availability metadata for the functions we shadow.
         const std::map<std::wstring, Req>& funcTable()
@@ -74,7 +80,8 @@ namespace egtools::core
                 { L"GROUPBY",     { 2024, true } }, { L"PIVOTBY",      { 2024, true } },
                 // IMPORTTEXT/IMPORTCSV (365, 2026 롤아웃 — Beta부터) — post-DA로 취급:
                 // DA 호스트(2024+)에선 EG. 접두(향후 네이티브와 공존), 구버전은 드롭인.
-                { L"IMPORTTEXT",  { 2024, true } }, { L"IMPORTCSV",    { 2024, true } },
+                // staged=true: 프리뷰 채널 한정 — 대부분의 365에 아직 네이티브 없음.
+                { L"IMPORTTEXT",  { 2024, true, true } }, { L"IMPORTCSV", { 2024, true, true } },
                 // Pre-dynamic-array — decided by edition year.
                 { L"IFS",       { 2019, false } }, { L"SWITCH",    { 2019, false } },
                 { L"MAXIFS",    { 2019, false } }, { L"MINIFS",    { 2019, false } },
@@ -146,6 +153,13 @@ namespace egtools::core
             return rank(excelYear()) >= rank(it->second.year);
         }
         return rank(excelYear()) >= rank(it->second.year);
+    }
+
+    bool isStagedRollout(const std::wstring& bareName)
+    {
+        const auto& t = funcTable();
+        auto it = t.find(upper(bareName));
+        return it != t.end() && it->second.staged;
     }
 
     bool needsXPrefix(const std::wstring& bareName)

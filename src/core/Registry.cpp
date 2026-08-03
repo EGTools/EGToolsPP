@@ -58,6 +58,16 @@ namespace egtools::core
         // EG.<F> / x<F> / <F> per host — see core::registeredName().
         const std::wstring name = registeredName(bareName);
 
+        // Record the runtime name while the UDF executes, for core::output()'s
+        // outermost-call check on legacy hosts (see detail::namedUdf).
+        xloil::DynamicExcelFunc<> named =
+            [name, fn = std::move(fn)](const xloil::FuncInfo& info,
+                                       const xloil::ExcelObj** args)
+            {
+                UdfNameScope scope(name);
+                return fn(info, args);
+            };
+
         // Build the argument list for a given arg-count cap and register. Returns
         // true on success. Wrapping in shared_ptr first: registerFunc() relies on
         // shared_from_this (mirrors xloil::RegisterLambda::registerFunc).
@@ -87,7 +97,7 @@ namespace egtools::core
             }
             try
             {
-                auto reg = std::make_shared<xloil::LambdaSpec<>>(info, fn)->registerFunc();
+                auto reg = std::make_shared<xloil::LambdaSpec<>>(info, named)->registerFunc();
                 if (reg) { detail::keep(reg); return true; }
             }
             catch (...) {}

@@ -37,6 +37,14 @@ namespace egtools::core
     // convention EGTools VB used.
     bool needsXPrefix(const std::wstring& bareName);
 
+    // True if `bareName` is table-eligible on modern hosts but its native
+    // rollout is NOT yet general (e.g. IMPORTTEXT/IMPORTCSV — 365 preview
+    // channels only, 2026-08). The restore-to-native conversion converts such
+    // a function only after a positive runtime probe confirms the native name
+    // actually resolves on this host (ribbon/Convert.cpp); everything else is
+    // never probed. Flip the funcTable flag once the rollout completes.
+    bool isStagedRollout(const std::wstring& bareName);
+
     // The name this add-in actually registers for `bareName` on the CURRENT host:
     // EG.<F> when the host has the native function, x<F> for keyword-conflict
     // names on non-native hosts, bare <F> otherwise (drop-in).

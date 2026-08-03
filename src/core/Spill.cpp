@@ -28,6 +28,23 @@
 // formula via a programmatic COM write, which clears Excel's undo stack — so
 // Ctrl+Z cannot undo a spilled formula on legacy Excel. This is inherent to
 // emulated spill (ExcelDNA's resizer has the same open TODO); accepted as-is.
+//
+// ── NESTED UDFs: ONLY THE OUTERMOST CALL MAY RESIZE ──────────────────────────
+// Every array-returning UDF funnels through output(), including ones consumed
+// as arguments — e.g. =SUM(TAKE(xSORT(...),3)) runs xSORT (10x1) and TAKE (3x1)
+// in the same 1x1 cell. If BOTH schedule a resize they demand different sizes
+// for the same cell and each applied resize triggers a recalc that re-schedules
+// the other: an infinite recalc loop (the plan/05 "isMaster" check that was
+// never built). Fix, in two layers inside doResize():
+//   1. Outermost-name check — the UDF's registered runtime name (recorded via
+//      UdfNameScope by Registry's wrapper) rides along with the deferred job;
+//      the job applies only if the cell formula is a single call to that very
+//      name (strip Excel's stored "_xll." prefix; compare case-insensitively).
+//      Inner UDFs' jobs thus no-op, and their arrays are consumed in-memory.
+//   2. Oscillation guard — same-name nesting (=TAKE(TAKE(...,5),3)) defeats the
+//      name check, so remember targets recently applied per (cell, formula) and
+//      refuse to re-apply one within a short window. First-pass evaluation
+//      order (inner first, outer last) leaves the outer call's size in place.
 
 #include "Spill.h"
 #include "Version.h"
@@ -45,7 +62,11 @@
 
 #include <windows.h>
 #include <oleauto.h>
+#include <iterator>
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace xloil;
 using namespace msxll;
@@ -60,6 +81,10 @@ namespace egtools::core
         // Excel 2007+ grid limits (2016 target uses these).
         constexpr int kMaxRows = 1048576;
         constexpr int kMaxCols = 16384;
+
+        // Registered runtime name of the UDF currently executing on this thread
+        // (set by UdfNameScope from Registry's registration wrapper).
+        thread_local const std::wstring* t_currentUdf = nullptr;
 
 #ifdef EGTOOLS_SPILL_DEBUG
         void dbg(const std::wstring& msg)
@@ -157,11 +182,75 @@ namespace egtools::core
             return d;
         }
 
+        // If `formula` consists of one function call spanning the whole formula
+        // (e.g. "=TAKE(...)", "=_xll.xSORT(...)", "=+NAME(...)"), return that
+        // function's name (sans any "_xll." storage prefix); else L"". COM's
+        // Range.Formula is A1-style with EN-US names and comma separators;
+        // parens inside double-quoted strings and quoted sheet names ('...')
+        // must not count toward nesting depth.
+        std::wstring outermostFunction(const std::wstring& formula)
+        {
+            size_t i = 0;
+            const size_t n = formula.size();
+            auto skipWs = [&] { while (i < n && iswspace(formula[i])) ++i; };
+
+            skipWs();
+            if (i >= n || formula[i] != L'=') return L"";
+            ++i;
+            skipWs();
+            // Lotus-style leading sign / implicit-intersection marker.
+            while (i < n && (formula[i] == L'+' || formula[i] == L'-' || formula[i] == L'@'))
+                ++i;
+            skipWs();
+
+            // Excel stores an unresolved/re-saved XLL UDF as "_xll.NAME".
+            if (_wcsnicmp(formula.c_str() + i, L"_xll.", 5) == 0 && i + 5 < n)
+                i += 5;
+
+            const size_t nameStart = i;
+            while (i < n && (iswalnum(formula[i]) || formula[i] == L'.' || formula[i] == L'_'))
+                ++i;
+            if (i == nameStart) return L"";
+            const std::wstring name = formula.substr(nameStart, i - nameStart);
+
+            skipWs();
+            if (i >= n || formula[i] != L'(') return L"";
+
+            // Match the call's closing paren; it must end the formula.
+            int depth = 0;
+            wchar_t quote = 0;   // 0, or the active quote char (L'"' / L'\'')
+            for (; i < n; ++i)
+            {
+                const wchar_t c = formula[i];
+                if (quote) { if (c == quote) quote = 0; continue; }
+                if (c == L'"' || c == L'\'') { quote = c; continue; }
+                if (c == L'(') ++depth;
+                else if (c == L')' && --depth == 0) { ++i; break; }
+            }
+            if (depth != 0) return L"";
+            skipWs();
+            return (i == n) ? name : L"";
+        }
+
+        // Oscillation guard: targets recently CSE-applied per (cell, formula).
+        // Main thread only (doResize always runs on the WINDOW queue).
+        struct ResizeMemo
+        {
+            std::wstring formula;
+            std::vector<std::pair<std::wstring, ULONGLONG>> applied;  // target, tick
+        };
+        std::map<std::wstring, ResizeMemo> s_resizeMemo;   // key: firstCellAddr
+        constexpr ULONGLONG kOscillationMs = 10000;
+        constexpr size_t kMemoMaxCells = 512;
+        constexpr size_t kMemoMaxTargets = 8;
+
         // Deferred (WINDOW queue, main thread): re-enter the first cell's formula as
         // a CSE array formula over `targetAddr` using the COM object model.
-        void doResize(std::wstring firstCellAddr, std::wstring targetAddr)
+        // `udfName` is the registered name of the UDF that produced the array; the
+        // resize applies only if it is the formula's outermost (sole) call.
+        void doResize(std::wstring udfName, std::wstring firstCellAddr, std::wstring targetAddr)
         {
-            dbg(L"doResize ENTER first=" + firstCellAddr + L" target=" + targetAddr);
+            dbg(L"doResize ENTER udf=" + udfName + L" first=" + firstCellAddr + L" target=" + targetAddr);
             try
             {
                 xloil::COM::connectCom();
@@ -174,6 +263,35 @@ namespace egtools::core
                 const std::wstring formula = getBStr(firstDisp, L"Formula");
                 dbg(L"  formula=" + formula);
                 if (formula.empty()) { dbg(L"  empty formula -> abort"); return; }
+
+                // Layer 1: only the outermost call of the formula may resize the
+                // cell. A nested UDF's array is consumed in-memory by its parent.
+                if (!udfName.empty())
+                {
+                    const std::wstring outer = outermostFunction(formula);
+                    if (_wcsicmp(outer.c_str(), udfName.c_str()) != 0)
+                    {
+                        dbg(L"  outermost='" + outer + L"' != udf -> skip (nested call)");
+                        return;
+                    }
+                }
+
+                // Layer 2: same-name nesting (=TAKE(TAKE(...))) passes the name
+                // check from both calls and their sizes fight forever — refuse a
+                // target we already applied for this same (cell, formula) just now.
+                const ULONGLONG now = GetTickCount64();
+                auto& memo = s_resizeMemo[firstCellAddr];
+                if (memo.formula != formula)
+                {
+                    memo.formula = formula;
+                    memo.applied.clear();
+                }
+                for (const auto& [tgt, tick] : memo.applied)
+                    if (tgt == targetAddr && now - tick < kOscillationMs)
+                    {
+                        dbg(L"  target recently applied -> skip (oscillation guard)");
+                        return;
+                    }
 
                 // If the cell is already part of an array formula (re-resize), clear
                 // the existing array region first so FormulaArray won't error.
@@ -196,6 +314,24 @@ namespace egtools::core
                 // next legacyResize() sees equal dims and does NOT reschedule.
                 putBStr(tgtDisp, L"FormulaArray", formula);
                 dbg(L"  DONE FormulaArray set");
+
+                // Record for the oscillation guard (refresh tick if re-applied).
+                bool found = false;
+                for (auto& [tgt, tick] : memo.applied)
+                    if (tgt == targetAddr) { tick = now; found = true; break; }
+                if (!found)
+                {
+                    if (memo.applied.size() >= kMemoMaxTargets)
+                        memo.applied.erase(memo.applied.begin());
+                    memo.applied.emplace_back(targetAddr, now);
+                }
+                if (s_resizeMemo.size() > kMemoMaxCells)
+                    for (auto it = s_resizeMemo.begin(); it != s_resizeMemo.end();)
+                    {
+                        const auto& v = it->second.applied;
+                        const bool stale = v.empty() || now - v.back().second >= kOscillationMs;
+                        it = stale ? s_resizeMemo.erase(it) : std::next(it);
+                    }
             }
             catch (...) { dbg(L"  EXCEPTION in doResize"); }
         }
@@ -246,14 +382,30 @@ namespace egtools::core
                 caller.range(0, 0, 0, 0).address(AddressStyle::A1);
             const std::wstring targetAddr =
                 caller.range(0, 0, rows - 1, cols - 1).address(AddressStyle::A1);
-            dbg(L"legacyResize: scheduling resize to " + targetAddr);
+
+            // Which UDF is asking (empty only if a call path bypassed Registry's
+            // UdfNameScope wrapper — doResize then resizes unconditionally, the
+            // pre-nesting-check behaviour).
+            const std::wstring udfName = t_currentUdf ? *t_currentUdf : L"";
+            dbg(L"legacyResize: scheduling resize to " + targetAddr + L" by " + udfName);
 
             xloil::runExcelThread(
-                [firstCellAddr, targetAddr] { doResize(firstCellAddr, targetAddr); },
+                [udfName, firstCellAddr, targetAddr] { doResize(udfName, firstCellAddr, targetAddr); },
                 xloil::ExcelRunQueue::WINDOW | xloil::ExcelRunQueue::ENQUEUE);
 
             return returnValue(std::move(result));
         }
+    }
+
+    UdfNameScope::UdfNameScope(const std::wstring& name)
+        : _prev(t_currentUdf)
+    {
+        t_currentUdf = &name;
+    }
+
+    UdfNameScope::~UdfNameScope()
+    {
+        t_currentUdf = _prev;
     }
 
     xloil::ExcelObj* output(xloil::ExcelObj&& result)

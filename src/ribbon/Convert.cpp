@@ -20,6 +20,52 @@
 // string literals (adapted from FxLet.cpp splitTopLevel / replaceName), so bare
 // names never match partially or inside text.
 //
+// Storage-token artifacts beyond the function NAME (both fixed 2026-08-03):
+//   * `_xlpm.` — LET/LAMBDA parameter-name storage prefix. It surfaces in COM
+//     formula text whenever the surrounding call is unresolved on the host
+//     (e.g. `xLET(_xlpm.x, ...)` on a modern host, `_xlfn.LET(_xlpm.x, ...)` on
+//     a legacy host). Excel REFUSES a Formula/Formula2 put containing `_xlpm.`
+//     (0x800A03EC) — Direction B used to rewrite `xLET(_xlpm.x,…)` to
+//     `LET(_xlpm.x,…)` whose write failed, leaving the cell unconverted. Both
+//     directions now strip the prefix from every identifier (stripXlpmPrefix),
+//     counted in the summary as `_xlpm.*`.
+//   * `@` — implicit-intersection marker. The bulk scanner reads `.Formula`
+//     (legacy view, no `@`), but the per-cell fallback reads xlOil formula() =
+//     `.Formula2` on dynamic-array hosts, which SHOWS `@` in front of calls
+//     from legacy-authored cells (e.g. `=TAKE(@xSORT(…),3)`). Rewriting that
+//     to `=TAKE(@SORT(…),3)` "succeeds" but `@SORT` collapses the array to a
+//     single value. Direction B now drops `@` directly in front of any name it
+//     converts to native (stripImplicitAt), so both scan paths converge on the
+//     spilled-native semantics the button promises. `@` elsewhere (cell refs,
+//     non-target functions) is left untouched. Known limit: a modern `@SORT(…)`
+//     down-saved by a legacy host as `_xlfn.SINGLE(_xlfn._xlws.SORT(…))` keeps
+//     its `_xlfn.SINGLE(` wrapper (call-unwrapping, not token replacement).
+//   * `_xll.` / `_xludf.` — XLL / unknown-UDF storage prefixes (fixed
+//     2026-08-03). Excel records these on any call to an add-in UDF that is
+//     not registered on the opening host — DEFINED NAMES keep them (a 2016-
+//     saved name `xSORT(...)` reads back as `_xll.xSORT(...)` / `_xludf.
+//     TAKE(...)` via RefersTo on MS365). The token rules match `xF`/`EG.F`/
+//     bare `F` with a non-identifier left boundary, and the prefix's '.' IS an
+//     identifier char — so prefixed calls never matched and names were never
+//     converted. Both directions now strip the prefix FIRST, but only when the
+//     identifier that follows is one of our own tokens (stripUdfStoragePrefix;
+//     foreign add-ins' UDFs stay untouched). Counted as `_xll.*`.
+//
+// Native-availability safety net (Direction B, added 2026-08-03): funcTable()'s
+// year metadata says when Microsoft INTRODUCED a function, but staged rollouts
+// mean a table-eligible host may still lack the native name (IMPORTTEXT/
+// IMPORTCSV are 365-preview-only as of 2026-08). Functions flagged
+// core::isStagedRollout() are probed once per session via Application.
+// Evaluate("F()") and convert to native ONLY on a positive result (anything
+// but #NAME?/failure); unconfirmed ones get the IMAGE (Class E) treatment —
+// bare F re-points to EG.F so legacy-authored cells keep calculating, EG.F
+// cells stay as they are. ONLY staged functions are probed: a first version
+// probed EVERY native and Evaluate("F()") proved context-sensitive (measured
+// 2026-08-03: "SORT()" → FALSE / #VALUE! / #NAME? depending on host state —
+// SORT/FILTER also collide with XLM command names), so a long-GA function
+// could be misjudged as missing, silently disabling its conversion (regression:
+// xSORT survived restore). GA functions therefore trust the table, full stop.
+//
 // CSE arrays: a modern spill down-converts to a multi-cell CSE array formula on
 // legacy hosts, which rejects per-cell Formula writes ("cannot change part of an
 // array" — swallowed inside the COM put, so it LOOKS converted but isn't). Such
@@ -198,6 +244,140 @@ namespace egtools::ribbon
             return n;
         }
 
+        // Strip the LET/LAMBDA parameter storage prefix from every identifier:
+        // `_xlpm.x` → `x`. Excel refuses formula writes containing `_xlpm.`
+        // (0x800A03EC), so any rewritten formula must shed it. Skips string
+        // literals; requires a word boundary on the left and a real identifier
+        // start after the prefix. Returns the number of prefixes removed.
+        int stripXlpmPrefix(std::wstring& f)
+        {
+            const wchar_t kPfx[] = L"_xlpm.";
+            const size_t  nPfx   = wcslen(kPfx);
+            std::wstring out; out.reserve(f.size());
+            bool inStr = false; int n = 0;
+            for (size_t i = 0; i < f.size(); )
+            {
+                wchar_t c = f[i];
+                if (inStr)
+                {
+                    out += c;
+                    if (c == L'"')
+                    {
+                        if (i + 1 < f.size() && f[i + 1] == L'"') { out += f[i + 1]; i += 2; continue; }
+                        inStr = false;
+                    }
+                    ++i; continue;
+                }
+                if (c == L'"') { inStr = true; out += c; ++i; continue; }
+
+                if (c == L'_' && i + nPfx < f.size() &&
+                    _wcsnicmp(f.c_str() + i, kPfx, nPfx) == 0 &&
+                    ((i == 0) || !isIdentChar(f[i - 1])) &&
+                    isIdentStart(f[i + nPfx]))
+                { i += nPfx; ++n; continue; }   // drop the prefix, keep the name
+
+                out += c; ++i;
+            }
+            if (n) f.swap(out);
+            return n;
+        }
+
+        // Strip the XLL / unknown-UDF storage prefixes `_xll.` / `_xludf.` when
+        // the identifier that follows is one of OUR conversion tokens (bare F,
+        // xF, EG.F — `srcUpper`). Excel prepends these to any add-in UDF call
+        // it cannot resolve on the opening host, and defined names keep them in
+        // RefersTo (e.g. a 2016-saved name reads back as `_xll.xSORT(...)` on
+        // MS365) — the '.' inside the prefix defeats the token rules' left-
+        // boundary check, so the prefix must go before they run. Prefixed calls
+        // to foreign add-ins' UDFs are left untouched. Returns removals.
+        int stripUdfStoragePrefix(std::wstring& f, const std::set<std::wstring>& srcUpper)
+        {
+            static const wchar_t* kPfx[] = { L"_xll.", L"_xludf." };
+            std::wstring out; out.reserve(f.size());
+            bool inStr = false; int n = 0;
+            for (size_t i = 0; i < f.size(); )
+            {
+                wchar_t c = f[i];
+                if (inStr)
+                {
+                    out += c;
+                    if (c == L'"')
+                    {
+                        if (i + 1 < f.size() && f[i + 1] == L'"') { out += f[i + 1]; i += 2; continue; }
+                        inStr = false;
+                    }
+                    ++i; continue;
+                }
+                if (c == L'"') { inStr = true; out += c; ++i; continue; }
+
+                if (c == L'_' && ((i == 0) || !isIdentChar(f[i - 1])))
+                {
+                    size_t adv = 0;
+                    for (const auto* p : kPfx)
+                    {
+                        const size_t np = wcslen(p);
+                        if (i + np < f.size() &&
+                            _wcsnicmp(f.c_str() + i, p, np) == 0 &&
+                            isIdentStart(f[i + np]))
+                        { adv = np; break; }
+                    }
+                    if (adv)
+                    {
+                        size_t j = i + adv;
+                        while (j < f.size() && isIdentChar(f[j])) ++j;
+                        if (srcUpper.count(upperOf(f.substr(i + adv, j - i - adv))))
+                        { i += adv; ++n; continue; }   // drop the prefix, keep the call
+                    }
+                }
+                out += c; ++i;
+            }
+            if (n) f.swap(out);
+            return n;
+        }
+
+        // Direction B: drop an implicit-intersection `@` that sits directly in
+        // front of a converted-to-native function name (`@SORT(` → `SORT(`).
+        // The `@` is a legacy-load artifact on those calls (the per-cell
+        // fallback scanner reads Formula2, which shows it); keeping it would
+        // collapse the native function's array result to a single value.
+        // `@` in front of anything else is preserved. Returns removals.
+        int stripImplicitAt(std::wstring& f, const std::vector<std::wstring>& namesUpper)
+        {
+            std::wstring out; out.reserve(f.size());
+            bool inStr = false; int n = 0;
+            for (size_t i = 0; i < f.size(); )
+            {
+                wchar_t c = f[i];
+                if (inStr)
+                {
+                    out += c;
+                    if (c == L'"')
+                    {
+                        if (i + 1 < f.size() && f[i + 1] == L'"') { out += f[i + 1]; i += 2; continue; }
+                        inStr = false;
+                    }
+                    ++i; continue;
+                }
+                if (c == L'"') { inStr = true; out += c; ++i; continue; }
+
+                if (c == L'@')
+                {
+                    size_t j = i + 1;
+                    while (j < f.size() && isIdentChar(f[j])) ++j;
+                    if (j > i + 1)
+                    {
+                        const std::wstring ident = upperOf(f.substr(i + 1, j - i - 1));
+                        if (std::find(namesUpper.begin(), namesUpper.end(), ident)
+                            != namesUpper.end())
+                        { ++n; ++i; continue; }   // skip the '@'
+                    }
+                }
+                out += c; ++i;
+            }
+            if (n) f.swap(out);
+            return n;
+        }
+
         // ── classification ───────────────────────────────────────────────────
         bool isGroupName(const std::wstring& bareUpper)
         { return bareUpper == L"GROUPBY" || bareUpper == L"PIVOTBY"; }
@@ -256,7 +436,10 @@ namespace egtools::ribbon
         }
 
         // Scan for GROUPBY/PIVOTBY calls and rewrite name (→ bare) + aggregator.
+        // `nativeUpper` gates Direction B: a group name absent from it (native
+        // missing on this host per nativeResolves) leaves the call untouched.
         std::wstring convertGroupCalls(const std::wstring& f, bool toCompat,
+                                       const std::vector<std::wstring>& nativeUpper,
                                        std::map<std::wstring, int>& counts)
         {
             std::wstring out; out.reserve(f.size());
@@ -286,7 +469,10 @@ namespace egtools::ribbon
                     size_t k = j;
                     while (k < f.size() && iswspace(f[k])) ++k;
 
-                    if (isGroupName(bare) && k < f.size() && f[k] == L'(')
+                    const bool convertible = toCompat ||
+                        std::find(nativeUpper.begin(), nativeUpper.end(), bare)
+                            != nativeUpper.end();
+                    if (isGroupName(bare) && convertible && k < f.size() && f[k] == L'(')
                     {
                         // matching close paren (respecting nested parens + strings)
                         int depth = 0; bool s2 = false; size_t close = std::wstring::npos;
@@ -341,15 +527,62 @@ namespace egtools::ribbon
         struct TransformPlan
         {
             bool toCompat = true;
+            // Direction B on a native-IMAGE host: run the source-aware IMAGE
+            // pass (convertImageCalls) instead of a blanket IMAGE→EG.IMAGE
+            // token rule.
+            bool imageAware = false;
             std::vector<TokenRule> rules;
+            // Direction B: upper-cased bare names that end up NATIVE after the
+            // conversion — an `@` directly in front of one of these is a
+            // legacy-load artifact and gets removed (stripImplicitAt). Also
+            // gates convertGroupCalls' to-native rewrite (GROUPBY/PIVOTBY).
+            std::vector<std::wstring> nativeUpper;
+            // Upper-cased identifiers that may legitimately follow an `_xll.`/
+            // `_xludf.` storage prefix (bare F, xF, EG.F) — the strip set for
+            // stripUdfStoragePrefix. Both directions.
+            std::set<std::wstring> udfSrcUpper;
         };
+
+        // Runtime probe, defined after the COM helpers below: is the NATIVE
+        // function POSITIVELY confirmed to resolve on this host? Called only
+        // for core::isStagedRollout() functions — see the file-top note.
+        bool nativeConfirmed(const std::wstring& bareF);
+
+        // Source-aware IMAGE restore (Direction B), defined after the COM
+        // helpers below. `evalCtx` is a Worksheet (cells) or Application
+        // (defined names) IDispatch whose Evaluate resolves references.
+        // Sets `forceReset` when a call STAYS native: the text may be
+        // unchanged, but the cell must still be re-entered so the legacy-load
+        // implicit-intersection `@` (visible only in the Formula2 view) is
+        // cleared — same re-tokenise idea as TokenRule::retokenBare.
+        std::wstring convertImageCalls(const std::wstring& f, IDispatch* evalCtx,
+                                       std::map<std::wstring, int>& counts,
+                                       bool& forceReset);
+
+        // Direction B: convert `F` to native? GA functions trust the metadata
+        // table; staged-rollout ones additionally need the positive probe.
+        bool convertsToNative(const std::wstring& F)
+        {
+            return core::hasNativeFunction(F) &&
+                   (!core::isStagedRollout(F) || nativeConfirmed(F));
+        }
 
         TransformPlan buildPlan(bool toCompat)
         {
-            TransformPlan plan{ toCompat, {} };
+            TransformPlan plan;
+            plan.toCompat = toCompat;
             for (const auto& F : core::shadowedFunctionNames())
             {
-                if (isGroupName(F)) continue;               // convertGroupCalls
+                plan.udfSrcUpper.insert(F);
+                plan.udfSrcUpper.insert(L"EG." + F);
+                if (core::needsXPrefix(F)) plan.udfSrcUpper.insert(L"X" + F);
+
+                if (isGroupName(F))                         // convertGroupCalls
+                {
+                    if (!toCompat && convertsToNative(F))
+                        plan.nativeUpper.push_back(F);
+                    continue;
+                }
 
                 TokenRule r{ F, {}, false };
                 auto add = [&r](std::wstring from, std::wstring to)
@@ -366,7 +599,7 @@ namespace egtools::ribbon
                         add(L"EG." + F, F);                 // EG.IMAGE   → IMAGE
                     }
                     else if (core::hasNativeFunction(F))
-                        add(F, L"EG." + F);                 // bare IMAGE → EG.IMAGE
+                        plan.imageAware = true;             // convertImageCalls
                 }
                 else
                 {
@@ -384,9 +617,20 @@ namespace egtools::ribbon
                     }
                     else if (core::hasNativeFunction(F))
                     {
-                        add(L"EG." + F, F);                    // EG.F → F (native)
-                        if (xPfx) add(L"x" + F, F);            // xF   → F (native)
-                        r.retokenBare = true;                  // bare F → re-tokenise
+                        if (convertsToNative(F))
+                        {
+                            add(L"EG." + F, F);                // EG.F → F (native)
+                            if (xPfx) add(L"x" + F, F);        // xF   → F (native)
+                            r.retokenBare = true;              // bare F → re-tokenise
+                            plan.nativeUpper.push_back(F);     // `@F` → `F` (strip)
+                        }
+                        else
+                            // Staged rollout without a positive native probe
+                            // (IMPORTTEXT/IMPORTCSV): keep the EGTools
+                            // implementation. Legacy bare-F cells re-point to
+                            // the registered EG.F (Class E treatment); EG.F
+                            // cells stay put.
+                            add(F, L"EG." + F);                // bare F → EG.F
                     }
                 }
                 if (!r.repl.empty() || r.retokenBare)
@@ -399,14 +643,32 @@ namespace egtools::ribbon
         // set when a Direction-B formula still holds a bare native Class-N name
         // that should be re-tokenised even without a text change.
         std::wstring transform(const std::wstring& formula, const TransformPlan& plan,
-                               std::map<std::wstring, int>& counts, bool& forceReset)
+                               std::map<std::wstring, int>& counts, bool& forceReset,
+                               IDispatch* evalCtx = nullptr)
         {
             const std::wstring fu = upperOf(formula);       // prescreen needle-space
+            std::wstring f = formula;
 
-            std::wstring f = (fu.find(L"GROUPBY") != std::wstring::npos ||
-                              fu.find(L"PIVOTBY") != std::wstring::npos)
-                ? convertGroupCalls(formula, plan.toCompat, counts)
-                : formula;
+            // XLL / unknown-UDF storage prefixes (`_xll.xSORT`, `_xludf.TAKE`):
+            // recorded by Excel on hosts where the UDF wasn't registered —
+            // defined names keep them in RefersTo. Strip FIRST so the token
+            // rules below see the clean names (the prefix's '.' defeats their
+            // left-boundary check). Both directions; foreign UDFs untouched.
+            if (fu.find(L"_XLL.") != std::wstring::npos ||
+                fu.find(L"_XLUDF.") != std::wstring::npos)
+            {
+                const int n = stripUdfStoragePrefix(f, plan.udfSrcUpper);
+                if (n) counts[L"_xll.*"] += n;
+            }
+
+            if (fu.find(L"GROUPBY") != std::wstring::npos ||
+                fu.find(L"PIVOTBY") != std::wstring::npos)
+                f = convertGroupCalls(f, plan.toCompat, plan.nativeUpper, counts);
+
+            // Class E IMAGE, Direction B — source-aware: https sources go
+            // native, everything else (and anything unprovable) → EG.IMAGE.
+            if (plan.imageAware && fu.find(L"IMAGE") != std::wstring::npos)
+                f = convertImageCalls(f, evalCtx, counts, forceReset);
 
             for (const auto& rule : plan.rules)
             {
@@ -418,6 +680,25 @@ namespace egtools::ribbon
                 for (const auto& rp : rule.repl)
                     if (fu.find(rp.fromUpper) != std::wstring::npos)
                         counts[rule.F] += replaceToken(f, rp.from, rp.to);
+            }
+
+            // LET/LAMBDA parameter storage prefix (`_xlpm.x` → `x`): Excel
+            // rejects formula writes containing `_xlpm.`, so it must go in
+            // BOTH directions (compat xLET keeps working with the bare name;
+            // native LET re-binds it as its own parameter).
+            if (fu.find(L"_XLPM.") != std::wstring::npos)
+            {
+                const int n = stripXlpmPrefix(f);
+                if (n) counts[L"_xlpm.*"] += n;
+            }
+
+            // Direction B: `@` in front of a now-native name would collapse its
+            // array result to one value — drop it (legacy-load artifact).
+            if (!plan.toCompat && !plan.nativeUpper.empty() &&
+                f.find(L'@') != std::wstring::npos)
+            {
+                const int n = stripImplicitAt(f, plan.nativeUpper);
+                if (n) counts[L"@(암시적 교차)"] += n;
             }
             return f;
         }
@@ -511,6 +792,178 @@ namespace egtools::ribbon
             return d;
         }
 
+        // POSITIVE confirmation that the native function resolves on this host.
+        // Called ONLY for core::isStagedRollout() functions (IMPORTTEXT/
+        // IMPORTCSV): Application.Evaluate("F()") returns the #NAME? error
+        // value (xlErrName 2029) when the name is unknown, and some OTHER
+        // value/error (measured: #VALUE! 2015) when the function exists but
+        // the args are missing. Only that other-result case confirms; #NAME?,
+        // a failed Invoke, or any exception leaves the function unconfirmed —
+        // i.e. it KEEPS its EGTools implementation, the safe direction for a
+        // staged function. NEVER probe GA functions with this: Evaluate is
+        // context-sensitive (see file-top note) and a false negative would
+        // silently disable their conversion. Cached per session; runs on the
+        // main thread (ribbon callback), where COM is safe.
+        bool nativeConfirmed(const std::wstring& bareF)
+        {
+            static std::map<std::wstring, bool> cache;
+            const auto it = cache.find(bareF);
+            if (it != cache.end()) return it->second;
+
+            bool confirmed = false;
+            try
+            {
+                if (IDispatch* app = asDisp(thisApp()))
+                {
+                    Releaser ar{ app };
+                    VARIANT a; VariantInit(&a); a.vt = VT_BSTR;
+                    a.bstrVal = SysAllocString((bareF + L"()").c_str());
+                    VARIANT r; VariantInit(&r);
+                    if (invokeRaw(app, L"Evaluate", DISPATCH_METHOD, &r, &a, 1))
+                    {
+                        confirmed = !(r.vt == VT_ERROR &&
+                                      (r.scode & 0xFFFF) == 2029);  // not #NAME?
+                        VariantClear(&r);
+                    }
+                    VariantClear(&a);
+                }
+            }
+            catch (...) {}
+            cache[bareF] = confirmed;
+            return confirmed;
+        }
+
+        // ── Class E — IMAGE source-aware restore (Direction B) ───────────────
+        // Native IMAGE renders ONLY https URLs; EG.IMAGE also renders local
+        // paths (and http) — see FxImage.cpp. Restoring therefore keeps
+        // EG.IMAGE unless the SOURCE is https (사용자 결정 2026-08-03):
+        //   * "https://…" string literal            → stay native (no rewrite)
+        //   * other literal (local path, http://)   → EG.IMAGE
+        //   * reference/expression                  → EVALUATE it now and use
+        //     the value as the criterion; https string → native, else EG.IMAGE.
+        // The traced decision is a snapshot: if the referenced cell later
+        // changes to a local path, the native IMAGE shows #VALUE! — accepted;
+        // any evaluation failure falls back to EG.IMAGE, which always works.
+
+        // `a` is a trimmed argument. True if it is a quoted string literal.
+        bool isStringArg(const std::wstring& a)
+        { return a.size() >= 2 && a.front() == L'"' && a.back() == L'"'; }
+
+        bool httpsLiteral(const std::wstring& a)
+        {
+            if (!isStringArg(a)) return false;
+            std::wstring s;                       // unquote ("" → ")
+            for (size_t i = 1; i + 1 < a.size(); ++i)
+            {
+                s += a[i];
+                if (a[i] == L'"' && i + 2 < a.size() && a[i + 1] == L'"') ++i;
+            }
+            return _wcsnicmp(s.c_str(), L"https://", 8) == 0;
+        }
+
+        bool evaluatesToHttps(const std::wstring& expr, IDispatch* evalCtx)
+        {
+            if (!evalCtx || expr.empty()) return false;
+            bool https = false;
+            try
+            {
+                // `(expr)&""` forces a scalar TEXT result (a bare reference
+                // would otherwise come back as a Range object); errors stay
+                // errors and simply fail the https check.
+                const std::wstring probe = L"(" + expr + L")&\"\"";
+                VARIANT a; VariantInit(&a); a.vt = VT_BSTR;
+                a.bstrVal = SysAllocString(probe.c_str());
+                VARIANT r; VariantInit(&r);
+                if (invokeRaw(evalCtx, L"Evaluate", DISPATCH_METHOD, &r, &a, 1))
+                {
+                    if (r.vt == VT_BSTR && r.bstrVal)
+                        https = _wcsnicmp(r.bstrVal, L"https://", 8) == 0;
+                    VariantClear(&r);
+                }
+                VariantClear(&a);
+            }
+            catch (...) {}
+            return https;
+        }
+
+        std::wstring convertImageCalls(const std::wstring& f, IDispatch* evalCtx,
+                                       std::map<std::wstring, int>& counts,
+                                       bool& forceReset)
+        {
+            std::wstring out; out.reserve(f.size());
+            bool inStr = false;
+            for (size_t i = 0; i < f.size(); )
+            {
+                wchar_t c = f[i];
+                if (inStr)
+                {
+                    out += c;
+                    if (c == L'"')
+                    {
+                        if (i + 1 < f.size() && f[i + 1] == L'"') { out += f[i + 1]; i += 2; continue; }
+                        inStr = false;
+                    }
+                    ++i; continue;
+                }
+                if (c == L'"') { inStr = true; out += c; ++i; continue; }
+
+                if (isIdentStart(c))
+                {
+                    size_t j = i;
+                    while (j < f.size() && isIdentChar(f[j])) ++j;
+                    const std::wstring ident = f.substr(i, j - i);
+
+                    size_t k = j;
+                    while (k < f.size() && iswspace(f[k])) ++k;
+
+                    // Bare IMAGE calls only — EG.IMAGE / _xlfn.IMAGE idents
+                    // contain '.' and do not match.
+                    if (upperOf(ident) == L"IMAGE" && k < f.size() && f[k] == L'(')
+                    {
+                        int depth = 0; bool s2 = false; size_t close = std::wstring::npos;
+                        for (size_t p = k; p < f.size(); ++p)
+                        {
+                            wchar_t d = f[p];
+                            if (s2) { if (d == L'"') { if (p + 1 < f.size() && f[p + 1] == L'"') ++p; else s2 = false; } continue; }
+                            if (d == L'"') { s2 = true; continue; }
+                            if (d == L'(') ++depth;
+                            else if (d == L')') { if (--depth == 0) { close = p; break; } }
+                        }
+                        if (close != std::wstring::npos)
+                        {
+                            const std::wstring inside = f.substr(k + 1, close - k - 1);
+                            std::vector<std::wstring> args = splitTopLevel(inside);
+                            const std::wstring a0 = args.empty() ? L"" : trim(args[0]);
+                            const bool stayNative = isStringArg(a0)
+                                ? httpsLiteral(a0)
+                                : evaluatesToHttps(a0, evalCtx);
+                            // A directly-preceding `@` is a legacy-load
+                            // implicit-intersection artifact — drop it with
+                            // the conversion (either way the call never needs
+                            // it: native IMAGE spills, EG.IMAGE is scalar).
+                            if (!out.empty() && out.back() == L'@')
+                            { out.pop_back(); counts[L"@(암시적 교차)"]++; }
+                            if (stayNative)
+                            {
+                                out += ident;                      // native IMAGE
+                                // Text may be unchanged, but re-enter the cell
+                                // anyway: the Formula2 view can still hold a
+                                // hidden legacy `@` that only a rewrite clears.
+                                forceReset = true;
+                            }
+                            else { out += L"EG.IMAGE"; counts[L"IMAGE"]++; }
+                            out += f.substr(k, close + 1 - k);     // "(args)" as-is
+                            i = close + 1;
+                            continue;
+                        }
+                    }
+                    out += ident; i = j; continue;
+                }
+                out += c; ++i;
+            }
+            return out;
+        }
+
         // ── CSE array-region re-entry ────────────────────────────────────────
         // A multi-cell CSE array (how a modern spill surfaces on a legacy host)
         // refuses per-cell Formula writes ("cannot change part of an array"), so
@@ -562,8 +1015,15 @@ namespace egtools::ribbon
             Kind kind;
             std::wstring sheet;     // Cell / Array
             std::wstring address;   // local address on `sheet` ($D$1 or $D$1:$E$4)
-            long nameIndex;         // Name — workbook Names.Item index
+            long nameIndex;         // Name — workbook Names.Item index (logging)
             std::wstring formula;   // rewritten formula to write
+            // Name only — captured at SCAN time so the name can be re-created
+            // from scratch at apply time (see the delete-and-re-add note in
+            // applyTargets): scope-qualified name ("Sheet1!x" for sheet scope),
+            // visibility and comment.
+            std::wstring nameText;
+            std::wstring nameComment;
+            bool nameVisible = true;
         };
 
         // Decide cell-vs-array-region for a CHANGED cell and fetch its address.
@@ -624,6 +1084,8 @@ namespace egtools::ribbon
                               std::vector<Target>& targets)
         {
             std::set<std::wstring> seenArrays;      // regions never span sheets
+            IDispatch* wsEval = asDisp(ws);         // IMAGE source tracing
+            Releaser we_{ wsEval };
             ExcelRange formulaCells = ws.usedRange().specialCells(SpecialCells::Formulas);
             // No formula cells (COM error 0x800A03EC) does NOT throw:
             // xlOil swallows it and returns a NULL ExcelRange. In Release
@@ -642,7 +1104,7 @@ namespace egtools::ribbon
 
                 bool fr = false;
                 std::map<std::wstring, int> local;
-                std::wstring nf = transform(fml, plan, local, fr);
+                std::wstring nf = transform(fml, plan, local, fr, wsEval);
                 if (nf == fml && !fr) continue;             // not a target
 
                 IDispatch* cd = asDisp(cell);
@@ -705,7 +1167,7 @@ namespace egtools::ribbon
                         return;                             // inside a queued CSE region
                 bool frs = false;
                 std::map<std::wstring, int> local;
-                std::wstring nf = transform(fml, plan, local, frs);
+                std::wstring nf = transform(fml, plan, local, frs, wsDisp);
                 if (nf == fml && !frs) return;              // not a target
 
                 VARIANT rc[2];
@@ -816,15 +1278,24 @@ namespace egtools::ribbon
                 if (!nm) continue;
                 Releaser mr{ nm };
                 std::wstring refers;
-                try { refers = getBStr(nm, L"RefersTo"); } catch (...) { continue; }
+                try { refers = getBStr(nm, L"RefersTo"); } catch (...) {}
                 if (refers.empty()) continue;
 
                 bool fr = false;
                 std::map<std::wstring, int> local;
-                std::wstring nf = transform(refers, plan, local, fr);
+                // Application.Evaluate as the IMAGE-tracing context — a name
+                // has no home sheet; unqualified refs resolve against the
+                // active sheet and any failure just keeps EG.IMAGE.
+                IDispatch* appEval = asDisp(thisApp());
+                Releaser ae{ appEval };
+                std::wstring nf = transform(refers, plan, local, fr, appEval);
                 if (nf == refers && !fr) continue;
                 for (auto& kv : local) counts[kv.first] += kv.second;
-                targets.push_back({ Target::Kind::Name, L"", L"", ix, nf });
+                Target t{ Target::Kind::Name, L"", L"", ix, nf };
+                t.nameText    = getBStr(nm, L"Name");        // scope-qualified
+                t.nameComment = getBStr(nm, L"Comment");
+                t.nameVisible = getBoolProp(nm, L"Visible");
+                if (!t.nameText.empty()) targets.push_back(std::move(t));
             }
         }
 
@@ -846,20 +1317,9 @@ namespace egtools::ribbon
 
             for (const auto& t : targets)
             {
+                if (t.kind == Target::Kind::Name) continue;    // done above
                 try
                 {
-                    if (t.kind == Target::Kind::Name)
-                    {
-                        if (!names) continue;
-                        VARIANT ix; VariantInit(&ix); ix.vt = VT_I4; ix.lVal = t.nameIndex;
-                        IDispatch* nm = getObject(names, L"Item", &ix, 1);
-                        VariantClear(&ix);
-                        if (!nm) continue;
-                        Releaser mr{ nm };
-                        if (putBStr(nm, L"RefersTo", t.formula)) ++applied;
-                        continue;
-                    }
-
                     if (!sheets) continue;
                     if (!ws || wsName != t.sheet)
                     {
@@ -898,6 +1358,54 @@ namespace egtools::ribbon
                 catch (...) {}
             }
             releaseWs();
+
+            // NAMES LAST — delete and re-create from the scan-time snapshot
+            // (사용자 결정 2026-08-03). A defined name that calls an
+            // unregistered add-in UDF (e.g. `xSORT` on a modern host) DEGRADES
+            // in memory to "=#NAME?" during the run — measured: it is already
+            // degraded by apply time even before any cell write (the summary-
+            // dialog idle recalc / SaveCopyAs backup triggers it) — and a
+            // degraded name refuses both RefersTo writes and Names.Add
+            // overwrite. So: try the plain RefersTo put first (healthy names,
+            // keeps every property), else DELETE the broken entry and re-Add
+            // it from the captured name/formula/visibility/comment.
+            for (const auto& t : targets)
+            {
+                if (t.kind != Target::Kind::Name) continue;
+                try
+                {
+                    if (!names) continue;
+                    VARIANT key; VariantInit(&key); key.vt = VT_BSTR;
+                    key.bstrVal = SysAllocString(t.nameText.c_str());
+                    IDispatch* nm = getObject(names, L"Item", &key, 1);
+                    VariantClear(&key);
+
+                    bool ok = false;
+                    if (nm)
+                    {
+                        Releaser mr{ nm };
+                        ok = putBStr(nm, L"RefersTo", t.formula);
+                        if (!ok)
+                            invokeRaw(nm, L"Delete", DISPATCH_METHOD, nullptr, nullptr, 0);
+                    }
+                    if (!ok)
+                    {
+                        VARIANT av[3];
+                        for (auto& v : av) VariantInit(&v);
+                        av[0].vt = VT_BSTR; av[0].bstrVal = SysAllocString(t.nameText.c_str());
+                        av[1].vt = VT_BSTR; av[1].bstrVal = SysAllocString(t.formula.c_str());
+                        av[2].vt = VT_BOOL; av[2].boolVal = t.nameVisible ? VARIANT_TRUE : VARIANT_FALSE;
+                        VARIANT r; VariantInit(&r);
+                        ok = invokeRaw(names, L"Add", DISPATCH_METHOD, &r, av, 3);
+                        if (ok && !t.nameComment.empty() && r.vt == VT_DISPATCH && r.pdispVal)
+                            putBStr(r.pdispVal, L"Comment", t.nameComment);
+                        VariantClear(&r);
+                        for (auto& v : av) VariantClear(&v);
+                    }
+                    if (ok) ++applied;
+                }
+                catch (...) {}
+            }
             return applied;
         }
 
@@ -969,7 +1477,8 @@ namespace egtools::ribbon
             s += L"\n";
             s += toCompat
                 ? L"모던/네이티브 토큰을 EGTools 호환 함수명으로 바꿉니다.\n"
-                : L"EGTools 함수명을 네이티브 내장 함수로 되돌립니다(IMAGE는 EG.IMAGE 유지).\n";
+                : L"EGTools 함수명을 네이티브 내장 함수로 되돌립니다"
+                  L"(IMAGE와 이 Excel에 아직 없는 함수는 EG.* 유지).\n";
             s += L"변환 직전 백업 파일이 자동 저장됩니다.\n\n계속하시겠습니까?";
             return s;
         }

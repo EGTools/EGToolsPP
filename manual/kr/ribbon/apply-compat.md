@@ -21,9 +21,11 @@
 
 | 대상 | 변환 |
 |---|---|
-| 일반 호환 함수 | `_xlfn.함수` / `_xlfn._xlws.함수` / `EG.함수` → `함수` (EGTools 드롭인 이름) |
+| 일반 호환 함수 | `_xlfn.함수` / `_xlfn._xlws.함수` / `EG.함수` → `함수` (EGTools 드롭인 이름). 충돌 이름 SORT/FILTER/LET는 `xSORT`/`xFILTER`/`xLET`로 변환됩니다 |
 | IMAGE | `_xlfn.IMAGE` / `EG.IMAGE` → `IMAGE` |
 | GROUPBY / PIVOTBY | 함수명을 `GROUPBY`/`PIVOTBY`로 바꾸고, 집계자 인수에 따옴표를 추가합니다(`SUM` 또는 `_xleta.SUM` → `"SUM"`; 네이티브 지원 집계자 16종에 한함, LAMBDA 등은 해당 수식을 건드리지 않음). 뒤따르는 선택 인수가 있어도 변환됩니다(인수 순서 네이티브 동일) |
+| `_xlpm.*` (LET/LAMBDA 매개변수) | 최신 Excel이 LET/LAMBDA의 **매개변수 이름**을 저장하는 내부 접두입니다. 구버전에서 `=_xlfn.LET(_xlpm.x, …)`처럼 나타나며, `_xlpm.`이 포함된 수식은 Excel이 다시 쓰기를 거부하므로 접두를 제거합니다(`_xlpm.x` → `x`). 변환 요약에 `_xlpm.*` 항목으로 집계됩니다 |
+| `_xll.*` / `_xludf.*` (추가기능 UDF 저장 접두) | EGTools 함수가 등록되지 않은 환경에서 열었던 통합문서(특히 **정의된 이름**)에 남는 접두를 제거해 등록된 EGTools 함수로 다시 연결합니다(`_xll.xSORT(…)` → `xSORT(…)`). 다른 추가기능의 함수는 건드리지 않습니다. 변환 요약에 `_xll.*` 항목으로 집계됩니다 |
 
 문자열 리터럴 내부나 다른 식별자의 일부는 변경되지 않습니다(식별자 단위 치환).
 

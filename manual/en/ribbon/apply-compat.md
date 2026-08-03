@@ -22,9 +22,11 @@ to EGTools-compatible names, so the formulas keep calculating on legacy Excel.
 
 | Target | Conversion |
 |---|---|
-| Regular compatibility functions | `_xlfn.F` / `_xlfn._xlws.F` / `EG.F` → `F` (EGTools drop-in name) |
+| Regular compatibility functions | `_xlfn.F` / `_xlfn._xlws.F` / `EG.F` → `F` (EGTools drop-in name). The conflicting names SORT/FILTER/LET convert to `xSORT`/`xFILTER`/`xLET` |
 | IMAGE | `_xlfn.IMAGE` / `EG.IMAGE` → `IMAGE` |
 | GROUPBY / PIVOTBY | Function name goes bare and the aggregator argument gains quotes (`SUM` → `"SUM"`; only for whitelisted aggregators with matching positions — otherwise the formula is left untouched) |
+| `_xlpm.*` (LET/LAMBDA parameters) | Modern Excel's internal storage prefix for LET/LAMBDA **parameter names**; on legacy hosts it surfaces as `=_xlfn.LET(_xlpm.x, …)`. Excel refuses to write back any formula containing `_xlpm.`, so the prefix is stripped (`_xlpm.x` → `x`). Counted as `_xlpm.*` in the conversion summary |
+| `_xll.*` / `_xludf.*` (add-in UDF storage prefixes) | Strips the prefixes left in workbooks (notably in **defined names**) that were opened on a host where the EGTools UDF was not registered, re-pointing the call at the registered EGTools function (`_xll.xSORT(…)` → `xSORT(…)`). Other add-ins' UDFs are left alone. Counted as `_xll.*` in the conversion summary |
 
 String literals and partial identifier matches are never modified (whole-identifier replacement).
 

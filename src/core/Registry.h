@@ -11,6 +11,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -18,6 +19,7 @@
 
 #include "Version.h"
 #include "I18n.h"
+#include "Spill.h"
 
 namespace egtools::core
 {
@@ -52,6 +54,39 @@ namespace egtools::core
 
     namespace detail
     {
+        // Wrap `fn` so its registered runtime name is visible (via UdfNameScope's
+        // thread-local) while it executes. core::output() needs it on legacy
+        // hosts: only the formula's OUTERMOST call may CSE-resize the cell; a
+        // nested UDF must return its array in-memory only (see Spill.cpp). The
+        // wrapper preserves fn's exact signature so RegisterLambda's argument
+        // deduction is unaffected.
+        template <class TFunc, class TRet, class TClass, class... Args>
+        auto namedUdfImpl(const std::wstring& name, TFunc fn, TRet (TClass::*)(Args...) const)
+        {
+            return [name, fn = std::move(fn)](Args... args) -> TRet
+            {
+                UdfNameScope scope(name);
+                return fn(static_cast<Args&&>(args)...);
+            };
+        }
+
+        template <class TFunc, class TRet, class TClass, class... Args>
+        auto namedUdfImpl(const std::wstring& name, TFunc fn, TRet (TClass::*)(Args...))
+        {
+            return [name, fn = std::move(fn)](Args... args) mutable -> TRet
+            {
+                UdfNameScope scope(name);
+                return fn(static_cast<Args&&>(args)...);
+            };
+        }
+
+        template <class TFunc>
+        auto namedUdf(const std::wstring& name, TFunc&& fn)
+        {
+            return namedUdfImpl(name, std::forward<TFunc>(fn),
+                                &std::decay_t<TFunc>::operator());
+        }
+
         // Register one (name -> fn) pair, pulling i18n help/args by bareName.
         template <class TFunc>
         void registerOne(const std::wstring& name, const std::wstring& bareName,
@@ -82,7 +117,9 @@ namespace egtools::core
     {
         // EG.<F> / x<F> / <F> per host — see core::registeredName().
         const std::wstring name = registeredName(bareName);
-        detail::registerOne(name, bareName, std::forward<TFunc>(fn), macro, threadsafe);
+        detail::registerOne(name, bareName,
+                            detail::namedUdf(name, std::forward<TFunc>(fn)),
+                            macro, threadsafe);
 
         // NOTE: we do NOT register the "_xlfn." alias of new functions.
         //
