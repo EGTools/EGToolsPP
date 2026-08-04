@@ -75,16 +75,28 @@ named `MMdd` (`MMdd_1` … on duplicates).
 
 ## Holidays
 
-- Holidays come from the **built-in calculation** — solar and lunar holidays,
-  Labor Day and the **substitute-holiday rules** (per their effective years).
-  The calculation is shared with the [KOREANHOLIDAYS](../KOREANHOLIDAYS.md)
-  function.
-- If a data.go.kr (Korean open-data portal) key is registered
-  ([EGTools → Manage API Keys](api-keys.md)), the holiday
-  API is queried so that **temporary holidays and election days** missing from
-  the built-in calculation are merged automatically. Without a key, or when
-  the lookup fails, only the built-in result is used (cached per year — no
-  re-query on every run).
+- The basis for holidays is the **built-in calculation** — solar and lunar
+  holidays, Labor Day and the **substitute-holiday rules** (per their effective
+  years). The calculation is shared with the
+  [KOREANHOLIDAYS](../KOREANHOLIDAYS.md) function.
+- On top of that, the **holiday API is merged in by default**: the stored
+  data.go.kr key ([EGTools → Manage API Keys](api-keys.md)) is used to query the
+  holiday-information service so that **temporary holidays and election days**
+  missing from the built-in calculation also appear. The same rule applies to
+  **every sheet type** — Monthly, Annual A/B, Weekly and Daily A/B.
+- When there is no internet connection, no key registered, or the key has
+  expired or been rejected, the sheet is **built from the built-in calculation
+  only** and the following notice is shown **once** after the command finishes
+  (together with the reason for the failure).
+
+  > The holiday API was unavailable, so the built-in calculation was used.
+  > Temporary holidays and election days are not shown.
+
+  Sheet creation itself is never aborted. If you see this notice, register or
+  renew the key and run the command again to get temporary holidays.
+- Lookup results are cached per year, so building several calendars for the same
+  year queries the service only once (failures are not cached, so fixing the key
+  takes effect immediately).
 - Lunar dates use the built-in lunar table (same as the
   [TOLUNAR](../TOLUNAR.md) function); dates outside its range show no lunar
   mark.

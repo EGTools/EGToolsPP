@@ -1483,21 +1483,28 @@
                            "ret":  "Spills a two-column array of [date serial, holiday name] rows (dates only when holiday_name=FALSE). A year outside 919-2050 returns a #VALUE! error.",
                            "examples":  [
                                             [
-                                                "=ROWS(KOREANHOLIDAYS(2025))",
+                                                "=ROWS(KOREANHOLIDAYS(2025,,,0))",
                                                 "18",
-                                                "Holiday rows for 2025 (built-in calculation — with an api_key registered, temporary holidays may add rows)"
+                                                "Holiday rows for 2025 — the trailing 0 skips the API and uses the built-in calculation only"
                                             ],
                                             [
-                                                "=INDEX(KOREANHOLIDAYS(2025,FALSE),1,1)",
+                                                "=INDEX(KOREANHOLIDAYS(2025,FALSE,,0),1,1)",
                                                 "45658",
-                                                "First holiday (Jan 1) serial"
+                                                "First holiday (Jan 1) serial, dates only (names excluded)"
+                                            ],
+                                            [
+                                                "=KOREANHOLIDAYS(2026)",
+                                                "",
+                                                "Default behaviour — the stored data.go.kr key merges temporary holidays (such as the nationwide local election on 2026-06-03). The row count depends on whether a key is registered and on network access"
                                             ]
                                         ],
                            "notes":  [
                                          "Substitute-holiday rules are applied per their effective years (Children's Day 2014+, Mar 1/Liberation/Foundation Day 2022+, Buddha's Birthday and Christmas 2023+).",
                                          "Holiday names follow the add-in language setting (Korean/English); holidays falling on the same day are merged with commas.",
                                          "Lunar holidays (Lunar New Year, Buddha's Birthday, Chuseok) use the built-in lunar table (918-2050).",
-                                         "With an api_key (Korean open-data portal, data.go.kr) the holiday API is queried and items missing from the built-in calculation — temporary holidays, election days — are merged in. A key passed once as the argument is stored in the registry (HKCU\\Software\\EGTools\\ApiKeys) and can be omitted afterwards; it can also be registered via ribbon EGTools → Manage API Keys. Without a key, or when the lookup fails, only the built-in result is returned (cached per year)."
+                                         "The api_key argument has three uses. **Omit it** (the default) and the stored data.go.kr key is used to query the holiday API, merging in items the built-in calculation lacks — temporary holidays, election days; without a key, or when the lookup fails, only the built-in result is returned (the formula does not break). **Pass a key string** and it is stored and used; if the lookup then fails the cell shows `ERROR: 공휴일 API - <reason>` with the cause (no key / key rejected plus the server message / connection failure / no items in the response). **Pass 0** and the API is never called — the built-in calculation only, with no network access.",
+                                         "The data.go.kr (Korean open-data portal) key is a single per-account key shared by KOREANHOLIDAYS, the ribbon Calendar commands and BRNSTATUS. Pass it once as the last argument, or register it under ribbon [EGTools] → [Manage API Keys]; it is stored in your user account and can be omitted afterwards. A key registered for business-registration lookups by an older version is moved to the shared slot automatically on first use.",
+                                         "Lookup results are cached per year, so a recalculation queries a given year only once. Failures are not cached, so fixing the key takes effect on the next calculation."
                                      ]
                        },
     "MONTHBHYWEEK":  {
@@ -2392,7 +2399,7 @@
                                            ]
                                        ],
                           "notes":  [
-                                        "No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored under HKCU\\Software\\EGTools\\ApiKeys and can be omitted afterwards.",
+                                        "No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored in the registry and can be omitted afterwards.",
                                         "When the service rejects the key (expired/unregistered), the stored key is deleted automatically and a reissue guide is returned.",
                                         "info columns: 1 zip, 2 road address (default), 3 jibun, 4 English — 27 fields in total."
                                     ]
@@ -2407,9 +2414,11 @@
                                        ]
                                    ],
                       "notes":  [
-                                    "No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys and reused afterwards.",
+                                    "No API key ships with the add-in. Get one at https://www.data.go.kr (NTS business-registration status service) and pass it once as the last argument, or register it under ribbon [EGTools] → [Manage API Keys]; it is stored in your user account and reused afterwards.",
+                                    "The data.go.kr key is a single per-account key, so it is shared with KOREANHOLIDAYS and the ribbon Calendar commands. A key registered separately for business-registration lookups by an older version is moved to the shared slot automatically on first use — nothing to re-enter.",
                                     "When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.",
-                                    "Requests are batched 100 numbers per POST, so bulk lookups are efficient; hyphens are removed automatically and blank inputs return empty strings."
+                                    "Numbers stored as **numeric cells** are handled correctly: the number is converted to an integer string without exponent notation, and a 9-digit value whose leading zero was dropped is restored to 10 digits. Non-digit characters such as hyphens and spaces are ignored, and blank cells return empty strings.",
+                                    "Requests are batched 100 numbers per POST, so bulk lookups are efficient."
                                 ]
                   },
     "GEOSEARCH":  {
@@ -2422,7 +2431,7 @@
                                        ]
                                    ],
                       "notes":  [
-                                    "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                    "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.",
                                     "Address search (search_type 1) retries road then parcel (jibun) automatically."
                                 ]
                   },
@@ -2436,7 +2445,7 @@
                                       ]
                                   ],
                      "notes":  [
-                                   "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                   "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.",
                                    "Tries the road-address geocoder first, then falls back to parcel (jibun)."
                                ]
                  },
@@ -2450,7 +2459,7 @@
                                         ]
                                     ],
                        "notes":  [
-                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide."
+                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide."
                                  ]
                    },
     "ADDRESSMAP":  {
@@ -2463,7 +2472,7 @@
                                         ]
                                     ],
                        "notes":  [
-                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\\Software\\EGTools\\ApiKeys, and a rejected key is deleted automatically with a reissue guide.",
+                                     "No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.",
                                      "Geocodes the address (road then parcel) and fetches a WMS map that includes the continuous cadastral layers."
                                  ]
                    }

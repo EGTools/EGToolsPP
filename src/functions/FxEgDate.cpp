@@ -341,15 +341,44 @@ namespace egtools::functions
             const bool mayDay = mayDayObj.isMissing() ? true : (mayDayObj.get<double>(1.0) != 0.0);
             const bool ko = egtools::i18n::current() == L"ko";
 
+            // api_key 인수(4번째)의 3가지 용법 — 기본은 **API 사용**(사용자 지시
+            // 2026-08-04):
+            //   생략        → 저장된 data.go.kr 키로 병합(키 없거나 실패하면 내장만)
+            //   "키 문자열" → 그 키를 저장하고 사용(설정 중이므로 실패는 오류로 보고)
+            //   0 / FALSE   → API를 아예 쓰지 않고 내장 계산만(네트워크 접근 없음)
+            const bool apiOff =
+                !keyObj.isMissing() &&
+                (keyObj.isType(ExcelType::Bool) || keyObj.isType(ExcelType::Num)) &&
+                keyObj.get<double>(1.0) == 0.0;
+
             std::map<int, std::wstring> list;
             buildHolidayList(year, mayDay, ko, list);
+            if (apiOff)
+            {
+                std::vector<ExcelObj> only;
+                only.reserve(list.size() * (withName ? 2 : 1));
+                for (const auto& [s, name] : list)
+                {
+                    only.push_back(ExcelObj((double)s));
+                    if (withName) only.push_back(ExcelObj(std::wstring_view(name)));
+                }
+                return egtools::core::output(egtools::core::makeArray(
+                    (ExcelArrayBuilder::row_t)list.size(), withName ? 2 : 1, only));
+            }
 
             // 공공 API 병합(결정 3): 임시공휴일·선거일 등 내장에 없는 항목 추가.
-            // 키 없음/실패는 조용히 무시(내장 결과만 반환).
             std::wstring apiKey;
-            if (!keyObj.isMissing())
-                apiKey = keyObj.toString();
-            egtools::dates::mergeApiHolidays(year, list, apiKey);
+            if (!keyObj.isMissing()) apiKey = keyObj.toString();
+
+            // 실패 처리: 키를 **문자열로 명시**한 호출은 설정 중이므로 사유를
+            // 셀에 돌려준다(FxPublicApi "ERROR: …" 관례 — 조용히 실패하면 원인을
+            // 알 수 없다는 사용자 신고 2026-08-04). 생략한 호출은 수식이 깨지지
+            // 않도록 내장 결과를 그대로 반환한다.
+            std::wstring apiError;
+            egtools::dates::mergeApiHolidays(year, list, apiKey, &apiError);
+            if (!apiKey.empty() && !apiError.empty())
+                return returnValue(ExcelObj(std::wstring_view(
+                    L"ERROR: 공휴일 API - " + apiError)));
 
             std::vector<ExcelObj> vals;
             vals.reserve(list.size() * (withName ? 2 : 1));
@@ -667,41 +696,93 @@ namespace egtools::dates
         return egtools::functions::solarToLunar(serial, lYear, lMonth, lDay);
     }
 
-    int mergeApiHolidays(int year, std::map<int, std::wstring>& list,
-                         const std::wstring& apiKeyArg)
+    // ── data.go.kr 인증키(단일 슬롯 "datago") ───────────────────────────────
+    // 공공데이터포털은 계정당 키 하나를 발급하고 활용신청한 모든 서비스에 그
+    // 키를 쓴다. 따라서 서비스별 슬롯은 불필요 — KOREANHOLIDAYS(특일정보)와
+    // BRNSTATUS(사업자등록)가 이 값을 공유한다. 구 "odcloud" 슬롯은 최초 조회
+    // 시 datago로 옮기고 삭제한다(사용자 지시 2026-08-04, 통일).
+    namespace
     {
-        // ── 키 결정: 인수 우선(전달 시 저장 — 공공 API 키 정책), 없으면 레지스트리 ──
-        constexpr const wchar_t* kKeyPath = L"Software\\EGTools\\ApiKeys";
-        constexpr const wchar_t* kValue = L"datago";
-        std::wstring key = apiKeyArg;
-        if (!key.empty())
-        {
-            HKEY h = nullptr;
-            if (RegCreateKeyExW(HKEY_CURRENT_USER, kKeyPath, 0, nullptr, 0,
-                                KEY_WRITE, nullptr, &h, nullptr) == ERROR_SUCCESS)
-            {
-                RegSetValueExW(h, kValue, 0, REG_SZ, (const BYTE*)key.c_str(),
-                               (DWORD)((key.size() + 1) * sizeof(wchar_t)));
-                RegCloseKey(h);
-            }
-        }
-        else
-        {
-            HKEY h = nullptr;
-            if (RegOpenKeyExW(HKEY_CURRENT_USER, kKeyPath, 0, KEY_READ, &h)
-                    == ERROR_SUCCESS)
-            {
-                wchar_t buf[512]{};
-                DWORD size = sizeof(buf), type = 0;
-                if (RegQueryValueExW(h, kValue, nullptr, &type, (BYTE*)buf, &size)
-                        == ERROR_SUCCESS && type == REG_SZ)
-                    key = buf;
-                RegCloseKey(h);
-            }
-        }
-        if (key.empty()) return 0;
+        constexpr const wchar_t* kApiKeyPath = L"Software\\EGTools\\ApiKeys";
 
-        // ── 연도별 세션 캐시(실패도 캐시 — 재계산마다 타임아웃 반복 방지) ──
+        std::wstring regReadKey(const wchar_t* value)
+        {
+            HKEY h = nullptr;
+            if (RegOpenKeyExW(HKEY_CURRENT_USER, kApiKeyPath, 0, KEY_READ, &h)
+                    != ERROR_SUCCESS)
+                return L"";
+            wchar_t buf[512]{};
+            DWORD size = sizeof(buf) - sizeof(wchar_t), type = 0;
+            std::wstring out;
+            if (RegQueryValueExW(h, value, nullptr, &type, (BYTE*)buf, &size)
+                    == ERROR_SUCCESS && type == REG_SZ)
+                out = buf;
+            RegCloseKey(h);
+            return out;
+        }
+    }
+
+    void saveDataGoKey(const std::wstring& key)
+    {
+        if (key.empty()) return;
+        HKEY h = nullptr;
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, kApiKeyPath, 0, nullptr, 0,
+                            KEY_WRITE, nullptr, &h, nullptr) != ERROR_SUCCESS)
+            return;
+        RegSetValueExW(h, L"datago", 0, REG_SZ, (const BYTE*)key.c_str(),
+                       (DWORD)((key.size() + 1) * sizeof(wchar_t)));
+        RegDeleteValueW(h, L"odcloud");     // 통일 후 구 슬롯 제거
+        RegCloseKey(h);
+    }
+
+    std::wstring dataGoKey()
+    {
+        std::wstring key = regReadKey(L"datago");
+        if (!key.empty()) return key;
+        key = regReadKey(L"odcloud");       // 구 버전 등록분 → 자동 이관
+        if (!key.empty()) saveDataGoKey(key);
+        return key;
+    }
+
+    int mergeApiHolidays(int year, std::map<int, std::wstring>& list,
+                         const std::wstring& apiKeyArg, std::wstring* error)
+    {
+        auto fail = [&](std::wstring msg) { if (error) *error = std::move(msg); return 0; };
+
+        // ── 키 결정: 인수 우선(전달 시 저장 — 공공 API 키 정책), 없으면 레지스트리 ──
+        // data.go.kr은 계정당 인증키 하나로 모든 서비스를 쓴다. 종전에는 서비스별로
+        // datago(공휴일)/odcloud(사업자등록) 슬롯을 따로 뒀는데 같은 값이라 혼란만
+        // 컸다 — **datago 하나로 통일**하고 구 odcloud 값은 자동 이관한다
+        // (사용자 지시 2026-08-04: 키를 odcloud로만 등록해 임시공휴일이 병합되지
+        // 않던 문제의 근본 해소).
+        std::wstring key = apiKeyArg;
+        if (!key.empty()) egtools::dates::saveDataGoKey(key);
+        else key = egtools::dates::dataGoKey();
+        if (key.empty())
+            return fail(L"data.go.kr 키가 없습니다. 마지막 인수로 1회 입력하거나 "
+                        L"[EGTools] > [API 키 관리]에서 등록하세요.");
+
+        // 포털은 인증키를 Encoding(퍼센트 인코딩)/Decoding 두 형태로 보여준다.
+        // Decoding 키를 그대로 붙이면 '+/=' 때문에 서명이 깨지므로 인코딩한다
+        // (이미 인코딩된 키는 '%'가 있으므로 건드리지 않는다).
+        if (key.find(L'%') == std::wstring::npos)
+        {
+            std::wstring enc;
+            for (wchar_t c : key)
+            {
+                if (c == L'+') enc += L"%2B";
+                else if (c == L'/') enc += L"%2F";
+                else if (c == L'=') enc += L"%3D";
+                else enc += c;
+            }
+            key.swap(enc);
+        }
+
+        // ── 연도별 세션 캐시: **성공만** 캐시한다. 실패는 캐시하지 않고 매번
+        //    다시 조회한다 — 사용자가 키를 고치면 즉시 반영되어야 하기 때문
+        //    (사용자 지시 2026-08-04: 재시도 지연을 두면 조치 결과를 바로
+        //    확인할 수 없다). 실패가 이어지면 매 재계산마다 타임아웃(최대 약
+        //    10초)이 발생하므로 타임아웃 값은 짧게 유지한다.
         static std::map<int, std::vector<std::pair<int, std::wstring>>> cache;
         auto it = cache.find(year);
         if (it == cache.end())
@@ -713,7 +794,7 @@ namespace egtools::dates
                 WINHTTP_NO_PROXY_BYPASS, 0);
             if (hSession)
             {
-                WinHttpSetTimeouts(hSession, 3000, 3000, 4000, 5000);
+                WinHttpSetTimeouts(hSession, 5000, 5000, 10000, 10000);
                 HINTERNET hConnect = WinHttpConnect(hSession, L"apis.data.go.kr",
                                                     INTERNET_DEFAULT_HTTPS_PORT, 0);
                 if (hConnect)
@@ -792,6 +873,22 @@ namespace egtools::dates
                 }
                 fetched.emplace_back(egtools::functions::toSerial(y, m, d), name);
             }
+
+            // 실패 판정: 응답 없음 / resultCode≠00(키 미등록·트래픽 초과 등) /
+            //           항목 0건. 사유를 그대로 돌려줘 사용자가 조치할 수 있게 한다.
+            if (body.empty())
+                return fail(L"서버에 연결하지 못했습니다(네트워크·방화벽 확인).");
+            const std::string code = tagText(body, 0, body.size(), "resultCode");
+            if (!code.empty() && code != "00")
+            {
+                std::string msg = tagText(body, 0, body.size(), "resultMsg");
+                if (msg.empty()) msg = tagText(body, 0, body.size(), "returnAuthMsg");
+                std::wstring wmsg(msg.begin(), msg.end());   // 코드/메시지는 ASCII
+                return fail(L"키가 거부되었습니다(" + wmsg + L"). 활용신청 승인 여부와 "
+                            L"키 값을 확인하세요.");
+            }
+            if (fetched.empty())
+                return fail(L"응답에 공휴일 항목이 없습니다(특일정보 활용신청 확인).");
             it = cache.emplace(year, std::move(fetched)).first;
         }
 

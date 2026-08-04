@@ -16,15 +16,16 @@ namespace egtools::commands
         constexpr const wchar_t* kKeyPath = L"Software\\EGTools\\ApiKeys";
 
         // 서비스 레지스트리 값 이름(FxPublicApi.cpp와 일치) + i18n 설명 키.
+        // data.go.kr은 계정당 인증키 하나라 슬롯도 하나("datago") — 공휴일과
+        // 사업자등록이 공유한다(사용자 지시 2026-08-04, 구 odcloud 슬롯 통합).
         struct Service { const wchar_t* value; const wchar_t* i18nKey; };
         constexpr Service kServices[] = {
-            { L"juso",    L"cmd.apikeys.svc.juso" },
-            { L"odcloud", L"cmd.apikeys.svc.odcloud" },
-            { L"vworld",  L"cmd.apikeys.svc.vworld" },
-            { L"datago",  L"cmd.apikeys.svc.datago" },
+            { L"juso",   L"cmd.apikeys.svc.juso" },
+            { L"datago", L"cmd.apikeys.svc.datago" },
+            { L"vworld", L"cmd.apikeys.svc.vworld" },
         };
 
-        bool regHasKey(const wchar_t* service)
+        bool regHasKeyRaw(const wchar_t* service)
         {
             HKEY h = nullptr;
             if (RegOpenKeyExW(HKEY_CURRENT_USER, kKeyPath, 0, KEY_READ, &h) != ERROR_SUCCESS)
@@ -34,6 +35,13 @@ namespace egtools::commands
                                  == ERROR_SUCCESS && type == REG_SZ && size > sizeof(wchar_t);
             RegCloseKey(h);
             return has;
+        }
+
+        // datago는 구 odcloud 슬롯도 등록된 것으로 본다(자동 이관 대상).
+        bool regHasKey(const wchar_t* service)
+        {
+            if (regHasKeyRaw(service)) return true;
+            return wcscmp(service, L"datago") == 0 && regHasKeyRaw(L"odcloud");
         }
 
         void regSetKey(const wchar_t* service, const std::wstring& key)
@@ -121,6 +129,8 @@ namespace egtools::commands
                     if (!key.empty())
                     {
                         regSetKey(kServices[i].value, key);
+                        if (wcscmp(kServices[i].value, L"datago") == 0)
+                            regDeleteKey(L"odcloud");      // 구 슬롯 정리(통일)
                         refreshStatus(dlg);
                     }
                     return TRUE;
@@ -131,6 +141,8 @@ namespace egtools::commands
                     if (i >= 0 && i < (int)_countof(kServices))
                     {
                         regDeleteKey(kServices[i].value);
+                        if (wcscmp(kServices[i].value, L"datago") == 0)
+                            regDeleteKey(L"odcloud");
                         refreshStatus(dlg);
                     }
                     return TRUE;

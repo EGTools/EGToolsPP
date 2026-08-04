@@ -5,6 +5,7 @@
 #include "Commands.h"
 #include "CmdCommon.h"
 #include "Dialogs.h"
+#include "Smtp.h"
 
 #include <filesystem>
 #include <map>
@@ -303,15 +304,46 @@ namespace egtools::commands
             const auto e = s.find_last_not_of(L" \t\r\n");
             return b == std::wstring::npos ? L"" : s.substr(b, e - b + 1);
         }
+
+        // 제목/본문 템플릿의 {{필드}}를 해당 행 값으로 치환(v2 개선 — VB는
+        // 제목/본문 치환이 없었음). 목록에 없는 필드는 원문 그대로 둔다.
+        std::wstring substituteFields(const std::wstring& tmpl,
+                                      const std::map<std::wstring, long>& headers,
+                                      SafeArr2D& listVals, long row)
+        {
+            std::wstring out = tmpl;
+            size_t ls = out.find(L"{{");
+            while (ls != std::wstring::npos)
+            {
+                const size_t rs = out.find(L"}}", ls);
+                if (rs == std::wstring::npos) break;
+                const std::wstring field = out.substr(ls + 2, rs - ls - 2);
+                std::wstring upper = field;
+                for (auto& ch : upper) ch = towupper(ch);
+                const auto hit = headers.find(trimWs(upper));
+                if (hit != headers.end())
+                {
+                    const std::wstring val =
+                        varToString(listVals.at(row, hit->second));
+                    out.replace(ls, rs - ls + 2, val);
+                    ls = out.find(L"{{", ls + val.size());
+                }
+                else
+                    ls = out.find(L"{{", ls + 2);
+            }
+            return out;
+        }
     }
 
-    // 메일머지 v1 (VB MailMerge, C05_MailMerge.vb:16)
+    // 메일머지 (VB MailMerge, C05_MailMerge.vb:16)
     // 자료 목록의 행마다 양식 시트를 복제해 {{필드}}를 치환하고, 옵션에 따라
-    // 개별 파일 저장(xlsx — 암호 열 지원 / 첫 헤더가 "PDF"면 PDF)·개별 인쇄를
+    // 개별 파일 저장(xlsx — 암호 열 지원 / 첫 헤더가 "PDF"면 PDF)·개별 인쇄·
+    // 메일 발송(v2, 비트 4 — 저장 파일을 첨부, 미저장 시 발송 후 삭제)을
     // 수행한다. 옵션 0이면 복제 시트를 남긴다(그 외에는 삭제).
-    // **메일 발송(v2)은 제외**(plan/23 결정 1 — SMTP 설정은 v2에서 암호 제외
-    // 레지스트리 저장 방침, §3-3). VB의 삭제 대상 시트명 버그(sName vs
-    // newShName)는 교정.
+    // VB 대비 교정: 삭제 대상 시트명 버그(sName vs newShName), 메일 본문이
+    // 옵션 안내문으로 발송되던 버그(→ 이메일 시트의 본문/Body 행 지원),
+    // 제목/본문 {{필드}} 치환 추가. SMTP 설정은 암호 제외 레지스트리 저장
+    // (§3-3 — 암호는 발송 시마다 입력).
     void mailMerge()
     {
         using egtools::i18n::t;
@@ -322,15 +354,16 @@ namespace egtools::commands
             if (!ad) return;
             Releaser rApp{ ad };
 
-            // 1) 옵션 (VB 0~7 중 메일 비트 제외: 0=시트 복제만, 1=파일저장,
-            //    2=인쇄, 3=저장+인쇄)
+            // 1) 옵션 (VB 0~7 비트: 1=파일저장, 2=인쇄, 4=메일발송)
             double optD = 1;
             if (!egtools::dialogs::inputNumber(excelHwnd(), t(L"cmd.mm.optTitle"),
-                                               t(L"cmd.mm.optPrompt"), optD, 0, 3, 1))
+                                               t(L"cmd.mm.optPrompt"), optD, 0, 7, 1))
                 return;
             const int opt = (int)optD;
             const bool doSave = (opt & 1) != 0;
             const bool doPrint = (opt & 2) != 0;
+            const bool doMail = (opt & 4) != 0;
+            const bool needFile = doSave || doMail;   // 첨부용 파일 생성 포함
             const bool deleteSheet = opt != 0;
 
             // 2) 인쇄 설정 (xlDialogPrinterSetup = 9, VB 동일)
@@ -390,6 +423,68 @@ namespace egtools::commands
             for (long c = 1; c <= listCols; ++c)
                 headers[upperCase(trimWs(varToString(listVals.at(1, c))))] = c;
 
+            // 메일 발송 준비(비트 4): 수신자 열 + 이메일 템플릿 시트 + SMTP + 암호
+            long emailCol = 0;
+            std::wstring mailSubject, mailBody, mailCc, mailBcc, mailPw;
+            smtp::Settings smtpCfg;
+            if (doMail)
+            {
+                // 수신자 열: eMail/이메일 (VB 동일, 대소문자 무시)
+                auto it = headers.find(L"EMAIL");
+                if (it == headers.end()) it = headers.find(L"이메일");
+                if (it == headers.end())
+                { msgWarn(t(L"cmd.mm.emailColMissing")); return; }
+                emailCol = it->second;
+
+                // 이메일 템플릿 시트("이메일"/"Email"): 1열=키, 2열=값.
+                // 제목/Subject(필수)·본문/Body·참조/CC·숨은참조/BCC.
+                // (VB는 본문 행이 없어 옵션 안내문이 본문으로 발송되던 버그.)
+                IDispatch* mailSh = nullptr;
+                if (IDispatch* sheets = getObject(wb, L"Sheets"))
+                {
+                    Releaser rs{ sheets };
+                    const long n = getLong(sheets, L"Count", 0);
+                    for (long i = 1; i <= n && !mailSh; ++i)
+                    {
+                        IDispatch* cand = getObjectIdx(sheets, L"Item", i);
+                        if (!cand) continue;
+                        const std::wstring nm = upperCase(getBStr(cand, L"Name"));
+                        if (nm == L"이메일" || nm == L"EMAIL") mailSh = cand;
+                        else cand->Release();
+                    }
+                }
+                if (!mailSh) { msgWarn(t(L"cmd.mm.mailSheetMissing")); return; }
+                Releaser rMailSh{ mailSh };
+                if (IDispatch* ur = getObject(mailSh, L"UsedRange"))
+                {
+                    Releaser rUr{ ur };
+                    SafeArr2D mv;
+                    if (mv.load(ur, L"Value2"))
+                        for (long i = 1; i <= mv.r2; ++i)
+                        {
+                            const std::wstring key =
+                                upperCase(trimWs(varToString(mv.at(i, 1))));
+                            const std::wstring val =
+                                mv.c2 >= 2 ? varToString(mv.at(i, 2)) : L"";
+                            if (key == L"제목" || key == L"SUBJECT") mailSubject = val;
+                            else if (key == L"본문" || key == L"BODY") mailBody = val;
+                            else if (key == L"참조" || key == L"CC") mailCc = val;
+                            else if (key == L"숨은참조" || key == L"BCC") mailBcc = val;
+                        }
+                }
+                if (mailSubject.empty())
+                { msgWarn(t(L"cmd.mm.subjectMissing")); return; }
+
+                // SMTP 설정(미비 시 설정 다이얼로그) + 암호(저장 안 함, §3-3)
+                if (!smtp::ensure(smtpCfg))
+                { msgWarn(t(L"cmd.mm.smtpIncomplete")); return; }
+                if (!egtools::dialogs::inputText(excelHwnd(), t(L"cmd.mm.pwTitle"),
+                                                 t(L"cmd.mm.pwPrompt"), mailPw,
+                                                 /*password*/ true)
+                    || mailPw.empty())
+                    return;                                  // 취소
+            }
+
             // 5) 양식의 {{필드}} 스캔 → 필드별 (열, 셀주소 목록)
             struct FieldRef { long col; std::vector<std::wstring> addrs; };
             std::map<std::wstring, FieldRef> fields;   // 키: 원문 필드명
@@ -438,9 +533,9 @@ namespace egtools::commands
                     }
             }
 
-            // 6) 암호 열(저장 시)
+            // 6) 암호 열(파일 생성 시 — VB는 저장/발송 모두에서 확인)
             long passCol = 0;
-            if (doSave)
+            if (needFile)
             {
                 auto it = headers.find(L"PASSWORD");
                 if (it == headers.end()) it = headers.find(L"암호");
@@ -450,13 +545,13 @@ namespace egtools::commands
             const bool asPdf =
                 upperCase(trimWs(varToString(listVals.at(1, 1)))) == L"PDF";
             const std::wstring wbPath = getBStr(wb, L"Path");
-            if (doSave && wbPath.empty())
+            if (needFile && wbPath.empty())
             {
                 msgWarn(t(L"cmd.mm.outputDirFail"));
                 return;
             }
             const std::wstring outDir = wbPath + L"\\Output";
-            if (doSave)
+            if (needFile)
             {
                 std::error_code ec;
                 fs::create_directories(outDir, ec);
@@ -468,7 +563,8 @@ namespace egtools::commands
             }
 
             // 7) 데이터 행 루프
-            long made = 0;
+            long made = 0, sent = 0;
+            std::wstring mailErrors;
             for (long r = 2; r <= listRows; ++r)
             {
                 const std::wstring rawName = trimWs(varToString(listVals.at(r, 1)));
@@ -518,9 +614,10 @@ namespace egtools::commands
 
                 if (doPrint) callMethod(newSh, L"PrintOut");
 
-                if (doSave)
+                std::wstring savedFile;                 // 이 행의 산출 파일 경로
+                if (needFile)
                 {
-                    // 단일 시트 새 워크북으로 복사 후 저장
+                    // 단일 시트 새 워크북으로 복사 후 저장(발송 시 첨부용 포함)
                     if (callMethod(newSh, L"Copy"))
                     {
                         IDispatch* outWb = getObject(ad, L"ActiveWorkbook");
@@ -535,17 +632,19 @@ namespace egtools::commands
                             }
                             if (asPdf)
                             {
+                                savedFile = outDir + L"\\" + fileBase + L".pdf";
                                 VARIANT a[2];
                                 a[0] = varLong(0);           // xlTypePDF
-                                a[1] = varBStr(outDir + L"\\" + fileBase + L".pdf");
+                                a[1] = varBStr(savedFile);
                                 callMethod(outWb, L"ExportAsFixedFormat", a, 2);
                                 VariantClear(&a[1]);
                             }
                             else
                             {
                                 // SaveAs(Filename, FileFormat=51, [Password])
+                                savedFile = outDir + L"\\" + fileBase + L".xlsx";
                                 VARIANT a[3];
-                                a[0] = varBStr(outDir + L"\\" + fileBase + L".xlsx");
+                                a[0] = varBStr(savedFile);
                                 a[1] = varLong(51);
                                 VariantInit(&a[2]);
                                 a[2].vt = VT_ERROR; a[2].scode = DISP_E_PARAMNOTFOUND;
@@ -561,6 +660,30 @@ namespace egtools::commands
                             f.vt = VT_BOOL; f.boolVal = VARIANT_FALSE;
                             callMethod(outWb, L"Close", &f, 1);
                         }
+                    }
+                }
+
+                // 메일 발송(비트 4): 수신자 셀이 빈 행은 건너뜀(VB 동일)
+                if (doMail)
+                {
+                    const std::wstring email =
+                        trimWs(varToString(listVals.at(r, emailCol)));
+                    if (!email.empty())
+                    {
+                        statusBar(ad, rawName + L" mailing...");
+                        const std::wstring err = smtp::send(
+                            smtpCfg, mailPw, email, mailCc, mailBcc,
+                            substituteFields(mailSubject, headers, listVals, r),
+                            substituteFields(mailBody, headers, listVals, r),
+                            savedFile);
+                        if (err.empty()) ++sent;
+                        else mailErrors += L"\n" + rawName + L" - " + err;
+                    }
+                    // 저장을 선택하지 않았으면 첨부용 임시 파일 정리(VB 동일)
+                    if (!doSave && !savedFile.empty())
+                    {
+                        std::error_code ec;
+                        fs::remove(savedFile, ec);
                     }
                 }
 
@@ -589,8 +712,13 @@ namespace egtools::commands
             statusBarClear(ad);
             callMethod(wb, L"Activate");
             callMethod(formSh, L"Activate");
-            msgInfo(made > 0 ? withCount(t(L"cmd.mm.done"), made)
-                             : t(L"cmd.mm.none"));
+            std::wstring doneMsg = made > 0 ? withCount(t(L"cmd.mm.done"), made)
+                                            : t(L"cmd.mm.none");
+            if (doMail) doneMsg += L"\n" + withCount(t(L"cmd.mm.sent"), sent);
+            if (!mailErrors.empty())
+                msgWarn(doneMsg + L"\n\n" + t(L"cmd.mm.mailErrors") + mailErrors);
+            else
+                msgInfo(doneMsg);
         }
         catch (...) {}
     }

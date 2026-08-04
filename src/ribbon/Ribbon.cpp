@@ -249,10 +249,11 @@ namespace egtools::ribbon
         // ── EGTools: 스플릿 버튼 단일 그룹 — 대표 기능은 EGTools 정보, API 키
         //    관리는 도구 메뉴에서 이 그룹으로 이동(사용자 지시, 2026-08-04) ──
         constexpr BtnDef kMainMenuItems[] = {
-            { L"egpp.toCompat", L"onToCompat", L"compat-apply",   nullptr, nullptr },
-            { L"egpp.toNative", L"onToNative", L"restore-native", nullptr, nullptr },
-            { L"egpp.apiKeys",  L"onApiKeys",  L"api-keys",       nullptr, nullptr },
-            { L"egpp.about",    L"onAbout",    L"about",          nullptr, nullptr },
+            { L"egpp.toCompat",  L"onToCompat",  L"compat-apply",   nullptr, nullptr },
+            { L"egpp.toNative",  L"onToNative",  L"restore-native", nullptr, nullptr },
+            { L"egpp.smtpSetup", L"onSmtpSetup", L"smtp-setup",     nullptr, nullptr },
+            { L"egpp.apiKeys",   L"onApiKeys",   L"api-keys",       nullptr, nullptr },
+            { L"egpp.about",     L"onAbout",     L"about",          nullptr, nullptr },
         };
         constexpr SplitDef kSbMain = {
             L"egpp.sbMain",
@@ -350,6 +351,7 @@ namespace egtools::ribbon
             { L"draw-shape",       IDR_ICON_DRAW_SHAPE },
             { L"date-picker",      IDR_ICON_DATE_PICKER },
             { L"mail-merge",       IDR_ICON_MAIL_MERGE },
+            { L"smtp-setup",       IDR_ICON_SMTP_SETUP },
         };
 
         // 버튼 XML. topLevel=true면 size="large"(그룹 직속/스플릿 기본 버튼),
@@ -886,6 +888,7 @@ namespace egtools::ribbon
                 { L"onCheckBox",     &applyCheckBox },
                 { L"onRecalc",       &recalcAll },
                 { L"onApiKeys",      &manageApiKeys },
+                { L"onSmtpSetup",    &smtpSettings },
                 { L"onOpenUrl",      &openUrlInCell },
             };
             for (const auto& c : kCommands)

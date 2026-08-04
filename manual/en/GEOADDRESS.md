@@ -32,5 +32,5 @@ Returns the address text at the coordinate (return_type=3 spills jibun and road 
 
 ## Notes
 
-- No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored under HKCU\Software\EGTools\ApiKeys, and a rejected key is deleted automatically with a reissue guide.
+- No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.
 - Supported: Excel 2010+. Always registered as `GEOADDRESS` on every Excel version.

@@ -14,12 +14,20 @@ namespace egtools::dates
                          std::map<int, std::wstring>& list);
 
     // 공공데이터포털 특일정보 API(getRestDeInfo)로 임시공휴일·선거일 등
-    // 내장 계산에 없는 항목을 병합한다(결정 3). apiKey가 비어 있으면
-    // HKCU\Software\EGTools\ApiKeys\datago 저장 키 사용; 인수로 오면 저장 후
-    // 사용(공공 API 키 정책과 동일). 키 없음/네트워크 실패는 조용히 0 반환.
-    // 연도별 세션 캐시(실패 포함) — 재계산마다 재조회하지 않는다.
+    // 내장 계산에 없는 항목을 병합한다(결정 3). apiKey가 비어 있으면 저장된
+    // data.go.kr 키 사용; 인수로 오면 저장 후 사용(공공 API 키 정책과 동일).
+    // 반환값은 추가된 항목 수. error가 있으면 실패 사유를 담는다(키 없음/거부/
+    // 네트워크). 성공만 연도별 세션 캐시 — 실패는 캐시하지 않고 매번 재조회해
+    // 사용자가 키를 고치면 즉시 반영된다(사용자 지시 2026-08-04).
     int mergeApiHolidays(int year, std::map<int, std::wstring>& list,
-                         const std::wstring& apiKey = L"");
+                         const std::wstring& apiKey = L"",
+                         std::wstring* error = nullptr);
+
+    // data.go.kr 인증키 — 서비스 구분 없이 계정당 하나(단일 슬롯 "datago").
+    // 특일정보(KOREANHOLIDAYS·달력)와 사업자등록(BRNSTATUS)이 공유한다.
+    // dataGoKey()는 구 "odcloud" 슬롯 값을 발견하면 datago로 자동 이관한다.
+    std::wstring dataGoKey();
+    void saveDataGoKey(const std::wstring& key);
 
     // serial(양력)의 음력 표기(년/월/일). 범위 밖이면 false.
     // 달력/일정표의 음력 표시용.

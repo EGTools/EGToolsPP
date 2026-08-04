@@ -10,7 +10,7 @@
 //
 // API keys (user decision 2026-08-01): NO key ships with the add-in. The last
 // optional argument takes a key; on first use it is stored under
-// HKCU\Software\EGTools\ApiKeys (value: juso / odcloud / vworld) and reused
+// HKCU\Software\EGTools\ApiKeys (value: juso / datago / vworld) and reused
 // when the argument is omitted. The path is deliberately "EGTools" (not
 // "EGTools++") so the VB/VBA editions can share the same stored keys. When a service rejects the key
 // (expired/unregistered), the stored value is deleted and the error tells the
@@ -127,11 +127,49 @@ namespace egtools::functions
         }
 
         // arg key (→ store) > stored key > "" (caller returns guidance).
+        // "datago" = data.go.kr 계정 인증키(계정당 하나). 특일정보(공휴일)와
+        // 사업자등록 상태조회가 공유한다 — 구 "odcloud" 슬롯 값은 최초 조회 시
+        // datago로 이관한다(사용자 지시 2026-08-04, 슬롯 통일).
         std::wstring resolveKey(const ExcelObj& keyA, const wchar_t* service)
         {
             std::wstring k = trimWs(keyA.toString());
-            if (!k.empty()) { regSetKey(service, k); return k; }
-            return regGetKey(service);
+            if (!k.empty())
+            {
+                regSetKey(service, k);
+                if (wcscmp(service, L"datago") == 0) regDelKey(L"odcloud");
+                return k;
+            }
+            k = regGetKey(service);
+            if (k.empty() && wcscmp(service, L"datago") == 0)
+            {
+                k = regGetKey(L"odcloud");
+                if (!k.empty()) { regSetKey(L"datago", k); regDelKey(L"odcloud"); }
+            }
+            return k;
+        }
+
+        // 사업자등록번호 정규화(사용자 요청 2026-08-04): 셀이 **숫자**로 저장된
+        // 경우를 텍스트로 변환해 비교한다. Excel은 큰 수를 지수 표기로 문자열화
+        // 할 수 있고(1.01812E+09) 앞자리 0은 아예 사라지므로, 숫자면 정수 표기로
+        // 바꾼 뒤 숫자만 남기고 9자리면 앞에 0을 채워 10자리로 맞춘다
+        // ("0101812345" 같은 번호가 101812345로 저장되는 사례).
+        std::wstring brnDigits(const ExcelObj& o)
+        {
+            std::wstring s;
+            if (o.isType(ExcelType::Num))
+            {
+                wchar_t buf[32]{};
+                swprintf_s(buf, L"%.0f", o.get<double>(0.0));
+                s = buf;
+            }
+            else
+                s = o.toString();
+
+            std::wstring digits;
+            for (wchar_t ch : s)
+                if (iswdigit(ch)) digits.push_back(ch);
+            if (digits.size() == 9) digits.insert(digits.begin(), L'0');
+            return digits;
         }
 
         // Key-guidance errors (user request 2026-08-01): always include the
@@ -432,8 +470,8 @@ namespace egtools::functions
         core::registerFn(L"BRNSTATUS",
             [](const ExcelObj& numsA, const ExcelObj& keyA) -> ExcelObj*
             {
-                std::wstring key = resolveKey(keyA, L"odcloud");
-                if (key.empty()) return keyMissingError(L"odcloud", kDataIssuer, kDataUrl);
+                std::wstring key = resolveKey(keyA, L"datago");
+                if (key.empty()) return keyMissingError(L"datago", kDataIssuer, kDataUrl);
                 // accept both encoded and raw keys (raw contains '/', '+', '=')
                 if (key.find(L'%') == std::wstring::npos &&
                     key.find_first_of(L"+/=") != std::wstring::npos)
@@ -447,18 +485,14 @@ namespace egtools::functions
                     for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
                         for (ExcelArray::col_t c = 0; c < a.nCols(); ++c)
                         {
-                            std::wstring s = trimWs(ExcelObj(a.at(r, c)).toString());
-                            std::wstring digits;
-                            for (wchar_t ch : s) if (ch != L'-') digits.push_back(ch);
+                            std::wstring digits = brnDigits(ExcelObj(a.at(r, c)));
                             blank.push_back(digits.empty());
                             nums.push_back(digits);
                         }
                 }
                 else
                 {
-                    std::wstring s = trimWs(numsA.toString());
-                    std::wstring digits;
-                    for (wchar_t ch : s) if (ch != L'-') digits.push_back(ch);
+                    std::wstring digits = brnDigits(numsA);
                     blank.push_back(digits.empty());
                     nums.push_back(digits);
                 }
@@ -481,20 +515,20 @@ namespace egtools::functions
                     if (!httpCall(url, L"POST", req.dump(), L"application/json", body, &status))
                         return returnValue(ExcelObj(std::wstring_view(L"ERROR: 네트워크 요청 실패")));
                     if (status == 401 || status == 403)
-                        return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
+                        return keyRejectedError(L"datago", kDataIssuer, kDataUrl);
                     json j;
                     try { j = json::parse(body); }
                     catch (...)
                     {
                         const std::wstring wb = fromUtf8Pa(body);
-                        if (looksLikeKeyError(wb)) return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
+                        if (looksLikeKeyError(wb)) return keyRejectedError(L"datago", kDataIssuer, kDataUrl);
                         return returnValue(ExcelObj(std::wstring_view(
                             L"ERROR: 응답 파싱 실패(HTTP " + std::to_wstring(status) + L")")));
                     }
                     if (!j.contains("data") || !j["data"].is_array())
                     {
                         std::wstring m = j.contains("msg") ? jstr(j["msg"]) : L"응답 형식 오류";
-                        if (looksLikeKeyError(m)) return keyRejectedError(L"odcloud", kDataIssuer, kDataUrl);
+                        if (looksLikeKeyError(m)) return keyRejectedError(L"datago", kDataIssuer, kDataUrl);
                         return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                     }
                     const auto& data = j["data"];

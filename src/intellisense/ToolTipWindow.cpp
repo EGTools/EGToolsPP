@@ -42,13 +42,15 @@ namespace egtools::intellisense
         }
 
         // UI 언어 → 준비된 매뉴얼 언어 폴더. 준비된 번역이 없으면 영어로 폴백.
-        // 번역이 추가되면 여기에 매핑 한 줄만 더한다 (예: ja → L"ja").
+        // 번역이 추가되면 여기에 매핑 한 줄만 더한다.
         std::wstring manualLang()
         {
             const std::wstring ui = egtools::i18n::current();
             if (ui == L"ko") return L"kr";
-            if (ui == L"en") return L"en";
-            return L"en";   // ja/es/zh-CN/zh-TW 등 미준비 언어 → 영어 폴백
+            if (ui == L"ja" || ui == L"es" ||
+                ui == L"zh-CN" || ui == L"zh-TW")
+                return ui;                  // 2026-08-04 전체 언어 매뉴얼 완비
+            return L"en";
         }
 
         // 함수명 → GitHub 매뉴얼 URL. EG./x 접두를 벗겨 bare 이름으로 연결한다.

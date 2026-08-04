@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SMTP 설정 — 봉투 + 우하단 기어 배지(메일 발송 설정). 액센트 청록(메일 계열) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="3.5" y="7" width="20" height="15" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <path d="M4.5 9 L13.5 16 L22.5 9" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="20.5" y1="24" x2="31.5" y2="24" stroke="#0D9488" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="23.25" y1="19.25" x2="28.75" y2="28.75" stroke="#0D9488" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="28.75" y1="19.25" x2="23.25" y2="28.75" stroke="#0D9488" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="26" cy="24" r="3.4" fill="#0D9488" stroke="none"/>
+  <circle cx="26" cy="24" r="1.4" fill="#FFFFFF" stroke="none"/>
+</svg>

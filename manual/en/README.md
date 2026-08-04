@@ -171,6 +171,7 @@ Features on the `EGTools++` ribbon tab. See the [ribbon overview](ribbon/README.
 
 - [Apply Legacy Compatibility](ribbon/apply-compat.md)
 - [Restore Native Functions](ribbon/restore-native.md)
+- [SMTP Settings](ribbon/smtp-settings.md)
 - [Manage API Keys](ribbon/api-keys.md)
 
 ### Context Menu

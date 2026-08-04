@@ -7,6 +7,7 @@
 #include "Dialogs.h"
 #include "../../core/I18n.h"
 
+#include <algorithm>
 #include <commdlg.h>
 #include <shobjidl.h>
 #include <vector>
@@ -137,13 +138,19 @@ namespace egtools::dialogs
                    const std::wstring& label, std::wstring& value, bool password)
     {
         using egtools::i18n::t;
-        DlgBuilder b(title, 230, 92);
-        b.item(0x0082, IDC_LABEL, SS_LEFT, 7, 7, 216, 42);
+        // 라벨 높이는 줄 수에 맞춰 동적 산정(메일머지 옵션 안내처럼 여러 줄
+        // 프롬프트가 잘리지 않도록 — 한 줄 ≈ 9 DLU).
+        const int lines = 1 + (int)std::count(label.begin(), label.end(), L'\n');
+        const int labelH = std::max(18, lines * 9);
+        const int editY = 7 + labelH + 3;
+        const int btnY = editY + 13 + 6;
+        DlgBuilder b(title, 230, btnY + 14 + 7);
+        b.item(0x0082, IDC_LABEL, SS_LEFT, 7, 7, 216, labelH);
         b.item(0x0081, IDC_EDIT,
                WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL | (password ? ES_PASSWORD : 0),
-               7, 52, 216, 13);
-        b.item(0x0080, IDOK, BS_DEFPUSHBUTTON | WS_TABSTOP, 118, 71, 50, 14, t(L"dlg.ok"));
-        b.item(0x0080, IDCANCEL, BS_PUSHBUTTON | WS_TABSTOP, 173, 71, 50, 14, t(L"dlg.cancel"));
+               7, editY, 216, 13);
+        b.item(0x0080, IDOK, BS_DEFPUSHBUTTON | WS_TABSTOP, 118, btnY, 50, 14, t(L"dlg.ok"));
+        b.item(0x0080, IDCANCEL, BS_PUSHBUTTON | WS_TABSTOP, 173, btnY, 50, 14, t(L"dlg.cancel"));
 
         InputCtx ctx{ &label, &value };
         return DialogBoxIndirectParamW(GetModuleHandleW(nullptr), b.finish(), owner,

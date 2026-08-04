@@ -9,7 +9,7 @@ action is **Make Labels**.
 | Menu item | Description |
 |---|---|
 | [Make Labels](#make-labels) | Tile the form on one sheet, once per data row, substituting `{{fieldname}}` with values |
-| [Mail Merge](mailmerge.md) | Clone the form sheet per data row into individual sheets/files (xlsx/PDF) or print each |
+| [Mail Merge](mailmerge.md) | Clone the form sheet per data row into individual sheets/files (xlsx/PDF), print each and/or send email (file attached) |
 
 ## Make Labels
 

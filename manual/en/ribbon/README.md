@@ -70,7 +70,7 @@ Details: [Forms](forms.md)
 | Menu item | Description |
 |---|---|
 | [Make Labels](forms.md#make-labels) | Clone the form per data row, substituting `{{fieldname}}` with values |
-| [Mail Merge](mailmerge.md) | Clone the form sheet per data row into individual sheets/files (xlsx/PDF) or print each |
+| [Mail Merge](mailmerge.md) | Clone the form sheet per data row into individual sheets/files (xlsx/PDF), print each and/or send email (file attached) |
 
 ## Group: Utilities
 
@@ -91,14 +91,15 @@ Frequently used helpers (split button, default = Recalculate All). Details: [Uti
 
 ## Group: EGTools
 
-A split button collecting batch function-name conversion, API key management and
-add-in information (default = About EGTools++).
+A split button collecting batch function-name conversion, SMTP settings, API key
+management and add-in information (default = About EGTools++).
 
 | Menu item | Description |
 |---|---|
 | [Apply Legacy Compatibility](apply-compat.md) | Batch-convert modern/native (`_xlfn.*`) function tokens to EGTools-compatible names |
 | [Restore Native Functions](restore-native.md) | Batch-restore EGTools function names to native built-ins |
-| [Manage API Keys](api-keys.md) | Register/remove per-service keys for the public-API functions |
+| [SMTP Settings](smtp-settings.md) | Register the SMTP server for mail-merge sending (password never stored) |
+| [Manage API Keys](api-keys.md) | Register/remove public-API keys (juso · data.go.kr · vworld — the data.go.kr key is shared by holidays, calendars and business-registration lookups) |
 | About EGTools++ | Shows version, distribution page and base libraries; notifies with a link when a newer GitHub Release is available |
 
 ## Cell Right-Click Menu

@@ -1,4 +1,4 @@
-// CmdCalendar.cpp — 달력/일정표 명령 (EGToolsVB C04_Scheduler.vb 포팅, plan/23).
+﻿// CmdCalendar.cpp — 달력/일정표 명령 (EGToolsVB C04_Scheduler.vb 포팅, plan/23).
 // MakeMonthlyCalendar / MakeAnnualCalendarA·B / MakeWeeklyCalendar /
 // MakeDailyCalendarA·B(+CopyTaskFromYesterday). 연간 A/B와 일일 A/B는 레이아웃
 // 파라미터/분기만 다른 공통 구현이며 산출 시트 레이아웃은 VB와 동일하다.
@@ -144,13 +144,36 @@ namespace egtools::commands
         }
 
         // ── 공휴일(공용 헤더) ──
+        // 기본은 **API 사용**(사용자 지시 2026-08-04): 저장된 data.go.kr 키로
+        // 임시공휴일·선거일을 병합한다. 키가 없거나 네트워크·키 문제로 실패하면
+        // 내장 계산만 쓰고, 그 사실을 명령이 끝난 뒤 한 번 안내한다(조용한 실패
+        // 금지 — 사용자는 임시공휴일 누락을 알아야 함).
+        thread_local std::wstring g_holidayApiError;   // 명령 1회 실행 동안 누적
+
         std::map<int, std::wstring> holidayList(int year, bool ko)
         {
             std::map<int, std::wstring> list;
             egtools::dates::builtinHolidays(year, /*mayDay*/true, ko, list);
-            egtools::dates::mergeApiHolidays(year, list);   // 키 있으면 조용히 병합
+            std::wstring err;
+            egtools::dates::mergeApiHolidays(year, list, L"", &err);
+            if (!err.empty() && g_holidayApiError.empty()) g_holidayApiError = err;
             return list;
         }
+
+        // 명령 시작~종료를 감싸는 RAII — 어느 경로로 빠져나가도(중간 return 다수)
+        // 실패했으면 "내장 계산을 썼고 임시공휴일이 빠졌다"고 한 번 알린다.
+        struct HolidayApiNotice
+        {
+            HolidayApiNotice() { g_holidayApiError.clear(); }
+            ~HolidayApiNotice()
+            {
+                if (g_holidayApiError.empty()) return;
+                const std::wstring msg = egtools::i18n::t(L"cmd.cal.apiFallback") +
+                                         L"\n\n" + g_holidayApiError;
+                g_holidayApiError.clear();
+                try { msgWarn(msg); } catch (...) {}
+            }
+        };
 
         // ── COM 소품 ──
         VARIANT varBool(bool v)
@@ -544,6 +567,7 @@ namespace egtools::commands
             using egtools::i18n::t;
             try
             {
+                HolidayApiNotice apiNotice;   // 실패 시 종료할 때 안내
                 const bool ko = egtools::i18n::current() == L"ko";
                 SYSTEMTIME st; GetLocalTime(&st);
 
@@ -662,6 +686,7 @@ namespace egtools::commands
             using egtools::i18n::t;
             try
             {
+                HolidayApiNotice apiNotice;   // 실패 시 종료할 때 안내
                 const bool ko = egtools::i18n::current() == L"ko";
                 SYSTEMTIME st; GetLocalTime(&st);
                 wchar_t def[16];
@@ -951,6 +976,7 @@ namespace egtools::commands
         using egtools::i18n::t;
         try
         {
+            HolidayApiNotice apiNotice;   // 실패 시 종료할 때 안내
             const bool ko = egtools::i18n::current() == L"ko";
             SYSTEMTIME st; GetLocalTime(&st);
             wchar_t def[16];
@@ -1148,6 +1174,7 @@ namespace egtools::commands
         using egtools::i18n::t;
         try
         {
+            HolidayApiNotice apiNotice;   // 실패 시 종료할 때 안내
             const bool ko = egtools::i18n::current() == L"ko";
             SYSTEMTIME st; GetLocalTime(&st);
             wchar_t def[16];

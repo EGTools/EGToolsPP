@@ -62,9 +62,12 @@ namespace egtools::commands
 
     // ── 양식 (CmdForm.cpp) ──
     void makeLabels();      // 라벨지 만들기
-    void mailMerge();       // 메일머지 v1 — 시트 복제·치환·파일저장(xlsx/PDF)·인쇄
-                            //   (메일 발송은 v2 보류 — plan/23 결정 1)
+    void mailMerge();       // 메일머지 — 시트 복제·치환·파일저장(xlsx/PDF)·인쇄·
+                            //   메일 발송(v2, 옵션 비트 4 — Smtp.h/CmdSmtp.cpp)
 
     // ── API 키 관리 (CmdApiKeys.cpp) ──
     void manageApiKeys();      // 공공 API 키 등록/삭제 다이얼로그
+
+    // ── SMTP 설정 (CmdSmtp.cpp) ──
+    void smtpSettings();       // 메일 발송 SMTP 설정 다이얼로그(암호 제외 저장)
 }

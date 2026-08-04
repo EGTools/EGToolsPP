@@ -171,6 +171,7 @@
 
 - [구버전 호환 적용](ribbon/apply-compat.md)
 - [내장 함수로 복원](ribbon/restore-native.md)
+- [SMTP 설정](ribbon/smtp-settings.md)
 - [API 키 관리](ribbon/api-keys.md)
 
 ### 컨텍스트 메뉴

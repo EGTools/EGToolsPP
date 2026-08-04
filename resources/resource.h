@@ -59,3 +59,4 @@
 #define IDR_ICON_DRAW_SHAPE      245
 #define IDR_ICON_DATE_PICKER     246
 #define IDR_ICON_MAIL_MERGE      247
+#define IDR_ICON_SMTP_SETUP      248
