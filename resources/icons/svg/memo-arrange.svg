@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 메모 정돈 — 말풍선 + 정렬 선. 액센트 주황 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <path d="M5 7 L21 7 A2 2 0 0 1 23 9 L23 17 A2 2 0 0 1 21 19 L12 19 L8 23 L8 19 L7 19 A2 2 0 0 1 5 17 Z" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M9 11.5 L19 11.5 M9 15 L15 15" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M26 12 L26 24 M26 24 L23.5 21.5 M26 24 L28.5 21.5" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 선택 맞춤 — 셀 테두리 안으로 향하는 네 모서리 화살표. 액센트 보라 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="4" y="5" width="24" height="22" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <path d="M9 12 L13 16 M13 16 L13 12.5 M13 16 L9.5 16" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M23 12 L19 16 M19 16 L19 12.5 M19 16 L22.5 16" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9 21 L13 17 M13 17 L13 20.5 M13 17 L9.5 17" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M23 21 L19 17 M19 17 L19 20.5 M19 17 L22.5 17" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

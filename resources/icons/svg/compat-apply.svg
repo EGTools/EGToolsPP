@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 구버전 호환 적용 — 시트(그리드) + 아래로 되감는 화살표(레거시로 변환). 모노라인 2px, 액센트 파랑 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="5" y="4" width="22" height="14" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="5" y1="11" x2="27" y2="11" stroke="#475569" stroke-width="2"/>
+  <line x1="16" y1="4" x2="16" y2="18" stroke="#475569" stroke-width="2"/>
+  <path d="M25.5 21.5 A10 5.5 0 0 1 8.5 25.5" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M12.5 22.5 L8 25.8 L13.5 27.5" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

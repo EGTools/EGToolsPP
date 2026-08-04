@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 모양 뽑기 — 색칠 셀 블록의 외곽선을 따는 펜 경로. 액센트 빨강 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="6" width="9" height="9" fill="#CBD5E1" stroke="none"/>
+  <rect x="15" y="10" width="9" height="9" fill="#CBD5E1" stroke="none"/>
+  <rect x="10" y="15" width="9" height="9" fill="#CBD5E1" stroke="none"/>
+  <path d="M6 6 L15 6 L15 10 L24 10 L24 19 L19 19 L19 24 L10 24 L10 15 L6 15 Z" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-linejoin="round"/>
+</svg>

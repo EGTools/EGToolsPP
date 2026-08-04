@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 전체 재계산 — 순환 화살표 + 가운데 등호. 액센트 파랑 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <path d="M25.5 13 A10 10 0 0 0 7.5 11.5" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M7.5 6.5 L7.2 11.8 L12.5 11.5" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M6.5 19 A10 10 0 0 0 24.5 20.5" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M24.5 25.5 L24.8 20.2 L19.5 20.5" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12.5 13.8 L19.5 13.8 M12.5 18.2 L19.5 18.2" fill="none" stroke="#475569" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

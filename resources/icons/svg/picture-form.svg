@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 그림 양식 삽입 — 문서 틀 + 보라 사진 칸 2개 반복(산 모양) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="4" width="20" height="24" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <rect x="9.5" y="7.5" width="13" height="8" rx="1" fill="none" stroke="#7C3AED" stroke-width="1.8"/>
+  <path d="M11.5 13.5 L14 10.5 L16 12.5 L17.5 11 L20.5 13.5" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="9.5" y="17.5" width="13" height="8" rx="1" fill="none" stroke="#7C3AED" stroke-width="1.8"/>
+  <path d="M11.5 23.5 L14 20.5 L16 22.5 L17.5 21 L20.5 23.5" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

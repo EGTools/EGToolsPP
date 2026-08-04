@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 0.6
+  VERSION 0.7
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX)
 
@@ -69,6 +69,15 @@ set(EG_SOURCES
   src/intellisense/ToolTipWindow.cpp
   src/ribbon/Ribbon.cpp
   src/ribbon/Convert.cpp
+  src/ribbon/commands/Dialogs.cpp
+  src/ribbon/commands/CmdCopy.cpp
+  src/ribbon/commands/CmdMerge.cpp
+  src/ribbon/commands/CmdPicture.cpp
+  src/ribbon/commands/CmdUtil.cpp
+  src/ribbon/commands/CmdCalendar.cpp
+  src/ribbon/commands/CmdForm.cpp
+  src/ribbon/commands/CmdApiKeys.cpp
+  src/ribbon/commands/DatePicker.cpp
   resources/egtools.rc
   # Module-definition file: exports the XLL entry points (xlAutoOpen, …) with
   # UNDECORATED names. Required on x86 — without it __stdcall decoration

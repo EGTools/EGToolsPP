@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 이미지 삽입 — 사진(산+해) + 우하단 플러스 배지. 액센트 보라 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="4" y="6" width="21" height="17" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <circle cx="10.5" cy="11.5" r="1.8" fill="#475569" stroke="none"/>
+  <path d="M6 20 L12 14 L16 18 L20 13 L23 16" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 21 L25 29 M21 25 L29 25" fill="none" stroke="#7C3AED" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

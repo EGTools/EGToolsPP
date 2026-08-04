@@ -785,7 +785,8 @@ namespace egtools::ribbon
 
         struct Releaser { IDispatch* p; ~Releaser() { if (p) p->Release(); } };
 
-        IDispatch* asDisp(const detail::UnknownObject& obj)
+        // NB: 한정 필수 — Convert.h의 egtools::ribbon::detail이 xloil::detail을 가림
+        IDispatch* asDisp(const xloil::detail::UnknownObject& obj)
         {
             IDispatch* d = nullptr;
             if (obj.ptr()) obj.ptr()->QueryInterface(IID_IDispatch, (void**)&d);
@@ -1620,4 +1621,84 @@ namespace egtools::ribbon
 
     void convertToCompat() { runConversion(/*toCompat*/ true); }
     void convertToNative() { runConversion(/*toCompat*/ false); }
+
+    // 저장 게이트 + 백업 공용 진입점 (Convert.h detail — UDF 값 고정 등에서 재사용).
+    // runConversion의 게이트/백업과 동일 로직·동일 안내 문구.
+    bool detail::saveGateAndBackup(const wchar_t* title, std::wstring& backupPath)
+    {
+        const HWND hwnd = excelHwnd();
+        try { COM::connectCom(); } catch (...) {}
+
+        ExcelWorkbook wb(nullptr);
+        try { wb = thisApp().workbooks().active(); }
+        catch (...) {}
+        if (!wb.valid())
+        {
+            MessageBoxW(hwnd, L"열려 있는 통합문서를 찾을 수 없습니다.", title,
+                        MB_OK | MB_ICONWARNING);
+            return false;
+        }
+
+        {
+            IDispatch* wbDisp = asDisp(wb);
+            if (!wbDisp) return false;
+            Releaser r{ wbDisp };
+            std::wstring path;
+            try { path = wb.path(); } catch (...) {}
+            const bool saved = getLong(wbDisp, L"Saved") != 0;
+            if (path.empty() || !saved)
+            {
+                if (MessageBoxW(hwnd,
+                    L"이 기능은 통합문서를 저장한 상태에서 실행해야 합니다.\n"
+                    L"지금 저장하고 계속하시겠습니까?",
+                    title, MB_YESNO | MB_ICONQUESTION) != IDYES)
+                    return false;
+
+                if (path.empty())
+                {
+                    IDispatch* appDisp2 = asDisp(thisApp());
+                    if (appDisp2)
+                    {
+                        Releaser ar{ appDisp2 };
+                        IDispatch* dialogs = getObject(appDisp2, L"Dialogs");
+                        if (dialogs)
+                        {
+                            Releaser dr{ dialogs };
+                            VARIANT ix; VariantInit(&ix); ix.vt = VT_I4; ix.lVal = 5;
+                            IDispatch* dlg = getObject(dialogs, L"Item", &ix, 1);
+                            VariantClear(&ix);
+                            if (dlg)
+                            {
+                                Releaser gr{ dlg };
+                                invokeRaw(dlg, L"Show", DISPATCH_METHOD,
+                                          nullptr, nullptr, 0);
+                            }
+                        }
+                    }
+                }
+                else
+                    invokeRaw(wbDisp, L"Save", DISPATCH_METHOD, nullptr, nullptr, 0);
+
+                std::wstring newPath;
+                try { newPath = wb.path(); } catch (...) {}
+                if (newPath.empty() || getLong(wbDisp, L"Saved") == 0)
+                {
+                    MessageBoxW(hwnd,
+                        L"통합문서가 저장되지 않아 작업을 취소했습니다.",
+                        title, MB_OK | MB_ICONINFORMATION);
+                    return false;
+                }
+            }
+        }
+
+        if (!backupWorkbook(wb, backupPath))
+        {
+            MessageBoxW(hwnd,
+                L"백업 파일 저장에 실패하여 작업을 중단했습니다.\n"
+                L"통합문서를 먼저 저장한 뒤 다시 시도하세요.",
+                title, MB_OK | MB_ICONERROR);
+            return false;
+        }
+        return true;
+    }
 }

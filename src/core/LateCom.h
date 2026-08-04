@@ -102,4 +102,53 @@ namespace egtools::latecom
         Releaser(const Releaser&) = delete;
         Releaser& operator=(const Releaser&) = delete;
     };
+
+    // ── property-put / method-call helpers (ribbon commands 등에서 공용) ─────
+
+    inline bool putLong(IDispatch* d, const wchar_t* name, long v)
+    {
+        VARIANT a; VariantInit(&a); a.vt = VT_I4; a.lVal = v;
+        return invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
+    }
+
+    inline bool putDouble(IDispatch* d, const wchar_t* name, double v)
+    {
+        VARIANT a; VariantInit(&a); a.vt = VT_R8; a.dblVal = v;
+        return invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
+    }
+
+    inline bool putBool(IDispatch* d, const wchar_t* name, bool v)
+    {
+        VARIANT a; VariantInit(&a); a.vt = VT_BOOL;
+        a.boolVal = v ? VARIANT_TRUE : VARIANT_FALSE;
+        return invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
+    }
+
+    inline bool putBStr(IDispatch* d, const wchar_t* name, const std::wstring& v)
+    {
+        VARIANT a; VariantInit(&a); a.vt = VT_BSTR;
+        a.bstrVal = SysAllocString(v.c_str());
+        bool ok = invokeRaw(d, name, DISPATCH_PROPERTYPUT, nullptr, &a, 1);
+        VariantClear(&a);
+        return ok;
+    }
+
+    // 인수 없는 메서드 호출(Delete/UnMerge/CalculateFull 등).
+    inline bool callMethod(IDispatch* d, const wchar_t* name)
+    {
+        return invokeRaw(d, name, DISPATCH_METHOD, nullptr, nullptr, 0);
+    }
+
+    // VARIANT 배열(자연 순서) 메서드 호출. 호출자가 인수를 준비/해제한다.
+    inline bool callMethod(IDispatch* d, const wchar_t* name,
+                           VARIANT* args, UINT nArgs, VARIANT* result = nullptr)
+    {
+        return invokeRaw(d, name, DISPATCH_METHOD, result, args, nArgs);
+    }
+
+    // VARIANT 편의 생성자.
+    inline VARIANT varLong(long v)   { VARIANT a; VariantInit(&a); a.vt = VT_I4;  a.lVal = v;   return a; }
+    inline VARIANT varDouble(double v){ VARIANT a; VariantInit(&a); a.vt = VT_R8; a.dblVal = v; return a; }
+    inline VARIANT varBStr(const std::wstring& s)
+    { VARIANT a; VariantInit(&a); a.vt = VT_BSTR; a.bstrVal = SysAllocString(s.c_str()); return a; }
 }

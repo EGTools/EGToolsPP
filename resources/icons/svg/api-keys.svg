@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- API 키 관리 — 열쇠. 액센트 금색 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle cx="11" cy="11" r="6" fill="none" stroke="#D97706" stroke-width="2.4"/>
+  <path d="M15.5 15.5 L26 26 M26 26 L26 21.5 M22.5 22.5 L26 22.5" fill="none" stroke="#475569" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

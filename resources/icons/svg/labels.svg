@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 라벨지 — 종이 프레임 + 청록 2×3 칸 격자 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="4" width="20" height="24" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="16" y1="4" x2="16" y2="28" stroke="#0D9488" stroke-width="2"/>
+  <line x1="6" y1="12" x2="26" y2="12" stroke="#0D9488" stroke-width="2"/>
+  <line x1="6" y1="20" x2="26" y2="20" stroke="#0D9488" stroke-width="2"/>
+</svg>

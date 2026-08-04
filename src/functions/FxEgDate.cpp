@@ -5,8 +5,10 @@
 //   NETWORKHOUR       — 휴식시간을 반영한 순 근무시간.
 //   WEEKNUMOFMONTH / MONTHBHYWEEK — 시작·기준 요일에 따른 월 주차/주차 기준 월.
 //   TODATETIME        — 한글·한자 날짜/시간 문자열 → 날짜·시간 값.
-// 전부 순수 계산(비매크로형). (VB의 KOREANHOLIDAYS 공공 API 조회 옵션은 제외 —
-// 내장 계산과 동일 결과이며 API 키 의존이 없어짐.)
+// KOREANHOLIDAYS는 [api_key] 인수(또는 저장 키)가 있으면 공공데이터포털 특일정보
+// API를 조회해 임시공휴일·선거일 등 내장 계산에 없는 항목을 병합한다(plan/23
+// §3-4 — "내장과 동일 결과"라던 종전 제외 판단은 임시공휴일을 놓친 것이라 번복).
+// 공휴일/음력 계산 코어는 KoreanHolidays.h로도 노출되어 리본 달력이 공유한다.
 
 #include "../core/Registry.h"
 #include "../core/Apply.h"
@@ -14,6 +16,11 @@
 #include "../core/Spill.h"
 #include "../core/I18n.h"
 #include "KoreanLunarTable.h"
+#include "KoreanHolidays.h"
+
+#include <windows.h>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -228,25 +235,11 @@ namespace egtools::functions
             return lunarToSolar(year, idx, ld, serial);
         }
 
-        ExcelObj* koreanHolidays(const ExcelObj& yearObj, const ExcelObj& nameObj,
-                                 const ExcelObj& mayDayObj)
+        // 내장 공휴일 계산 본체 — KOREANHOLIDAYS UDF와 리본 달력이 공유
+        // (KoreanHolidays.h egtools::dates::builtinHolidays가 이 함수로 위임).
+        void buildHolidayList(int year, bool mayDay, bool ko,
+                              std::map<int, std::wstring>& list)
         {
-            int year;
-            if (yearObj.isMissing())
-            {
-                SYSTEMTIME st;
-                GetLocalTime(&st);
-                year = st.wYear;
-            }
-            else
-                year = yearObj.get<int>(0);
-            if (year < kLunarFirstYear + 1 || year > kLunarLastYear)
-                return returnValue(CellError::Value);
-            const bool withName = nameObj.isMissing() ? true : (nameObj.get<double>(1.0) != 0.0);
-            const bool mayDay = mayDayObj.isMissing() ? true : (mayDayObj.get<double>(1.0) != 0.0);
-            const bool ko = egtools::i18n::current() == L"ko";
-
-            std::map<int, std::wstring> list;
             auto isHol = [&](int s)
             {
                 return list.count(s) > 0 || s % 7 == 0 /*토*/ || s % 7 == 1 /*일*/;
@@ -328,6 +321,35 @@ namespace egtools::functions
                 add(d, ko ? L"추석" : L"Chuseok");
                 add(d + 1, ko ? L"추석연휴" : L"Chuseok Holiday");
             }
+        }
+
+        ExcelObj* koreanHolidays(const ExcelObj& yearObj, const ExcelObj& nameObj,
+                                 const ExcelObj& mayDayObj, const ExcelObj& keyObj)
+        {
+            int year;
+            if (yearObj.isMissing())
+            {
+                SYSTEMTIME st;
+                GetLocalTime(&st);
+                year = st.wYear;
+            }
+            else
+                year = yearObj.get<int>(0);
+            if (year < kLunarFirstYear + 1 || year > kLunarLastYear)
+                return returnValue(CellError::Value);
+            const bool withName = nameObj.isMissing() ? true : (nameObj.get<double>(1.0) != 0.0);
+            const bool mayDay = mayDayObj.isMissing() ? true : (mayDayObj.get<double>(1.0) != 0.0);
+            const bool ko = egtools::i18n::current() == L"ko";
+
+            std::map<int, std::wstring> list;
+            buildHolidayList(year, mayDay, ko, list);
+
+            // 공공 API 병합(결정 3): 임시공휴일·선거일 등 내장에 없는 항목 추가.
+            // 키 없음/실패는 조용히 무시(내장 결과만 반환).
+            std::wstring apiKey;
+            if (!keyObj.isMissing())
+                apiKey = keyObj.toString();
+            egtools::dates::mergeApiHolidays(year, list, apiKey);
 
             std::vector<ExcelObj> vals;
             vals.reserve(list.size() * (withName ? 2 : 1));
@@ -601,9 +623,10 @@ namespace egtools::functions
             { return egtools::core::mapUnary(v, toSolarOne); });
 
         egtools::core::registerFn(L"KOREANHOLIDAYS",
-            [](const ExcelObj& y, const ExcelObj& n, const ExcelObj& md) -> ExcelObj*
+            [](const ExcelObj& y, const ExcelObj& n, const ExcelObj& md,
+               const ExcelObj& key) -> ExcelObj*
             {
-                try { return koreanHolidays(y, n, md); }
+                try { return koreanHolidays(y, n, md, key); }
                 catch (...) { return returnValue(CellError::Value); }
             });
 
@@ -625,5 +648,161 @@ namespace egtools::functions
                 try { return toDateTime(t); }
                 catch (...) { return returnValue(CellError::Value); }
             });
+    }
+}
+
+// ── 공용 공휴일/음력 헬퍼 (KoreanHolidays.h) ────────────────────────────────
+// 익명 네임스페이스 헬퍼(buildHolidayList/toSerial/solarToLunar)는 같은 TU라
+// egtools::functions:: 한정 이름으로 접근 가능.
+namespace egtools::dates
+{
+    void builtinHolidays(int year, bool mayDay, bool korean,
+                         std::map<int, std::wstring>& list)
+    {
+        egtools::functions::buildHolidayList(year, mayDay, korean, list);
+    }
+
+    bool lunarOf(int serial, int& lYear, int& lMonth, int& lDay)
+    {
+        return egtools::functions::solarToLunar(serial, lYear, lMonth, lDay);
+    }
+
+    int mergeApiHolidays(int year, std::map<int, std::wstring>& list,
+                         const std::wstring& apiKeyArg)
+    {
+        // ── 키 결정: 인수 우선(전달 시 저장 — 공공 API 키 정책), 없으면 레지스트리 ──
+        constexpr const wchar_t* kKeyPath = L"Software\\EGTools\\ApiKeys";
+        constexpr const wchar_t* kValue = L"datago";
+        std::wstring key = apiKeyArg;
+        if (!key.empty())
+        {
+            HKEY h = nullptr;
+            if (RegCreateKeyExW(HKEY_CURRENT_USER, kKeyPath, 0, nullptr, 0,
+                                KEY_WRITE, nullptr, &h, nullptr) == ERROR_SUCCESS)
+            {
+                RegSetValueExW(h, kValue, 0, REG_SZ, (const BYTE*)key.c_str(),
+                               (DWORD)((key.size() + 1) * sizeof(wchar_t)));
+                RegCloseKey(h);
+            }
+        }
+        else
+        {
+            HKEY h = nullptr;
+            if (RegOpenKeyExW(HKEY_CURRENT_USER, kKeyPath, 0, KEY_READ, &h)
+                    == ERROR_SUCCESS)
+            {
+                wchar_t buf[512]{};
+                DWORD size = sizeof(buf), type = 0;
+                if (RegQueryValueExW(h, kValue, nullptr, &type, (BYTE*)buf, &size)
+                        == ERROR_SUCCESS && type == REG_SZ)
+                    key = buf;
+                RegCloseKey(h);
+            }
+        }
+        if (key.empty()) return 0;
+
+        // ── 연도별 세션 캐시(실패도 캐시 — 재계산마다 타임아웃 반복 방지) ──
+        static std::map<int, std::vector<std::pair<int, std::wstring>>> cache;
+        auto it = cache.find(year);
+        if (it == cache.end())
+        {
+            std::vector<std::pair<int, std::wstring>> fetched;
+            std::string body;
+            HINTERNET hSession = WinHttpOpen(L"EGTools++",
+                WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
+                WINHTTP_NO_PROXY_BYPASS, 0);
+            if (hSession)
+            {
+                WinHttpSetTimeouts(hSession, 3000, 3000, 4000, 5000);
+                HINTERNET hConnect = WinHttpConnect(hSession, L"apis.data.go.kr",
+                                                    INTERNET_DEFAULT_HTTPS_PORT, 0);
+                if (hConnect)
+                {
+                    const std::wstring path =
+                        L"/B090041/openapi/service/SpcdeInfoService/getRestDeInfo"
+                        L"?serviceKey=" + key +
+                        L"&solYear=" + std::to_wstring(year) + L"&numOfRows=100";
+                    HINTERNET hReq = WinHttpOpenRequest(hConnect, L"GET", path.c_str(),
+                        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
+                        WINHTTP_FLAG_SECURE);
+                    if (hReq)
+                    {
+                        if (WinHttpSendRequest(hReq, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
+                            WinHttpReceiveResponse(hReq, nullptr))
+                        {
+                            DWORD avail = 0;
+                            do
+                            {
+                                avail = 0;
+                                if (!WinHttpQueryDataAvailable(hReq, &avail) || !avail)
+                                    break;
+                                std::string chunk((size_t)avail, '\0');
+                                DWORD read = 0;
+                                if (!WinHttpReadData(hReq, chunk.data(), avail, &read))
+                                    break;
+                                body.append(chunk.data(), read);
+                            } while (avail > 0);
+                        }
+                        WinHttpCloseHandle(hReq);
+                    }
+                    WinHttpCloseHandle(hConnect);
+                }
+                WinHttpCloseHandle(hSession);
+            }
+
+            // <item> 단위로 locdate(YYYYMMDD)/dateName/isHoliday(Y) 추출(UTF-8).
+            auto tagText = [](const std::string& s, size_t from, size_t to,
+                              const char* tag) -> std::string
+            {
+                const std::string open = std::string("<") + tag + ">";
+                const std::string close = std::string("</") + tag + ">";
+                const size_t a = s.find(open, from);
+                if (a == std::string::npos || a >= to) return "";
+                const size_t b = s.find(close, a);
+                if (b == std::string::npos || b > to) return "";
+                return s.substr(a + open.size(), b - a - open.size());
+            };
+            size_t pos = 0;
+            while (true)
+            {
+                const size_t a = body.find("<item>", pos);
+                if (a == std::string::npos) break;
+                const size_t b = body.find("</item>", a);
+                if (b == std::string::npos) break;
+                pos = b + 7;
+
+                if (tagText(body, a, b, "isHoliday") != "Y") continue;
+                const std::string loc = tagText(body, a, b, "locdate");
+                if (loc.size() != 8) continue;
+                const int y = atoi(loc.substr(0, 4).c_str());
+                const int m = atoi(loc.substr(4, 2).c_str());
+                const int d = atoi(loc.substr(6, 2).c_str());
+                if (y != year || m < 1 || m > 12 || d < 1 || d > 31) continue;
+
+                const std::string name8 = tagText(body, a, b, "dateName");
+                std::wstring name;
+                if (!name8.empty())
+                {
+                    const int n = MultiByteToWideChar(CP_UTF8, 0, name8.c_str(),
+                                                      (int)name8.size(), nullptr, 0);
+                    name.resize((size_t)n);
+                    MultiByteToWideChar(CP_UTF8, 0, name8.c_str(), (int)name8.size(),
+                                        name.data(), n);
+                }
+                fetched.emplace_back(egtools::functions::toSerial(y, m, d), name);
+            }
+            it = cache.emplace(year, std::move(fetched)).first;
+        }
+
+        // 내장 계산에 없는 날짜만 추가(임시공휴일·선거일 등).
+        int added = 0;
+        for (const auto& [serial, name] : it->second)
+            if (!list.count(serial))
+            {
+                list[serial] = name.empty() ? L"임시공휴일" : name;
+                ++added;
+            }
+        return added;
     }
 }

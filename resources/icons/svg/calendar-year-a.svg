@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 연간 달력(세로형) — 달력 베이스 + 주황 세로 3칸 미니 그리드 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="5" y="7" width="22" height="19" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="5" y1="12.5" x2="27" y2="12.5" stroke="#475569" stroke-width="2"/>
+  <line x1="11" y1="4" x2="11" y2="9" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21" y1="4" x2="21" y2="9" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <rect x="12" y="14.5" width="8" height="9.5" rx="1" fill="none" stroke="#EA580C" stroke-width="1.8"/>
+  <line x1="12" y1="17.7" x2="20" y2="17.7" stroke="#EA580C" stroke-width="1.8"/>
+  <line x1="12" y1="20.8" x2="20" y2="20.8" stroke="#EA580C" stroke-width="1.8"/>
+</svg>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 내용감춘 병합 — 점선 느낌 프레임(짧은 선 조각) + 안쪽으로 모이는 초록 화살표 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <line x1="7" y1="6" x2="10.5" y2="6" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="13.5" y1="6" x2="18.5" y2="6" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21.5" y1="6" x2="25" y2="6" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="7" y1="26" x2="10.5" y2="26" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="13.5" y1="26" x2="18.5" y2="26" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21.5" y1="26" x2="25" y2="26" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="5" y1="8" x2="5" y2="11.5" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="5" y1="14.5" x2="5" y2="17.5" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="5" y1="20.5" x2="5" y2="24" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="27" y1="8" x2="27" y2="11.5" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="27" y1="14.5" x2="27" y2="17.5" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="27" y1="20.5" x2="27" y2="24" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="8" y1="16" x2="12.5" y2="16" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10.5 13.5 L13.5 16 L10.5 18.5" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="24" y1="16" x2="19.5" y2="16" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M21.5 13.5 L18.5 16 L21.5 18.5" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

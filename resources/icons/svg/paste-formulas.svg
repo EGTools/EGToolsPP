@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 보이는 셀에 수식 붙여넣기 — 클립보드 + 함수 곡선(fx 느낌). 액센트 파랑 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="5" width="18" height="23" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <rect x="11" y="3" width="8" height="4" rx="1.5" fill="#475569" stroke="none"/>
+  <path d="M17.5 12 C14.5 12 15.5 16 13.5 16 M11.5 16 L15.5 16 M11 22 L18 15 M11 15 L18 22" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/>
+</svg>

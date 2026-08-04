@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 보이는 셀만 복사 — 가운데 행이 접힌(숨겨진) 시트 + 파랑 눈 배지 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="4" y="4" width="20" height="18" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="4" y1="9.5" x2="24" y2="9.5" stroke="#475569" stroke-width="2"/>
+  <line x1="4" y1="13" x2="24" y2="13" stroke="#475569" stroke-width="2"/>
+  <path d="M16.5 25.5 C18.5 22.5 26.5 22.5 28.5 25.5 C26.5 28.5 18.5 28.5 16.5 25.5 Z" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="22.5" cy="25.5" r="1.7" fill="#2563EB" stroke="none"/>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 나누고 채우기 — 수평 분할선(초록)으로 나누고 값 복제(위 점 슬레이트 → 아래 점 초록). 세트 공통 프레임 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="5" y="6" width="22" height="20" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="5" y1="16" x2="27" y2="16" stroke="#16A34A" stroke-width="2"/>
+  <circle cx="16" cy="11" r="1.8" fill="#475569" stroke="none"/>
+  <circle cx="16" cy="21" r="1.8" fill="#16A34A" stroke="none"/>
+</svg>

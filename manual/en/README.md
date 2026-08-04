@@ -143,8 +143,37 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 
 Features on the `EGTools++` ribbon tab. See the [ribbon overview](ribbon/README.md) for the full layout.
 
-### EGTools (formula conversion)
+### Visible Cells
+
+- [Visible Cells — Copy Visible Cells, Copy Range, Paste Values/Formulas/All](ribbon/visible-cells.md)
+
+### Merge/Unmerge Cells
+
+- [Merge/Unmerge Cells — Merge Same Values, Merge Keeping Values, Merge Contents, Merge Rows/Columns, Unmerge and Fill, Split to Rows/Columns](ribbon/merge-split.md)
+
+### Image/Picture
+
+- [Image/Picture — Insert Image, Insert by Name, Insert into Form, Fit Selected, Fit All, Export All](ribbon/pictures.md)
+
+### Calendar
+
+- [Calendar — Monthly, Annual A/B, Weekly, Daily A/B](ribbon/calendar.md)
+
+### Forms
+
+- [Forms — Make Labels](ribbon/forms.md) · [Mail Merge](ribbon/mailmerge.md)
+
+### Utilities
+
+- [Utilities — Delete Styles, Delete Names, Clear Errors, Clear Empty Text, Arrange Notes, Change Border Colors, Draw Free Form, Freeze UDF Values, Apply CheckBox, Recalculate All](ribbon/utilities.md)
+
+### EGTools
 
 - [Apply Legacy Compatibility](ribbon/apply-compat.md)
 - [Restore Native Functions](ribbon/restore-native.md)
+- [Manage API Keys](ribbon/api-keys.md)
+
+### Context Menu
+
+- [Cell Right-Click Menu — Date Picker, Open URL](ribbon/context-menu.md)
 

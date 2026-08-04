@@ -143,8 +143,37 @@
 
 리본 `EGTools++` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.
 
-### EGTools (수식 변환)
+### 보이는 셀
+
+- [보이는 셀 — 보이는 셀만 복사 · 전체 복사 · 값만/수식/모두 붙여넣기](ribbon/visible-cells.md)
+
+### 셀 병합/나누기
+
+- [셀 병합/나누기 — 연속값 병합 · 내용감춘 병합 · 내용병합 · 행/열끼리 병합 · 나누고 채우기 · 행/열 나누기](ribbon/merge-split.md)
+
+### 그림/사진
+
+- [그림/사진 — 이미지 삽입 · 이름에 삽입 · 양식에 삽입 · 선택 맞춤 · 모두 맞춤 · 추출 저장](ribbon/pictures.md)
+
+### 달력/일정표
+
+- [달력/일정표 — 월간 · 연간A/B · 주간 · 일일A/B](ribbon/calendar.md)
+
+### 양식
+
+- [양식 — 라벨지 만들기](ribbon/forms.md) · [메일머지](ribbon/mailmerge.md)
+
+### 도구
+
+- [도구 — 스타일 삭제 · 이름 삭제 · 오류 정리 · 빈셀 정리 · 메모 정돈 · 테두리 색 변경 · 모양 뽑기 · UDF 값 고정 · CheckBox 적용 · 전체 재계산](ribbon/utilities.md)
+
+### EGTools
 
 - [구버전 호환 적용](ribbon/apply-compat.md)
 - [내장 함수로 복원](ribbon/restore-native.md)
+- [API 키 관리](ribbon/api-keys.md)
+
+### 컨텍스트 메뉴
+
+- [셀 오른쪽 클릭 메뉴 — 날짜입력 · 링크열기](ribbon/context-menu.md)
 

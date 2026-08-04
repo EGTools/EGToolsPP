@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 이름 삭제 — 이름표(태그) + 빨간 X. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <path d="M5 8 L17 8 L23 14 L17 20 L5 20 Z" fill="none" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="10" cy="14" r="1.7" fill="#475569" stroke="none"/>
+  <path d="M20 21 L28 29 M28 21 L20 29" fill="none" stroke="#DC2626" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

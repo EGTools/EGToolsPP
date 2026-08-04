@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 주간 일정표 — 달력 베이스 + 길이가 다른 주황 세로 시간띠 3개 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="5" y="7" width="22" height="19" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="5" y1="12.5" x2="27" y2="12.5" stroke="#475569" stroke-width="2"/>
+  <line x1="11" y1="4" x2="11" y2="9" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21" y1="4" x2="21" y2="9" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <line x1="10.5" y1="15" x2="10.5" y2="23.5" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16" y1="15" x2="16" y2="20" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21.5" y1="15" x2="21.5" y2="22" stroke="#EA580C" stroke-width="2" stroke-linecap="round"/>
+</svg>

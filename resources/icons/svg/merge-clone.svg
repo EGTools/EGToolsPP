@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 연속값 병합 — 세로 동작: 수평 분할선 스텁 + 상하에서 안쪽으로 모이는 초록 화살표
+     + 프레임 왼쪽 동일값 점 2개 세로 스택 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="5" y="6" width="22" height="20" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="5" y1="16" x2="8.5" y2="16" stroke="#475569" stroke-width="2"/>
+  <line x1="23.5" y1="16" x2="27" y2="16" stroke="#475569" stroke-width="2"/>
+  <line x1="16" y1="8.5" x2="16" y2="13" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13.5 11 L16 13.5 L18.5 11" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="16" y1="23.5" x2="16" y2="19" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13.5 21 L16 18.5 L18.5 21" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="2.3" cy="12" r="1.7" fill="#475569" stroke="none"/>
+  <circle cx="2.3" cy="20" r="1.7" fill="#475569" stroke="none"/>
+</svg>

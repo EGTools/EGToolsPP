@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace egtools::ribbon
 {
     // Direction A — "구버전 호환 적용": rewrite native/stored (`_xlfn.*`) and
@@ -24,4 +26,12 @@ namespace egtools::ribbon
     // (bare IMAGE → EG.IMAGE); GROUPBY/PIVOTBY toggle their text aggregator to a
     // function reference; unsupported cases are left untouched.
     void convertToNative();
+
+    namespace detail
+    {
+        // 수식을 고쳐 쓰는 다른 리본 명령(UDF 값 고정 등)이 재사용하는 공통
+        // 전처리: 활성 통합문서 확인 → 저장 게이트(미저장 시 질의·저장, 거절
+        // 시 false) → SaveCopyAs 백업(실패 시 false). 성공 시 backupPath 반환.
+        bool saveGateAndBackup(const wchar_t* title, std::wstring& backupPath);
+    }
 }

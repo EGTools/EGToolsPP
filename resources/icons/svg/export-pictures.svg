@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 그림 추출 저장 — 사진 프레임에서 나가는 화살표 + 폴더. 액센트 보라 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="4" y="4" width="17" height="14" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <circle cx="9" cy="8.5" r="1.5" fill="#475569" stroke="none"/>
+  <path d="M6 15 L11 10.5 L14 13.5 L17 10.5 L19 12.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M4 24 L4 27 A2 2 0 0 0 6 29 L26 29 A2 2 0 0 0 28 27 L28 22 A2 2 0 0 0 26 20 L18 20" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+  <path d="M25 9 L25 16 M25 16 L22 13.2 M25 16 L28 13.2" fill="none" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
