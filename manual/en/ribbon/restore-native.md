@@ -1,6 +1,6 @@
 # Restore Native Functions
 
-**Location**: ribbon `EGTools++` tab → `EGTools` group → split-button dropdown menu
+**Location**: ribbon `EGTools` tab → `EGTools` group → split-button dropdown menu
 
 When a workbook converted for EGTools compatibility moves back to modern Excel, this
 button batch-restores EGTools function names (`EG.*` etc.) in every formula of the

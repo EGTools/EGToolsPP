@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 傳回子集合之和佔全部資料之和的比例。
 

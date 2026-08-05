@@ -1,6 +1,6 @@
 # REGEXEXTRACT
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 從文字中擷取正規表示式的相符項。
 

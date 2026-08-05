@@ -1,6 +1,6 @@
 # GROUPBY
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 按键对行分组并聚合值。聚合器为文本: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 扩展(参数=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC)。
 

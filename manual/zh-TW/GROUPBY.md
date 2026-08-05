@@ -1,6 +1,6 @@
 # GROUPBY
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 依鍵將列分組並彙總值。彙總器為文字: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 擴充(參數=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC)。
 

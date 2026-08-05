@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365
 
 Pivots data by row and column keys. Aggregator is text (SUM, COUNT, …).
 

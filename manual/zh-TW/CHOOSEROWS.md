@@ -1,6 +1,6 @@
 # CHOOSEROWS
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024
 
 傳回陣列中指定的列。
 

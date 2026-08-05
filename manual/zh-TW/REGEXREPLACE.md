@@ -1,6 +1,6 @@
 # REGEXREPLACE
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 取代與正規表示式相符的文字($1.. 反向參照)。
 

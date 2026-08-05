@@ -1,6 +1,6 @@
 # TEXTSPLIT
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024
 
 使用欄和列分隔符號將文字拆分為陣列。
 

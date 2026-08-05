@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Recorta filas/columnas vacías de los bordes de una matriz.
 

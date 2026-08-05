@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365
 
 Returns the sum of a subset divided by the sum of all data.
 

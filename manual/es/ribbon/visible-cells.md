@@ -1,6 +1,6 @@
 # Celdas visibles
 
-**Ubicación**: cinta, pestaña `EGTools++` → grupo `Celdas visibles`
+**Ubicación**: cinta, pestaña `EGTools` → grupo `Celdas visibles`
 
 Grupo de funciones para copiar y pegar en rangos con filtros o filas/columnas ocultas.
 Se compone de 2 botones divididos — **Copiar** (acción predeterminada = Copiar celdas visibles) y

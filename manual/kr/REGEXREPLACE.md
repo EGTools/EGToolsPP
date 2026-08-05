@@ -1,6 +1,6 @@
 # REGEXREPLACE
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 정규식과 일치하는 텍스트를 치환합니다($1.. 역참조 지원).
 

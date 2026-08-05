@@ -1,6 +1,6 @@
 # TEXTBEFORE
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024
 
 Devuelve el texto anterior a un delimitador.
 

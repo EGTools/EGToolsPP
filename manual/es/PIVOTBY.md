@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Dinamiza datos por claves de fila y columna. El agregador es texto (SUM, COUNT…).
 

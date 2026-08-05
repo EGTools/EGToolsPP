@@ -5,7 +5,7 @@
 ## MS Excel 호환 함수 (69)
 
 - [ARABIC](ARABIC.md) — Excel 2013
-- [ARRAYTOTEXT](ARRAYTOTEXT.md) — Excel 2024 / Microsoft 365
+- [ARRAYTOTEXT](ARRAYTOTEXT.md) — Excel 2024
 - [BASE](BASE.md) — Excel 2013
 - [BITAND](BITAND.md) — Excel 2013
 - [BITLSHIFT](BITLSHIFT.md) — Excel 2013
@@ -13,26 +13,26 @@
 - [BITRSHIFT](BITRSHIFT.md) — Excel 2013
 - [BITXOR](BITXOR.md) — Excel 2013
 - [CEILING.MATH](CEILING.MATH.md) — Excel 2013
-- [CHOOSECOLS](CHOOSECOLS.md) — Excel 2024 / Microsoft 365
-- [CHOOSEROWS](CHOOSEROWS.md) — Excel 2024 / Microsoft 365
+- [CHOOSECOLS](CHOOSECOLS.md) — Excel 2024
+- [CHOOSEROWS](CHOOSEROWS.md) — Excel 2024
 - [COMBINA](COMBINA.md) — Excel 2013
 - [CONCAT](CONCAT.md) — Excel 2016/2019
 - [DAYS](DAYS.md) — Excel 2013
 - [DECIMAL](DECIMAL.md) — Excel 2013
-- [DROP](DROP.md) — Excel 2024 / Microsoft 365
+- [DROP](DROP.md) — Excel 2024
 - [ENCODEURL](ENCODEURL.md) — Excel 2013
-- [EXPAND](EXPAND.md) — Excel 2024 / Microsoft 365
+- [EXPAND](EXPAND.md) — Excel 2024
 - [FILTER](FILTER.md) — Excel 2021
 - [FILTERXML](FILTERXML.md) — Excel 2013
 - [FLOOR.MATH](FLOOR.MATH.md) — Excel 2013
 - [FORMULATEXT](FORMULATEXT.md) — Excel 2013
-- [GROUPBY](GROUPBY.md) — Excel 2024 / Microsoft 365
-- [HSTACK](HSTACK.md) — Excel 2024 / Microsoft 365
+- [GROUPBY](GROUPBY.md) — Microsoft 365
+- [HSTACK](HSTACK.md) — Excel 2024
 - [IFNA](IFNA.md) — Excel 2013
 - [IFS](IFS.md) — Excel 2016/2019
-- [IMAGE](IMAGE.md) — Excel 2024 / Microsoft 365
-- [IMPORTCSV](IMPORTCSV.md) — Excel 365 (2026 신규)
-- [IMPORTTEXT](IMPORTTEXT.md) — Excel 365 (2026 신규)
+- [IMAGE](IMAGE.md) — Excel 2024
+- [IMPORTCSV](IMPORTCSV.md) — Microsoft 365 (2026 신규)
+- [IMPORTTEXT](IMPORTTEXT.md) — Microsoft 365 (2026 신규)
 - [ISFORMULA](ISFORMULA.md) — Excel 2013
 - [ISOWEEKNUM](ISOWEEKNUM.md) — Excel 2013
 - [LET](LET.md) — Excel 2021
@@ -40,13 +40,13 @@
 - [MINIFS](MINIFS.md) — Excel 2016/2019
 - [NUMBERVALUE](NUMBERVALUE.md) — Excel 2013
 - [PDURATION](PDURATION.md) — Excel 2013
-- [PERCENTOF](PERCENTOF.md) — Excel 2024 / Microsoft 365
+- [PERCENTOF](PERCENTOF.md) — Microsoft 365
 - [PERMUTATIONA](PERMUTATIONA.md) — Excel 2013
-- [PIVOTBY](PIVOTBY.md) — Excel 2024 / Microsoft 365
+- [PIVOTBY](PIVOTBY.md) — Microsoft 365
 - [RANDARRAY](RANDARRAY.md) — Excel 2021
-- [REGEXEXTRACT](REGEXEXTRACT.md) — Excel 2024 / Microsoft 365
-- [REGEXREPLACE](REGEXREPLACE.md) — Excel 2024 / Microsoft 365
-- [REGEXTEST](REGEXTEST.md) — Excel 2024 / Microsoft 365
+- [REGEXEXTRACT](REGEXEXTRACT.md) — Microsoft 365
+- [REGEXREPLACE](REGEXREPLACE.md) — Microsoft 365
+- [REGEXTEST](REGEXTEST.md) — Microsoft 365
 - [RRI](RRI.md) — Excel 2013
 - [SEQUENCE](SEQUENCE.md) — Excel 2021
 - [SHEET](SHEET.md) — Excel 2013
@@ -54,22 +54,22 @@
 - [SORT](SORT.md) — Excel 2021
 - [SORTBY](SORTBY.md) — Excel 2021
 - [SWITCH](SWITCH.md) — Excel 2016/2019
-- [TAKE](TAKE.md) — Excel 2024 / Microsoft 365
-- [TEXTAFTER](TEXTAFTER.md) — Excel 2024 / Microsoft 365
-- [TEXTBEFORE](TEXTBEFORE.md) — Excel 2024 / Microsoft 365
+- [TAKE](TAKE.md) — Excel 2024
+- [TEXTAFTER](TEXTAFTER.md) — Excel 2024
+- [TEXTBEFORE](TEXTBEFORE.md) — Excel 2024
 - [TEXTJOIN](TEXTJOIN.md) — Excel 2016/2019
-- [TEXTSPLIT](TEXTSPLIT.md) — Excel 2024 / Microsoft 365
-- [TOCOL](TOCOL.md) — Excel 2024 / Microsoft 365
-- [TOROW](TOROW.md) — Excel 2024 / Microsoft 365
-- [TRIMRANGE](TRIMRANGE.md) — Excel 2024 / Microsoft 365
+- [TEXTSPLIT](TEXTSPLIT.md) — Excel 2024
+- [TOCOL](TOCOL.md) — Excel 2024
+- [TOROW](TOROW.md) — Excel 2024
+- [TRIMRANGE](TRIMRANGE.md) — Microsoft 365
 - [UNICHAR](UNICHAR.md) — Excel 2013
 - [UNICODE](UNICODE.md) — Excel 2013
 - [UNIQUE](UNIQUE.md) — Excel 2021
-- [VALUETOTEXT](VALUETOTEXT.md) — Excel 2024 / Microsoft 365
-- [VSTACK](VSTACK.md) — Excel 2024 / Microsoft 365
+- [VALUETOTEXT](VALUETOTEXT.md) — Excel 2024
+- [VSTACK](VSTACK.md) — Excel 2024
 - [WEBSERVICE](WEBSERVICE.md) — Excel 2013
-- [WRAPCOLS](WRAPCOLS.md) — Excel 2024 / Microsoft 365
-- [WRAPROWS](WRAPROWS.md) — Excel 2024 / Microsoft 365
+- [WRAPCOLS](WRAPCOLS.md) — Excel 2024
+- [WRAPROWS](WRAPROWS.md) — Excel 2024
 - [XLOOKUP](XLOOKUP.md) — Excel 2021
 - [XMATCH](XMATCH.md) — Excel 2021
 - [XOR](XOR.md) — Excel 2013
@@ -141,7 +141,7 @@
 
 ## 리본 메뉴
 
-리본 `EGTools++` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.
+리본 `EGTools` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.
 
 ### 보이는 셀
 

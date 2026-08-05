@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**種類**: MS Excel 互換関数 · **ネイティブ導入**: Excel 2024 / Microsoft 365
+**種類**: MS Excel 互換関数 · **ネイティブ導入**: Microsoft 365
 
 配列の端の空白行/列を取り除きます。
 

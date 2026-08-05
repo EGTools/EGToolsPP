@@ -1,6 +1,6 @@
 # Restaurar funciones nativas
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
 
 Cuando un libro convertido a las funciones compatibles de EGTools se lleva de vuelta
 a un Excel moderno, este botón restaura de una sola vez, en todas las fórmulas del

@@ -1,6 +1,6 @@
 # GROUPBY
 
-**種類**: MS Excel 互換関数 · **ネイティブ導入**: Excel 2024 / Microsoft 365
+**種類**: MS Excel 互換関数 · **ネイティブ導入**: Microsoft 365
 
 キーで行をグループ化して値を集計します。集計子はテキスト: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 拡張(パラメータ=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC)。
 

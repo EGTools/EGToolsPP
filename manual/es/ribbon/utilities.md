@@ -1,6 +1,6 @@
 # Herramientas
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `Herramientas`
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `Herramientas`
 
 Botón dividido que reúne funciones auxiliares de uso frecuente. Al pulsar el botón
 directamente se ejecuta la acción predeterminada, **Recalcular todo**; al pulsar la

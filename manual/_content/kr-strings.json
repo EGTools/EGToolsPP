@@ -14,7 +14,7 @@
   "noArgs": "(인수 없음)",
   "todoRet": "<!-- TODO: 반환 형태(스칼라/배열·스필)와 의미, 오류 조건(#VALUE!, #N/A 등) -->",
   "todoNote": "<!-- TODO: 원본(Excel/Google)과의 차이, 관련 함수 링크 -->",
-  "newIn2026": "Excel 365 (2026 신규)",
+  "newIn2026": "Microsoft 365 (2026 신규)",
   "catExcel": "**종류**: MS Excel 호환 함수 · **네이티브 도입**: {Y}",
   "catExcelNote": "- 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `{FN}` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.{FN}`으로 등록됩니다.",
   "xNote": " 일부 구버전에서는 예약어 충돌로 `x{FN}` 이름으로 등록됩니다.",
@@ -27,5 +27,5 @@
   "secExcel": "MS Excel 호환 함수",
   "secGoogle": "Google Sheets 호환 함수",
   "secEg": "EGTools 전용 함수",
-  "ribbonIndex": "## 리본 메뉴\n\n리본 `EGTools++` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.\n\n### 보이는 셀\n\n- [보이는 셀 — 보이는 셀만 복사 · 전체 복사 · 값만/수식/모두 붙여넣기](ribbon/visible-cells.md)\n\n### 셀 병합/나누기\n\n- [셀 병합/나누기 — 연속값 병합 · 내용감춘 병합 · 내용병합 · 행/열끼리 병합 · 나누고 채우기 · 행/열 나누기](ribbon/merge-split.md)\n\n### 그림/사진\n\n- [그림/사진 — 이미지 삽입 · 이름에 삽입 · 양식에 삽입 · 선택 맞춤 · 모두 맞춤 · 추출 저장](ribbon/pictures.md)\n\n### 달력/일정표\n\n- [달력/일정표 — 월간 · 연간A/B · 주간 · 일일A/B](ribbon/calendar.md)\n\n### 양식\n\n- [양식 — 라벨지 만들기](ribbon/forms.md) · [메일머지](ribbon/mailmerge.md)\n\n### 도구\n\n- [도구 — 스타일 삭제 · 이름 삭제 · 오류 정리 · 빈셀 정리 · 메모 정돈 · 테두리 색 변경 · 모양 뽑기 · UDF 값 고정 · CheckBox 적용 · 전체 재계산](ribbon/utilities.md)\n\n### EGTools\n\n- [구버전 호환 적용](ribbon/apply-compat.md)\n- [내장 함수로 복원](ribbon/restore-native.md)\n- [SMTP 설정](ribbon/smtp-settings.md)\n- [API 키 관리](ribbon/api-keys.md)\n\n### 컨텍스트 메뉴\n\n- [셀 오른쪽 클릭 메뉴 — 날짜입력 · 링크열기](ribbon/context-menu.md)\n\n"
+  "ribbonIndex": "## 리본 메뉴\n\n리본 `EGTools` 탭에서 제공되는 기능입니다. 전체 구성은 [리본 메뉴 개요](ribbon/README.md) 참고.\n\n### 보이는 셀\n\n- [보이는 셀 — 보이는 셀만 복사 · 전체 복사 · 값만/수식/모두 붙여넣기](ribbon/visible-cells.md)\n\n### 셀 병합/나누기\n\n- [셀 병합/나누기 — 연속값 병합 · 내용감춘 병합 · 내용병합 · 행/열끼리 병합 · 나누고 채우기 · 행/열 나누기](ribbon/merge-split.md)\n\n### 그림/사진\n\n- [그림/사진 — 이미지 삽입 · 이름에 삽입 · 양식에 삽입 · 선택 맞춤 · 모두 맞춤 · 추출 저장](ribbon/pictures.md)\n\n### 달력/일정표\n\n- [달력/일정표 — 월간 · 연간A/B · 주간 · 일일A/B](ribbon/calendar.md)\n\n### 양식\n\n- [양식 — 라벨지 만들기](ribbon/forms.md) · [메일머지](ribbon/mailmerge.md)\n\n### 도구\n\n- [도구 — 스타일 삭제 · 이름 삭제 · 오류 정리 · 빈셀 정리 · 메모 정돈 · 테두리 색 변경 · 모양 뽑기 · UDF 값 고정 · CheckBox 적용 · 전체 재계산](ribbon/utilities.md)\n\n### EGTools\n\n- [구버전 호환 적용](ribbon/apply-compat.md)\n- [내장 함수로 복원](ribbon/restore-native.md)\n- [SMTP 설정](ribbon/smtp-settings.md)\n- [API 키 관리](ribbon/api-keys.md)\n\n### 컨텍스트 메뉴\n\n- [셀 오른쪽 클릭 메뉴 — 날짜입력 · 링크열기](ribbon/context-menu.md)\n\n"
 }

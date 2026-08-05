@@ -410,10 +410,10 @@ namespace egtools::commands
             {
                 IDispatch* areas = getObject(rng, L"Areas");
                 Releaser ra{ areas };
-                // VB c0205/c0206("하나의 구역만 통합 가능") — 전용 키가 없어 needRange 사용
+                // VB c0205/c0206("하나의 구역만 통합 가능")
                 if (!areas || getLong(areas, L"Count", 0) != 1)
                 {
-                    msgWarn(t(L"cmd.merge.needRange"));
+                    msgWarn(t(L"cmd.merge.oneArea"));
                     return false;
                 }
             }
@@ -805,8 +805,8 @@ namespace egtools::commands
                 if (!rng) { msgWarn(t(L"cmd.merge.needRange")); return; }
                 Releaser rRng{ rng };
 
-                // "오직 하나의 (병합)셀만 처리 가능" (VB c0214 — 전용 키가 없어
-                // needRange 사용). SplitRows는 셀 2개 이상이면, SplitColumns는
+                // "오직 하나의 (병합)셀만 처리 가능" (VB c0214).
+                // SplitRows는 셀 2개 이상이면, SplitColumns는
                 // 선택이 첫 셀의 병합 영역과 다르면 전체가 한 병합 셀이어야 한다.
                 bool needMergedCheck = false;
                 if (byRows)
@@ -837,7 +837,7 @@ namespace egtools::commands
                     const bool merged =
                         mc.vt == VT_BOOL && mc.boolVal == VARIANT_TRUE;
                     VariantClear(&mc);
-                    if (!merged) { msgWarn(t(L"cmd.merge.needRange")); return; }
+                    if (!merged) { msgWarn(t(L"cmd.merge.splitOneMerged")); return; }
                 }
 
                 std::wstring delim = L"\n";   // 행 나누기는 \n 고정(VB vbLf)
@@ -864,8 +864,13 @@ namespace egtools::commands
                     VariantClear(&v);
                 }
                 const auto parts = wsplit(text, delim);
-                // 나눌 조각이 하나뿐 (VB c0204/c0209 — 전용 키가 없어 oneRow 사용)
-                if (parts.size() <= 1) { msgWarn(t(L"cmd.merge.oneRow")); return; }
+                // 나눌 조각이 하나뿐 (VB c0204/c0209)
+                if (parts.size() <= 1)
+                {
+                    msgWarn(t(byRows ? L"cmd.merge.splitNoLf"
+                                     : L"cmd.merge.splitNoDelim"));
+                    return;
+                }
 
                 xloil::PauseExcel pause(xloil::thisApp());
 

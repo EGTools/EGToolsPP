@@ -1,6 +1,6 @@
 # WRAPCOLS
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024
 
 將向量依每欄指定數量換行成二維陣列。
 

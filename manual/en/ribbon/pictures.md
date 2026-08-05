@@ -1,6 +1,6 @@
 # Image/Picture
 
-**Location**: ribbon `EGTools++` tab → `Image/Picture` group
+**Location**: ribbon `EGTools` tab → `Image/Picture` group
 
 A group of features for inserting, aligning and extracting images on cells.
 It consists of two split buttons — **Image** (default action = Insert Image;

@@ -1,6 +1,6 @@
 # REGEXTEST
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 檢驗文字是否與正規表示式相符。
 

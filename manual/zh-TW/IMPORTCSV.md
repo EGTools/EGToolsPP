@@ -1,6 +1,6 @@
 # IMPORTCSV
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 365 (2026 新增)
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365 (2026 新增)
 
 將 CSV 檔(本機路徑/URL)匯入為陣列 — 逗號分隔、UTF-8。
 

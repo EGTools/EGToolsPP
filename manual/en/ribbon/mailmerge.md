@@ -1,6 +1,6 @@
 # Mail Merge
 
-**Location**: ribbon `EGTools++` tab → `Forms` group → `Labels` split-button menu → **Mail Merge**
+**Location**: ribbon `EGTools` tab → `Forms` group → `Labels` split-button menu → **Mail Merge**
 
 Clones the **whole form sheet once per data-list row**, substituting `{{fieldname}}`
 placeholders with that row's values, then — depending on the chosen option — saves

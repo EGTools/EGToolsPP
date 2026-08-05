@@ -1,6 +1,6 @@
 # REGEXEXTRACT
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 从文本中提取正则表达式的匹配。
 

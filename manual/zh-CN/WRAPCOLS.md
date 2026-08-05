@@ -1,6 +1,6 @@
 # WRAPCOLS
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 将向量按每列指定数量换行成二维数组。
 

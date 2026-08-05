@@ -1,6 +1,6 @@
 # Imagen
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `Imagen`
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `Imagen`
 
 Grupo de funciones para insertar, alinear y extraer imágenes ajustadas a las celdas.
 Se compone de 2 botones divididos:

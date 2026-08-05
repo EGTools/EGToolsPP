@@ -1,6 +1,6 @@
 # IMPORTCSV
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 365 (novedad de 2026)
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365 (novedad de 2026)
 
 Importa un archivo CSV (ruta local o URL) como matriz — coma y UTF-8.
 

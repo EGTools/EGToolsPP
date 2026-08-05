@@ -1,6 +1,6 @@
 # IMAGE
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 将来自 URL 或文件路径的图片插入单元格。
 

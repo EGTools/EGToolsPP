@@ -1,6 +1,6 @@
 # Merge/Unmerge Cells
 
-**Location**: ribbon `EGTools++` tab → `Merge/Unmerge Cells` group
+**Location**: ribbon `EGTools` tab → `Merge/Unmerge Cells` group
 
 A group of features for working with merged cells. It consists of two split
 buttons — **Merge** (default action = Merge Contents Only) and **Unmerge**
@@ -150,10 +150,12 @@ pieces to the right, one per column.
 | Selection is not a cell range | all | "Work on a cell range" |
 | Selection overlaps a table (ListObject) | Merge Same Values · Merge Same Values Keeping · content merge · row/column merge | "Table ranges cannot be processed" — merged cells are not supported inside tables |
 | Only one row selected | Merge Same Values · Merge Same Values Keeping | "A single row cannot be processed" |
-| Multi-area (Ctrl+click) selection | content merge | only one contiguous area can be processed |
+| Multi-area (Ctrl+click) selection | content merge | "Only one area can be processed at a time" |
 | More than 100 rows | content merge · column merge | "Ranges over 100 rows cannot be processed" |
 | Already-merged cells included | content merge (whole selection is already one merge) · row/column merge | "The range contains already-merged cells. Unmerge first" |
-| Not a single merged cell | split to rows/columns | "Work on a cell range" |
+| Not a single merged cell | split to rows/columns | "Select a single merged cell to run this" |
+| Nothing to split | split to rows | "The cell has no line breaks (Alt+Enter) to split by" |
+| Nothing to split | split to columns | "The cell has no delimiter to split by" |
 
 ### Caution
 

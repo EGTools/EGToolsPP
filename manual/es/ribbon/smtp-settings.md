@@ -1,6 +1,6 @@
 # Configuración SMTP
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
 
 Cuadro de diálogo para registrar los datos del servidor SMTP que usa el **envío de
 correo** de [Combinar correspondencia](mailmerge.md) (opciones 4, 5, 6 y 7).

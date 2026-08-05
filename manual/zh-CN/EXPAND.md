@@ -1,6 +1,6 @@
 # EXPAND
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 将数组扩展到指定大小，并用值填充。
 

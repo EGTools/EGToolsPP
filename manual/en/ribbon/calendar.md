@@ -1,6 +1,6 @@
 # Calendar
 
-**Location**: ribbon `EGTools++` tab → `Calendar` group
+**Location**: ribbon `EGTools` tab → `Calendar` group
 
 A group of features that build calendar and schedule sheets. It consists of two
 split buttons — **Calendar** (default action = Monthly; menu: Monthly, Annual A,

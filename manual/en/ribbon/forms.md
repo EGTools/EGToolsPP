@@ -1,6 +1,6 @@
 # Forms
 
-**Location**: ribbon `EGTools++` tab → `Forms` group
+**Location**: ribbon `EGTools` tab → `Forms` group
 
 A group of features that fill a form (template area) drawn on a sheet with a
 data list, repeatedly. It consists of a single split button whose default

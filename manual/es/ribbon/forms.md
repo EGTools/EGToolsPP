@@ -1,6 +1,6 @@
 # Formularios
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `Formularios`
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `Formularios`
 
 Grupo de funciones que rellena de forma repetida un formulario (área con formato)
 dibujado en una hoja con los datos de una lista.

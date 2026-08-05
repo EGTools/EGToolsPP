@@ -1,6 +1,6 @@
 # IMPORTTEXT
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 365 (new in 2026)
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365 (new in 2026)
 
 Imports data from a text-based file (local path or URL) as an array.
 

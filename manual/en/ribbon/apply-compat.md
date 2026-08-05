@@ -1,6 +1,6 @@
 # Apply Legacy Compatibility
 
-**Location**: ribbon `EGTools++` tab → `EGTools` group → split-button dropdown menu
+**Location**: ribbon `EGTools` tab → `EGTools` group → split-button dropdown menu
 
 When a workbook authored in modern Excel is opened in an older version, new functions
 appear as broken `_xlfn.XLOOKUP`-style tokens and evaluate to `#NAME?`. This button

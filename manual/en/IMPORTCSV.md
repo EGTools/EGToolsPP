@@ -1,6 +1,6 @@
 # IMPORTCSV
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 365 (new in 2026)
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365 (new in 2026)
 
 Imports a CSV file (local path or URL) as an array — comma delimiter, UTF-8.
 

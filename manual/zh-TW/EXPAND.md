@@ -1,6 +1,6 @@
 # EXPAND
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024
 
 將陣列擴展至指定大小，並以值填補。
 

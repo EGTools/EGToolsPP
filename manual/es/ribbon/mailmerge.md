@@ -1,6 +1,6 @@
 # Combinar correspondencia
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `Formularios` → menú del botón dividido `Etiquetas` → **Combinar correspondencia**
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `Formularios` → menú del botón dividido `Etiquetas` → **Combinar correspondencia**
 
 **Clona la hoja del formulario completa por cada fila** de la lista de datos,
 sustituye los marcadores de posición `{{nombredecampo}}` por los valores de esa fila

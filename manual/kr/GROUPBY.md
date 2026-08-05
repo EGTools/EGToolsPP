@@ -1,6 +1,6 @@
 # GROUPBY
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 키로 행을 그룹화해 값을 집계합니다. 집계자는 텍스트: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + 확장(파라미터=relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC).
 

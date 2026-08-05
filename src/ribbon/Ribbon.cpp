@@ -401,7 +401,7 @@ namespace egtools::ribbon
                 appendButton(xml, b, true);
             xml += L"</group></tab>";
 
-            xml += L"<tab id=\"egpp.tab\" getLabel=\"GetLabel\">";
+            xml += L"<tab id=\"egpp.tab\" insertBeforeMso=\"TabHome\" getLabel=\"GetLabel\">";
             for (const auto& g : kGroups)
             {
                 xml += L"<group id=\"";
@@ -755,6 +755,8 @@ namespace egtools::ribbon
                 content += L": <a href=\"";
                 content += kRepoUrl;
                 content += L"\">github.com/EGTools/EGToolsPP</a>\n";
+                content += t(L"ribbon.about.license");
+                content += L": Apache License 2.0\n";
                 content += t(L"ribbon.about.base");
                 content += L": xlOil 0.22.1 (Apache-2.0)";
                 if (hasNew)
@@ -791,6 +793,8 @@ namespace egtools::ribbon
             text += L": ";
             text += kRepoUrl;
             text += L"\n";
+            text += t(L"ribbon.about.license");
+            text += L": Apache License 2.0\n";
             text += t(L"ribbon.about.base");
             text += L": xlOil 0.22.1 (Apache-2.0)";
             if (hasNew)

@@ -1,6 +1,6 @@
 # IMPORTCSV
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 365（2026 年新增）
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365（2026 年新增）
 
 将 CSV 文件(本地路径/URL)导入为数组 — 逗号分隔、UTF-8。
 

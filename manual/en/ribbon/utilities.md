@@ -1,6 +1,6 @@
 # Utilities
 
-**Location**: ribbon `EGTools++` tab → `Utilities` group
+**Location**: ribbon `EGTools` tab → `Utilities` group
 
 A split button collecting frequently used helpers. Pressing the button itself runs the
 default action, **Recalculate All**; the arrow opens a menu of ten items.

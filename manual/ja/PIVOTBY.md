@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**種類**: MS Excel 互換関数 · **ネイティブ導入**: Excel 2024 / Microsoft 365
+**種類**: MS Excel 互換関数 · **ネイティブ導入**: Microsoft 365
 
 行キーと列キーでデータをピボットし値を集計します。集計子はテキスト(SUM, COUNT…)。
 

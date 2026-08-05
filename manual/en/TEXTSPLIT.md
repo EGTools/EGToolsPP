@@ -1,6 +1,6 @@
 # TEXTSPLIT
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Excel 2024
 
 Splits text into an array using column and row delimiters.
 

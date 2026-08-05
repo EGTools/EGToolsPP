@@ -1,6 +1,6 @@
 # Combinar/Separar celdas
 
-**Ubicación**: cinta, pestaña `EGTools++` → grupo `Combinar/Separar celdas`
+**Ubicación**: cinta, pestaña `EGTools` → grupo `Combinar/Separar celdas`
 
 Grupo de funciones para trabajar con celdas combinadas. Se compone de 2 botones divididos —
 **Combinar** (acción predeterminada = Combinar sin formato) y **Separar** (acción predeterminada = Separar a filas sin formato).
@@ -155,10 +155,12 @@ cada fragmento en una columna, de izquierda a derecha.
 | La selección no es un rango de celdas | Todas | "Seleccione primero un rango de celdas." |
 | Se solapa con un área de tabla (ListObject) | Combinar valores iguales · Combinar iguales conservando · Combinar sin/con formato · Combinar filas/columnas | "No se pueden procesar áreas de tabla." — dentro de una tabla no se admite la combinación de celdas |
 | Se seleccionó una sola fila | Combinar valores iguales · Combinar iguales conservando | "No se puede procesar una sola fila." |
-| Selección de varias áreas (Ctrl+clic) | Combinar sin/con formato | Solo se puede procesar un área continua |
+| Selección de varias áreas (Ctrl+clic) | Combinar sin/con formato | "Solo se puede procesar un área a la vez." |
 | Más de 100 filas | Combinar sin/con formato · Combinar columnas | "No se pueden procesar rangos de más de 100 filas." |
 | Contiene celdas ya combinadas | Combinar sin/con formato (todo el rango ya es una celda combinada) · Combinar filas/columnas | "El rango contiene celdas ya combinadas. Sepárelas primero." |
-| No es una única celda combinada | Separar a filas/columnas | "Seleccione primero un rango de celdas." |
+| No es una única celda combinada | Separar a filas/columnas | "Seleccione una sola celda combinada para ejecutar esta acción." |
+| Nada que dividir | Separar a filas | "La celda no tiene saltos de línea (Alt+Entrar) para dividir." |
+| Nada que dividir | Separar a columnas | "La celda no tiene delimitador para dividir." |
 
 ### Precaución
 

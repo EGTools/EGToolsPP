@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 去除数组边缘的空白行/列。
 

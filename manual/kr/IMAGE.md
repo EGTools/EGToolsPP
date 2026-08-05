@@ -1,6 +1,6 @@
 # IMAGE
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024
 
 셀에 URL 또는 파일 경로의 그림을 삽입합니다.
 

@@ -1,6 +1,6 @@
 # EXPAND
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024
 
 Expande una matriz al tamaño dado, rellenando con un valor.
 

@@ -1,6 +1,6 @@
 # Manage API Keys
 
-**Location**: ribbon `EGTools++` tab → `EGTools` group → split-button dropdown menu
+**Location**: ribbon `EGTools` tab → `EGTools` group → split-button dropdown menu
 
 A dialog to register or remove the API keys used by the public-API functions and
 ribbon commands.

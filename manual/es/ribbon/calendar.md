@@ -1,6 +1,6 @@
 # Calendario
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `Calendario`
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `Calendario`
 
 Grupo de funciones que crea hojas de calendario y de agenda. Se compone de 2 botones
 divididos: **Calendario** (acción predeterminada = Mensual; menú: Mensual · Anual A · Anual B) y

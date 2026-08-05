@@ -14,7 +14,7 @@
   "noArgs": "（无参数）",
   "todoRet": "<!-- TODO: 返回形式（标量/数组·溢出）及含义、错误条件（#VALUE!、#N/A 等） -->",
   "todoNote": "<!-- TODO: 与原版（Excel/Google）的差异、相关函数链接 -->",
-  "newIn2026": "Excel 365（2026 年新增）",
+  "newIn2026": "Microsoft 365（2026 年新增）",
   "catExcel": "**类别**：MS Excel 兼容函数 · **原生引入**：{Y}",
   "catExcelNote": "- 支持：Excel 2010+。在没有原生函数的旧版本中按 `{FN}` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.{FN}`。",
   "xNote": " 在部分旧版本中因保留字冲突注册为 `x{FN}`。",
@@ -27,5 +27,5 @@
   "secExcel": "MS Excel 兼容函数",
   "secGoogle": "Google 表格兼容函数",
   "secEg": "EGTools 专用函数",
-  "ribbonIndex": "## 功能区菜单\n\n功能区 `EGTools++` 选项卡提供的功能。整体布局参见[功能区菜单概览](ribbon/README.md)。\n\n### 可见单元格\n\n- [可见单元格 — 仅复制可见单元格 · 全部复制 · 仅粘贴值/粘贴公式/全部粘贴](ribbon/visible-cells.md)\n\n### 合并/拆分单元格\n\n- [合并/拆分单元格 — 合并连续相同值 · 保留值的合并 · 合并内容 · 按行/按列合并 · 拆分并填充 · 拆分为行/列](ribbon/merge-split.md)\n\n### 图片\n\n- [图片 — 插入图片 · 按名称插入 · 插入到表单 · 调整所选 · 全部调整 · 全部导出](ribbon/pictures.md)\n\n### 日历/日程表\n\n- [日历/日程表 — 月历 · 年历A/B · 周 · 日A/B](ribbon/calendar.md)\n\n### 表单\n\n- [表单 — 制作标签](ribbon/forms.md) · [邮件合并](ribbon/mailmerge.md)\n\n### 工具\n\n- [工具 — 删除样式 · 删除名称 · 整理错误 · 清理空文本 · 整理批注 · 更改边框颜色 · 描摹形状 · UDF 固定为值 · 应用 CheckBox · 全部重算](ribbon/utilities.md)\n\n### EGTools\n\n- [应用旧版兼容](ribbon/apply-compat.md)\n- [还原为内置函数](ribbon/restore-native.md)\n- [SMTP 设置](ribbon/smtp-settings.md)\n- [管理 API 密钥](ribbon/api-keys.md)\n\n### 右键菜单\n\n- [单元格右键菜单 — 日期选择 · 打开链接](ribbon/context-menu.md)\n\n"
+  "ribbonIndex": "## 功能区菜单\n\n功能区 `EGTools` 选项卡提供的功能。整体布局参见[功能区菜单概览](ribbon/README.md)。\n\n### 可见单元格\n\n- [可见单元格 — 仅复制可见单元格 · 全部复制 · 仅粘贴值/粘贴公式/全部粘贴](ribbon/visible-cells.md)\n\n### 合并/拆分单元格\n\n- [合并/拆分单元格 — 合并连续相同值 · 保留值的合并 · 合并内容 · 按行/按列合并 · 拆分并填充 · 拆分为行/列](ribbon/merge-split.md)\n\n### 图片\n\n- [图片 — 插入图片 · 按名称插入 · 插入到表单 · 调整所选 · 全部调整 · 全部导出](ribbon/pictures.md)\n\n### 日历/日程表\n\n- [日历/日程表 — 月历 · 年历A/B · 周 · 日A/B](ribbon/calendar.md)\n\n### 表单\n\n- [表单 — 制作标签](ribbon/forms.md) · [邮件合并](ribbon/mailmerge.md)\n\n### 工具\n\n- [工具 — 删除样式 · 删除名称 · 整理错误 · 清理空文本 · 整理批注 · 更改边框颜色 · 描摹形状 · UDF 固定为值 · 应用 CheckBox · 全部重算](ribbon/utilities.md)\n\n### EGTools\n\n- [应用旧版兼容](ribbon/apply-compat.md)\n- [还原为内置函数](ribbon/restore-native.md)\n- [SMTP 设置](ribbon/smtp-settings.md)\n- [管理 API 密钥](ribbon/api-keys.md)\n\n### 右键菜单\n\n- [单元格右键菜单 — 日期选择 · 打开链接](ribbon/context-menu.md)\n\n"
 }

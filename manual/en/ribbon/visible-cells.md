@@ -1,6 +1,6 @@
 # Visible Cells
 
-**Location**: ribbon `EGTools++` tab → `Visible Cells` group
+**Location**: ribbon `EGTools` tab → `Visible Cells` group
 
 A group of features for copying and pasting ranges under filters or hidden
 rows/columns. It consists of two split buttons — **Copy** (default action =

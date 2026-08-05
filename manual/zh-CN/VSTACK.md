@@ -1,6 +1,6 @@
 # VSTACK
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 将多个数组垂直堆叠为一个数组。
 

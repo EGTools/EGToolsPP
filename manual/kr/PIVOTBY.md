@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 행·열 키로 데이터를 피벗해 값을 집계합니다. 집계자=텍스트(SUM, COUNT…).
 

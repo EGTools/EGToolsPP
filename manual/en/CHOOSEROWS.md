@@ -1,6 +1,6 @@
 # CHOOSEROWS
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Excel 2024
 
 Returns the specified rows from an array.
 

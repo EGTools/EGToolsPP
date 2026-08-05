@@ -1,6 +1,6 @@
 # GROUPBY
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365
 
 Groups rows by key(s) and aggregates values. Aggregator is text: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + extensions (param via relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC).
 

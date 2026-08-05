@@ -1,6 +1,6 @@
 # REGEXEXTRACT
 
-**種類**: MS Excel 互換関数 · **ネイティブ導入**: Excel 2024 / Microsoft 365
+**種類**: MS Excel 互換関数 · **ネイティブ導入**: Microsoft 365
 
 テキストから正規表現の一致部分を抽出します。
 

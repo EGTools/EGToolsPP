@@ -1,6 +1,6 @@
 # Aplicar compatibilidad
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
 
 Cuando un libro creado en un Excel moderno se abre en versiones antiguas de Excel,
 las funciones nuevas aparecen como tokens rotos del tipo `_xlfn.XLOOKUP` y producen

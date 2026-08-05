@@ -1,6 +1,6 @@
 # HSTACK
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024
 
 將多個陣列水平堆疊為一個陣列。
 

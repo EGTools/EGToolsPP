@@ -1,6 +1,6 @@
 # IMPORTTEXT
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 365 (novedad de 2026)
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365 (novedad de 2026)
 
 Importa datos de un archivo de texto (ruta local o URL) como matriz.
 

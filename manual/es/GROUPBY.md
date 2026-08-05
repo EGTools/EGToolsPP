@@ -1,6 +1,6 @@
 # GROUPBY
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Agrupa filas por clave(s) y agrega valores. El agregador es texto: SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF + extensiones (parámetro en relative_to): TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC).
 

@@ -1,6 +1,6 @@
 # REGEXREPLACE
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365
 
 Replaces text matching a regular expression ($1.. backrefs).
 

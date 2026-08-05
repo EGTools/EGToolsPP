@@ -1,6 +1,6 @@
 # TEXTAFTER
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024
 
 구분자 뒤의 텍스트를 반환합니다.
 

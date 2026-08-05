@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 移除陣列邊緣的空白列/欄。
 

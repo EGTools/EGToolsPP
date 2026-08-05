@@ -1,6 +1,6 @@
 # REGEXREPLACE
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Reemplaza el texto que coincide con una expresión regular ($1.. retro-referencias).
 

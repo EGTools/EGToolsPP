@@ -1,6 +1,6 @@
 # SMTP Settings
 
-**Location**: ribbon `EGTools++` tab → `EGTools` group → split-button dropdown menu
+**Location**: ribbon `EGTools` tab → `EGTools` group → split-button dropdown menu
 
 A dialog to register the SMTP server used by [Mail Merge](mailmerge.md) for
 **sending email** (options 4, 5, 6, 7).

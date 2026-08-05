@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 배열 가장자리의 빈 행/열을 제거합니다.
 

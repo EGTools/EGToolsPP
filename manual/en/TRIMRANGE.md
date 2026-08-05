@@ -1,6 +1,6 @@
 # TRIMRANGE
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Microsoft 365
 
 Trims blank rows/columns from the edges of an array.
 

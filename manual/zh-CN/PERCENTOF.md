@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 返回子集之和占全部数据之和的比例。
 

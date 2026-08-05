@@ -14,7 +14,7 @@
   "noArgs": "(無引數)",
   "todoRet": "<!-- TODO: 傳回形態（純量/陣列·溢出）與意義、錯誤條件（#VALUE!、#N/A 等） -->",
   "todoNote": "<!-- TODO: 與原版（Excel/Google）的差異、相關函數連結 -->",
-  "newIn2026": "Excel 365 (2026 新增)",
+  "newIn2026": "Microsoft 365 (2026 新增)",
   "catExcel": "**類別**: MS Excel 相容函數 · **原生導入**: {Y}",
   "catExcelNote": "- 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `{FN}` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.{FN}`。",
   "xNote": " 在部分舊版 Excel 中因保留字衝突，會以 `x{FN}` 名稱註冊。",
@@ -27,5 +27,5 @@
   "secExcel": "MS Excel 相容函數",
   "secGoogle": "Google Sheets 相容函數",
   "secEg": "EGTools 專用函數",
-  "ribbonIndex": "## 功能區選單\n\n功能區 `EGTools++` 索引標籤提供的功能。完整配置請參閱[功能區選單總覽](ribbon/README.md)。\n\n### 可見儲存格\n\n- [可見儲存格 — 僅複製可見儲存格 · 全部複製 · 僅貼上值/貼上公式/全部貼上](ribbon/visible-cells.md)\n\n### 合併/取消合併儲存格\n\n- [合併/取消合併儲存格 — 合併連續相同值 · 保留值的合併 · 合併內容 · 逐列/逐欄合併 · 取消合併並填滿 · 拆分為列/欄](ribbon/merge-split.md)\n\n### 圖片\n\n- [圖片 — 插入圖片 · 依名稱插入 · 插入到表單 · 調整所選 · 全部調整 · 全部匯出](ribbon/pictures.md)\n\n### 行事曆/日程表\n\n- [行事曆/日程表 — 月曆 · 年曆A/B · 週 · 日A/B](ribbon/calendar.md)\n\n### 表單\n\n- [表單 — 製作標籤](ribbon/forms.md) · [郵件合併](ribbon/mailmerge.md)\n\n### 工具\n\n- [工具 — 刪除樣式 · 刪除名稱 · 整理錯誤 · 清理空文字 · 整理註解 · 變更框線色彩 · 描摹形狀 · UDF 固定為值 · 套用 CheckBox · 全部重算](ribbon/utilities.md)\n\n### EGTools\n\n- [套用舊版相容](ribbon/apply-compat.md)\n- [還原為內建函數](ribbon/restore-native.md)\n- [SMTP 設定](ribbon/smtp-settings.md)\n- [管理 API 金鑰](ribbon/api-keys.md)\n\n### 右鍵選單\n\n- [儲存格右鍵選單 — 日期選擇 · 開啟連結](ribbon/context-menu.md)\n\n"
+  "ribbonIndex": "## 功能區選單\n\n功能區 `EGTools` 索引標籤提供的功能。完整配置請參閱[功能區選單總覽](ribbon/README.md)。\n\n### 可見儲存格\n\n- [可見儲存格 — 僅複製可見儲存格 · 全部複製 · 僅貼上值/貼上公式/全部貼上](ribbon/visible-cells.md)\n\n### 合併/取消合併儲存格\n\n- [合併/取消合併儲存格 — 合併連續相同值 · 保留值的合併 · 合併內容 · 逐列/逐欄合併 · 取消合併並填滿 · 拆分為列/欄](ribbon/merge-split.md)\n\n### 圖片\n\n- [圖片 — 插入圖片 · 依名稱插入 · 插入到表單 · 調整所選 · 全部調整 · 全部匯出](ribbon/pictures.md)\n\n### 行事曆/日程表\n\n- [行事曆/日程表 — 月曆 · 年曆A/B · 週 · 日A/B](ribbon/calendar.md)\n\n### 表單\n\n- [表單 — 製作標籤](ribbon/forms.md) · [郵件合併](ribbon/mailmerge.md)\n\n### 工具\n\n- [工具 — 刪除樣式 · 刪除名稱 · 整理錯誤 · 清理空文字 · 整理註解 · 變更框線色彩 · 描摹形狀 · UDF 固定為值 · 套用 CheckBox · 全部重算](ribbon/utilities.md)\n\n### EGTools\n\n- [套用舊版相容](ribbon/apply-compat.md)\n- [還原為內建函數](ribbon/restore-native.md)\n- [SMTP 設定](ribbon/smtp-settings.md)\n- [管理 API 金鑰](ribbon/api-keys.md)\n\n### 右鍵選單\n\n- [儲存格右鍵選單 — 日期選擇 · 開啟連結](ribbon/context-menu.md)\n\n"
 }

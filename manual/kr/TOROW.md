@@ -1,6 +1,6 @@
 # TOROW
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024
 
 배열을 한 행으로 반환합니다.
 

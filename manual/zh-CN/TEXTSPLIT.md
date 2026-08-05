@@ -1,6 +1,6 @@
 # TEXTSPLIT
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 使用列和行分隔符将文本拆分为数组。
 

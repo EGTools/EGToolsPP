@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**類別**: MS Excel 相容函數 · **原生導入**: Excel 2024 / Microsoft 365
+**類別**: MS Excel 相容函數 · **原生導入**: Microsoft 365
 
 依列鍵與欄鍵樞紐分析資料並彙總值。彙總器為文字(SUM、COUNT…)。
 

@@ -1,6 +1,6 @@
 # IMAGE
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Excel 2024
 
 Inserts a picture into a cell from a source URL or file path.
 

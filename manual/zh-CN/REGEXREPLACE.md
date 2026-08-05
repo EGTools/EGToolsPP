@@ -1,6 +1,6 @@
 # REGEXREPLACE
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 替换与正则表达式匹配的文本($1.. 反向引用)。
 

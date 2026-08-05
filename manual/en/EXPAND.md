@@ -1,6 +1,6 @@
 # EXPAND
 
-**Category**: MS Excel compatibility function · **Native since**: Excel 2024 / Microsoft 365
+**Category**: MS Excel compatibility function · **Native since**: Excel 2024
 
 Expands an array to the given size, padding with a value.
 

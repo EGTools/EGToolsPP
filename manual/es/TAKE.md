@@ -1,6 +1,6 @@
 # TAKE
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024
 
 Devuelve filas/columnas del principio o final de una matriz.
 

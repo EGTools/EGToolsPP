@@ -1,6 +1,6 @@
 # IMAGE
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024
 
 Inserta una imagen en la celda desde una URL o ruta de archivo.
 

@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 부분합을 전체합으로 나눈 비율을 반환합니다.
 

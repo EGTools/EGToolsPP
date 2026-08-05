@@ -1,6 +1,6 @@
 # REGEXTEST
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Microsoft 365
 
 텍스트가 정규식과 일치하는지 검사합니다.
 

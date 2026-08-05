@@ -1,6 +1,6 @@
 # Administrar claves API
 
-**Ubicación**: pestaña `EGTools++` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
+**Ubicación**: pestaña `EGTools` de la cinta → grupo `EGTools` → menú desplegable del botón dividido
 
 Cuadro de diálogo para registrar/eliminar las claves API que usan las funciones de
 API públicas y las funciones de la cinta.

@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**種類**: MS Excel 互換関数 · **ネイティブ導入**: Excel 2024 / Microsoft 365
+**種類**: MS Excel 互換関数 · **ネイティブ導入**: Microsoft 365
 
 部分集合の合計を全データの合計で割った比率を返します。
 

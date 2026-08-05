@@ -1,6 +1,6 @@
 # PERCENTOF
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Devuelve la suma de un subconjunto dividida por la suma de todos los datos.
 

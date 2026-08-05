@@ -1,6 +1,6 @@
 # REGEXEXTRACT
 
-**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2024 / Microsoft 365
+**Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Microsoft 365
 
 Extrae coincidencias de una expresión regular del texto.
 

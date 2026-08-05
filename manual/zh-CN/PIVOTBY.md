@@ -1,6 +1,6 @@
 # PIVOTBY
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Microsoft 365
 
 按行键和列键透视数据并聚合值。聚合器为文本(SUM、COUNT…)。
 

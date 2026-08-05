@@ -1,6 +1,6 @@
 # TEXTSPLIT
 
-**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024 / Microsoft 365
+**종류**: MS Excel 호환 함수 · **네이티브 도입**: Excel 2024
 
 열·행 구분 기호로 텍스트를 배열로 분할합니다.
 

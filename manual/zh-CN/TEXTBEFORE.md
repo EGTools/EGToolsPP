@@ -1,6 +1,6 @@
 # TEXTBEFORE
 
-**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024 / Microsoft 365
+**类别**：MS Excel 兼容函数 · **原生引入**：Excel 2024
 
 返回分隔符之前的文本。
 
