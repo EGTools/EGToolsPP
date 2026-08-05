@@ -159,7 +159,7 @@ namespace egtools::intellisense
             std::wstring fn;
             int argIndex = -1;
             FuncInfo fi;
-            if (tryGetFormulaInfo(prefix, fn, argIndex) && lookupFunction(fn, fi))
+            if (tryGetFormulaInfo(prefix, fn, argIndex) && lookupRegistered(fn, fi))
             {
                 POINT p = caretScreenPos(threadId, wnd);
                 toolTipShow(p.x, p.y + 2, fi, argIndex);
