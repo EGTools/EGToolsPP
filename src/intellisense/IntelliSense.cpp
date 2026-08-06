@@ -50,6 +50,8 @@ namespace egtools::intellisense
         DWORD         g_threadId = 0;
         HWINEVENTHOOK g_hook = nullptr;
         HWINEVENTHOOK g_hookPopup = nullptr;   // CREATE..SELECTION (popup list)
+        bool          g_excelFg = true;        // Excel(우리 프로세스)이 포그라운드인가
+        UINT_PTR      g_fgPoll = 0;            // 편집 세션 동안 포그라운드 폴링 타이머
         CRITICAL_SECTION g_logLock;
         bool          g_logInit = false;
         std::wstring  g_lastPrefix;
@@ -291,12 +293,52 @@ namespace egtools::intellisense
             return false;
         }
 
+        // 수식 편집 상태는 앱 전환 후에도 유지되므로(셀 편집 모드) 포그라운드가
+        // 다른 프로세스면 툴팁을 숨겨야 한다. EVENT_SYSTEM_FOREGROUND 전역 훅은
+        // 이 환경에서 발화하지 않는 것으로 실측돼(2026-08-06), 편집 세션 동안만
+        // 250ms 폴링으로 전환을 감지한다(비편집 시 타이머 없음 = 상시 비용 0).
+        bool excelIsForeground()
+        {
+            DWORD pid = 0;
+            HWND fg = GetForegroundWindow();
+            if (fg) GetWindowThreadProcessId(fg, &pid);
+            return pid == GetCurrentProcessId();
+        }
+
+        void ensureFgPoll()
+        {
+            if (!g_fgPoll) g_fgPoll = SetTimer(nullptr, 0, 250, nullptr);
+        }
+
+        void stopFgPoll()
+        {
+            if (g_fgPoll) { KillTimer(nullptr, g_fgPoll); g_fgPoll = 0; }
+        }
+
         void doUpdate()
         {
+            const bool fg = excelIsForeground();
+            if (!fg)
+            {
+                if (g_excelFg)
+                {
+                    g_excelFg = false;
+                    toolTipHide();      // 다른 앱이 앞 — 즉시 숨김
+                }
+                ensureFgPoll();         // 복귀 감지를 위해 폴링 유지
+                return;
+            }
+            if (!g_excelFg)
+            {
+                g_excelFg = true;
+                g_lastPrefix.clear();   // 복귀 — 강제 재평가로 툴팁 재표시
+            }
+
             std::wstring prefix;
             int caret = 0;
             if (getFormulaPrefix(prefix, caret))
             {
+                ensureFgPoll();         // 편집 중 — 전환 감시 계속
                 // While the desc overlay owns the tooltip window, do NOT
                 // consume prefix changes — g_lastPrefix must stay stale so the
                 // re-read scheduled by descHide() still processes the keystroke
@@ -308,10 +350,14 @@ namespace egtools::intellisense
                     updateIntelliSense(prefix, g_lastEventThread, g_lastEventWnd);
                 }
             }
-            else if (!g_lastPrefix.empty())
+            else
             {
-                g_lastPrefix.clear();
-                if (!g_descActive) toolTipHide();   // desc overlay owns the window
+                stopFgPoll();           // 편집 종료 — 폴링 중단
+                if (!g_lastPrefix.empty())
+                {
+                    g_lastPrefix.clear();
+                    if (!g_descActive) toolTipHide();   // desc overlay owns the window
+                }
             }
         }
 
@@ -355,6 +401,7 @@ namespace egtools::intellisense
                 nullptr, winEventProc,
                 GetCurrentProcessId(), 0,
                 WINEVENT_OUTOFCONTEXT);
+            g_excelFg = excelIsForeground();
             logLine(L"--- IntelliSense thread ready (LPenHelper) ---");
 
             MSG msg;
@@ -367,9 +414,15 @@ namespace egtools::intellisense
                     doUpdate();   // settled re-read
                     continue;
                 }
+                if (msg.message == WM_TIMER && g_fgPoll && msg.wParam == g_fgPoll)
+                {
+                    doUpdate();   // 주기 폴링(편집 세션 동안): 포그라운드 전환 감지
+                    continue;
+                }
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+            stopFgPoll();
             if (g_hookPopup) { UnhookWinEvent(g_hookPopup); g_hookPopup = nullptr; }
             if (g_hook) { UnhookWinEvent(g_hook); g_hook = nullptr; }
             toolTipDestroy();   // window/class cleanup on the owning thread
