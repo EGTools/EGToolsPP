@@ -492,7 +492,10 @@ namespace egtools::ribbon
         }
 
         // ── ribbon icons: RCDATA PNG → WIC → HICON → IPictureDisp ──────────
-        std::map<std::wstring, IPictureDisp*> g_pics;   // main-thread only cache
+        // NB: 그림은 캐시하지 않고 GetImage 호출마다 새로 만든다. Office 리본은
+        // 받은 IPictureDisp의 HICON을 자기 소유처럼 창 파괴 시 함께 파괴하므로
+        // (SDI: 창=리본 단위), 캐시를 재사용하면 통합문서를 닫았다 새로 열 때
+        // 두 번째 창부터 죽은 핸들이 전달돼 아이콘이 빈 칸으로 그려진다.
 
         HMODULE thisModule()
         {
@@ -567,8 +570,13 @@ namespace egtools::ribbon
                 pd.cbSizeofstruct = sizeof(pd);
                 pd.picType = PICTYPE_ICON;
                 pd.icon.hicon = icon;
+                // fOwn=FALSE: Office 리본은 IPictureDisp를 받자마자 Release하고
+                // (실측: 다음 생성이 같은 힙 주소 재사용) HICON만 뽑아 창 수명
+                // 동안 쓰다가 창 파괴 시 자기가 파괴한다. 그림이 핸들을 소유하면
+                // (TRUE) 즉시 파괴돼 렌더링 전에 핸들이 죽는다 — 파괴는 Office
+                // 몫이므로 우리는 성공 경로에서 DestroyIcon 하지 않는다.
                 if (FAILED(OleCreatePictureIndirect(&pd, IID_IPictureDisp,
-                        TRUE /*fOwn*/, reinterpret_cast<void**>(&pic))))
+                        FALSE /*fOwn*/, reinterpret_cast<void**>(&pic))))
                 {
                     DestroyIcon(icon);
                     pic = nullptr;
@@ -612,30 +620,19 @@ namespace egtools::ribbon
             return it == index.end() ? nullptr : it->second;
         }
 
+        // 매 호출 새 그림 생성 — 참조 1개(생성분)를 호출자에게 넘긴다.
         IPictureDisp* iconFor(const wchar_t* ctrlId)
         {
             const BtnDef* btn = findButton(ctrlId);
             const wchar_t* image = btn ? btn->image : nullptr;
             if (!image) return nullptr;
 
-            auto it = g_pics.find(image);
-            if (it != g_pics.end()) return it->second;
-
             int resId = 0;
             for (const auto& [name, id] : kIcons)
                 if (wcscmp(name, image) == 0) { resId = id; break; }
             if (!resId) return nullptr;
 
-            IPictureDisp* pic = createPictureFromPng(resId);
-            if (pic) g_pics[image] = pic;            // cache holds one ref
-            return pic;
-        }
-
-        void releaseIcons()
-        {
-            for (auto& [name, pic] : g_pics)
-                if (pic) pic->Release();
-            g_pics.clear();
+            return createPictureFromPng(resId);
         }
 
         constexpr const wchar_t* kRepoUrl = L"https://github.com/EGTools/EGToolsPP";
@@ -835,7 +832,7 @@ namespace egtools::ribbon
                            if (!r) return;
                            IPictureDisp* pic = iconFor(c.Id);
                            if (!pic) return;
-                           pic->AddRef();          // 호출자(Office) 몫의 참조
+                           // 생성분 참조를 그대로 Office에 이전(AddRef 불필요).
                            r->vt = VT_DISPATCH;
                            r->pdispVal = pic;
                        };
@@ -959,6 +956,5 @@ namespace egtools::ribbon
         }
         catch (...) {}
         g_addin.reset();
-        releaseIcons();
     }
 }
