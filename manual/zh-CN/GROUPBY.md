@@ -38,6 +38,7 @@
 ## 备注
 
 - function 参数以文本而非原生的 lambda 指定；支持的聚合器为 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 共 16 种（与原生相同），并作为 EGTools 扩展支持 TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) — 扩展聚合器的参数（TEXTJOIN 分隔符、LARGE/SMALL 的 k、PERCENTILE 的 p、QUARTILE 0~4）通过 relative_to 参数传入（其他名称返回 #VALUE!）。field_relationship 参数接受但被忽略。
+- sort_order 保持键字段的层级顺序：键字段号仅改变该字段的排序方向；指定值列号时，以该聚合值代替最后一个键字段进行排序（并列时按该键升序）。
 - 总计·小计标签遵循 UI 语言（中文 UI：总计，英语 UI：Total/Grand Total）。小计行的标签为第一个键的值。
 - 省略 field_headers 时，若首行全为文本且其下存在非文本值，则自动识别为标题。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `GROUPBY` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.GROUPBY`。

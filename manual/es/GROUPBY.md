@@ -38,6 +38,7 @@ Devuelve, como matriz derramada, una matriz 2D formada por la columna de claves 
 ## Notas
 
 - El argumento function se especifica como texto en lugar de la lambda de la función nativa; los agregadores admitidos son los 16 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (los mismos que la función nativa), y como extensión de EGTools también se admiten TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) - el parámetro de los agregadores extendidos (separador de TEXTJOIN, k de LARGE/SMALL, p de PERCENTILE, 0~4 de QUARTILE) se pasa mediante el argumento relative_to (cualquier otro nombre devuelve #VALUE!). El argumento field_relationship se acepta pero se ignora.
+- sort_order mantiene el orden jerárquico de los campos clave: un número de campo clave solo cambia la dirección de ese campo, y un número de columna de valores ordena por el valor agregado en lugar del último campo clave (los empates se resuelven por esa clave en orden ascendente).
 - Las etiquetas de total y subtotal siguen el idioma de la interfaz (UI en coreano: 합계/총합계; UI en inglés: Total/Grand Total). La etiqueta de una fila de subtotal es el valor de la primera clave.
 - Si se omite field_headers, la primera fila se reconoce automáticamente como encabezado cuando toda ella es texto y debajo hay valores no textuales.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `GROUPBY` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.GROUPBY`.

@@ -38,6 +38,7 @@
 ## 참고
 
 - function 인수는 네이티브의 람다 대신 텍스트로 지정하며, 지원 집계자는 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 16종(네이티브와 동일)이며, EGTools 확장으로 TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) 도 지원합니다 - 확장 집계자의 파라미터(TEXTJOIN 구분자, LARGE/SMALL k, PERCENTILE p, QUARTILE 0~4)는 relative_to 인수로 전달합니다(그 외 이름은 #VALUE!). field_relationship 인수는 받되 무시됩니다.
+- sort_order는 키 필드의 계층 순서를 유지합니다: 키 필드 번호는 해당 필드의 정렬 방향만 바꾸고, 값 열 번호를 지정하면 마지막 키 필드 대신 그 집계값으로 정렬하며 동점은 마지막 키 오름차순입니다.
 - 총계·부분합 라벨은 UI 언어를 따릅니다(한국어 UI: 합계/총합계, 영어 UI: Total/Grand Total). 부분합 행의 라벨은 첫 번째 키 값입니다.
 - field_headers를 생략하면 첫 행이 모두 텍스트이고 그 아래에 비텍스트 값이 있을 때 헤더로 자동 인식합니다.
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `GROUPBY` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.GROUPBY`으로 등록됩니다.

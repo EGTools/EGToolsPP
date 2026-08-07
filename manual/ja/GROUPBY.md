@@ -38,6 +38,7 @@
 ## 解説
 
 - function 引数はネイティブのラムダの代わりにテキストで指定します。サポートされる集計子は SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF の 16 種(ネイティブと同一)で、EGTools 拡張として TEXTJOIN/LARGE/SMALL/PERCENTILE・QUARTILE(.INC/.EXC) もサポートします - 拡張集計子のパラメーター(TEXTJOIN の区切り文字、LARGE/SMALL の k、PERCENTILE の p、QUARTILE の 0~4)は relative_to 引数で渡します(それ以外の名前は #VALUE!)。field_relationship 引数は受け取りますが無視されます。
+- sort_order はキーフィールドの階層順を保ちます: キーフィールド番号は該当フィールドの並び方向のみを変え、値列の番号を指定すると最後のキーフィールドの代わりにその集計値で並べ替えます(同点はそのキーの昇順)。
 - 総計・小計のラベルは UI 言語に従います(韓国語 UI: 합계/총합계、英語 UI: Total/Grand Total)。小計行のラベルは最初のキーの値です。
 - field_headers を省略した場合、先頭行がすべてテキストで、その下に非テキスト値があるときにヘッダーとして自動認識します。
 - 対応: Excel 2010+。ネイティブ関数がない旧バージョンでは `GROUPBY` の名前のまま（ドロップイン）、ネイティブ関数がある新しい Excel では `EG.GROUPBY` として登録されます。

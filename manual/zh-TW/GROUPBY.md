@@ -38,6 +38,7 @@
 ## 備註
 
 - function 引數以文字指定（而非原生的 lambda），支援的彙總函數為 SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF 共 16 種（與原生相同），並以 EGTools 擴充另外支援 TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) — 擴充彙總函數的參數（TEXTJOIN 分隔符、LARGE/SMALL 的 k、PERCENTILE 的 p、QUARTILE 0~4）以 relative_to 引數傳入（其他名稱則為 #VALUE!）。field_relationship 引數會接受但被忽略。
+- sort_order 會保持鍵欄位的階層順序：鍵欄位編號僅改變該欄位的排序方向；指定值欄編號時，以該彙總值取代最後一個鍵欄位進行排序（同值時依該鍵遞增）。
 - 總計·小計的標籤依 UI 語言而定（韓文 UI: `합계`/`총합계`，英文 UI: `Total`/`Grand Total`）。小計列的標籤為第一個鍵的值。
 - 省略 field_headers 時，若第一列全為文字且其下方含有非文字值，會自動辨識為標題。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `GROUPBY` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.GROUPBY`。

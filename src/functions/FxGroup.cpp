@@ -13,7 +13,13 @@
 //     "MAX"|"MIN"|"PRODUCT"|"PERCENTOF".
 //   * field_relationship(GROUPBY 8번째)은 수용하되 무시. PIVOTBY relative_to는
 //     0(총합)/1(행합)/2(열합)만 지원, 3·4(부모)는 #VALUE.
-//   * PIVOTBY의 col_fields·values는 1열만 지원(다중 열 중첩 미지원).
+// row_fields·col_fields·values 모두 다중 열 허용(네이티브 동일, 실측 정합):
+//   * 다중 col_fields → 열 키 레벨별 헤더 행(Kc행), 다중 values → 열 그룹마다
+//     값 열 V개 중첩. 표시 모드(2·3)에서는 열 필드명 행(", " 연결)과
+//     행 필드명+값 이름 행이 추가된다.
+//   * col_total_depth ±2 = 총계+부분합 열(첫 열필드 블록별, 열필드 2개 이상).
+//   * 다중 값(V>1)의 합계/부분합 '열': 네이티브는 빈칸으로 두지만 EG는 값
+//     열별로 집계해 채운다 — 의도적 차이(plan/21 D5, 사용자 결정).
 // 그 외 인수 의미:
 //   * field_headers: 0=헤더없음·표시안함, 1=있음·표시안함, 2=없음·생성표시,
 //     3=있음·표시. 생략=자동(첫 행이 전부 텍스트이고 아래에 비텍스트가 있으면
@@ -103,9 +109,9 @@ namespace egtools::functions
 
         struct PivotArgs
         {
-            const ExcelObj* rowF = nullptr;      // 필수
-            const ExcelObj* colF = nullptr;      // PIVOTBY만 (1열)
-            const ExcelObj* values = nullptr;    // 필수 (GROUPBY 다열 허용)
+            const ExcelObj* rowF = nullptr;      // 필수 (다열 허용)
+            const ExcelObj* colF = nullptr;      // PIVOTBY만 (다열 허용)
+            const ExcelObj* values = nullptr;    // 필수 (다열 허용)
             const ExcelObj* fn = nullptr;        // 필수 (텍스트)
             const ExcelObj* fieldHeaders = nullptr;
             const ExcelObj* rowDepth = nullptr;
@@ -164,13 +170,9 @@ namespace egtools::functions
 
             const bool hasCols = in.colF && !in.colF->isMissing();
             ExcelArray ckStore = hasCols ? ExcelArray(*in.colF) : ExcelArray(*in.rowF);
-            if (hasCols)
-            {
-                if (ckStore.nRows() != Rall) return returnValue(CellError::Value);
-                // 미지원 조합: 다중 열축·다중 값·다중 행키 (plan/21 D 제한).
-                if (ckStore.nCols() != 1 || V != 1 || K != 1)
-                    return returnValue(CellError::Value);
-            }
+            const size_t Kc = hasCols ? (size_t)ckStore.nCols() : 0;
+            if (hasCols && (ckStore.nRows() != Rall || Kc == 0))
+                return returnValue(CellError::Value);
 
             const std::wstring fn = upper(in.fn->toString());
             // 네이티브 16종 + 파라미터형 확장 9종 (core/Aggregate.h).
@@ -209,8 +211,8 @@ namespace egtools::functions
                     if (rk.at(0, (ExcelArray::col_t)c).type() != ExcelType::Str) firstAllText = false;
                 for (size_t c = 0; firstAllText && c < V; ++c)
                     if (vv.at(0, (ExcelArray::col_t)c).type() != ExcelType::Str) firstAllText = false;
-                if (firstAllText && hasCols &&
-                    ckStore.at(0, 0).type() != ExcelType::Str) firstAllText = false;
+                for (size_t c = 0; firstAllText && hasCols && c < Kc; ++c)
+                    if (ckStore.at(0, (ExcelArray::col_t)c).type() != ExcelType::Str) firstAllText = false;
                 bool belowHasNonText = false;
                 for (size_t r = 1; !belowHasNonText && r < Rall; ++r)
                     for (size_t c = 0; c < V; ++c)
@@ -239,13 +241,19 @@ namespace egtools::functions
                 valNames[c] = dataHasHeaders
                     ? vv.at(0, (ExcelArray::col_t)c).toString()
                     : egtools::i18n::t(L"agg.value") + L" " + std::to_wstring(c + 1);
+            std::vector<std::wstring> colFieldNames(Kc);
+            for (size_t c = 0; c < Kc; ++c)
+                colFieldNames[c] = dataHasHeaders
+                    ? ckStore.at(0, (ExcelArray::col_t)c).toString()
+                    : egtools::i18n::t(L"agg.colField") + L" " + std::to_wstring(c + 1);
 
             // ---- total_depth ----
             int rowDepth = readInt(in.rowDepth, 1);
-            const int colDepth = readInt(in.colDepth, hasCols ? 1 : 0);
+            int colDepth = readInt(in.colDepth, hasCols ? 1 : 0);
             if (abs(rowDepth) > 2) return returnValue(CellError::Value);
-            if (abs(colDepth) > 1) return returnValue(CellError::Value);   // 열축은 총계만
+            if (abs(colDepth) > 2) return returnValue(CellError::Value);
             if (abs(rowDepth) == 2 && K < 2) rowDepth = rowDepth > 0 ? 1 : -1;
+            if (abs(colDepth) == 2 && Kc < 2) colDepth = colDepth > 0 ? 1 : -1;
 
             // ---- filter ----
             std::vector<ExcelArray::row_t> dataRows;
@@ -269,53 +277,42 @@ namespace egtools::functions
                 for (size_t r = r0; r < Rall; ++r) dataRows.push_back((ExcelArray::row_t)r);
             if (dataRows.empty()) return returnValue(CellError::NA);
 
-            // ---- 행 그룹 (해시, 등장 순서) ----
-            std::vector<Group> rowGroups;
+            // ---- 행/열 그룹 (해시, 등장 순서) + 데이터행→그룹 사상 ----
+            auto buildGroups = [&dataRows](const ExcelArray& arr, size_t nCols,
+                                           std::vector<Group>& groups, std::vector<size_t>& idxOf)
             {
                 std::unordered_map<std::wstring, size_t> lookup;
                 lookup.reserve(dataRows.size() * 2);
+                idxOf.resize(dataRows.size());
                 std::wstring canon;
-                for (auto r : dataRows)
+                for (size_t i = 0; i < dataRows.size(); ++i)
                 {
+                    const auto r = dataRows[i];
                     canon.clear();
-                    for (size_t c = 0; c < K; ++c) appendCanonical(canon, rk.at(r, (ExcelArray::col_t)c));
+                    for (size_t c = 0; c < nCols; ++c)
+                        appendCanonical(canon, arr.at(r, (ExcelArray::col_t)c));
                     const auto it = lookup.find(canon);
                     if (it == lookup.end())
                     {
                         Group g;
-                        for (size_t c = 0; c < K; ++c) g.key.emplace_back(rk.at(r, (ExcelArray::col_t)c));
+                        for (size_t c = 0; c < nCols; ++c)
+                            g.key.emplace_back(arr.at(r, (ExcelArray::col_t)c));
                         g.rows.push_back(r);
-                        lookup.emplace(canon, rowGroups.size());
-                        rowGroups.push_back(std::move(g));
+                        idxOf[i] = groups.size();
+                        lookup.emplace(canon, groups.size());
+                        groups.push_back(std::move(g));
                     }
                     else
-                        rowGroups[it->second].rows.push_back(r);
-                }
-            }
-
-            // ---- 열 그룹 ----
-            std::vector<Group> colGroups;
-            std::unordered_map<std::wstring, size_t> colLookup;
-            if (hasCols)
-            {
-                std::wstring canon;
-                for (auto r : dataRows)
-                {
-                    canon.clear();
-                    appendCanonical(canon, ckStore.at(r, 0));
-                    const auto it = colLookup.find(canon);
-                    if (it == colLookup.end())
                     {
-                        Group g;
-                        g.key.emplace_back(ckStore.at(r, 0));
-                        g.rows.push_back(r);
-                        colLookup.emplace(canon, colGroups.size());
-                        colGroups.push_back(std::move(g));
+                        idxOf[i] = it->second;
+                        groups[it->second].rows.push_back(r);
                     }
-                    else
-                        colGroups[it->second].rows.push_back(r);
                 }
-            }
+            };
+            std::vector<Group> rowGroups, colGroups;
+            std::vector<size_t> rgIdx, cgIdx;
+            buildGroups(rk, K, rowGroups, rgIdx);
+            if (hasCols) buildGroups(ckStore, Kc, colGroups, cgIdx);
 
             // ---- 집계 사전 계산 ----
             const size_t nG = rowGroups.size();
@@ -344,26 +341,8 @@ namespace egtools::functions
             if (hasCols)
             {
                 cross.assign(nG, std::vector<std::vector<ExcelArray::row_t>>(nC));
-                std::unordered_map<std::wstring, size_t> rowLookup;
-                {
-                    std::wstring canon;
-                    for (size_t g = 0; g < nG; ++g)
-                    {
-                        canon.clear();
-                        for (const auto& k : rowGroups[g].key) appendCanonical(canon, k);
-                        rowLookup.emplace(canon, g);
-                    }
-                }
-                std::wstring canon;
-                for (auto r : dataRows)
-                {
-                    canon.clear();
-                    for (size_t c = 0; c < K; ++c) appendCanonical(canon, rk.at(r, (ExcelArray::col_t)c));
-                    const size_t g = rowLookup[canon];
-                    canon.clear();
-                    appendCanonical(canon, ckStore.at(r, 0));
-                    cross[g][colLookup[canon]].push_back(r);
-                }
+                for (size_t i = 0; i < dataRows.size(); ++i)
+                    cross[rgIdx[i]][cgIdx[i]].push_back(dataRows[i]);
             }
 
             // ---- 정렬 ----
@@ -389,31 +368,43 @@ namespace egtools::functions
                 }
             }
 
+            // 정렬 레벨 — 네이티브 실측 규칙: 키 필드의 계층 순서는 항상 유지되고
+            // sort_order는 해당 필드의 '방향'만 바꾼다(P.sort). 값 열 지정은 마지막
+            // 키 필드 레벨을 대체해 그 안쪽을 정렬하고, 마지막 키는 동점 보조로
+            // 뒤에 남는다(G.sortVal — 동점은 키 오름차순).
+            struct SortLevel { bool isValue; size_t idx; int dir; };
+            auto makeLevels = [](size_t nKeys, size_t nVals,
+                                 const std::vector<std::pair<int, int>>& spec)
+            {
+                std::vector<int> keyDir(nKeys, 1);
+                std::vector<SortLevel> valLv;
+                for (const auto& [idx, dir] : spec)
+                {
+                    if (idx >= 1 && (size_t)idx <= nKeys) keyDir[(size_t)idx - 1] = dir;
+                    else if ((size_t)idx > nKeys && (size_t)idx <= nKeys + nVals)
+                        valLv.push_back(SortLevel{ true, (size_t)idx - nKeys - 1, dir });
+                }
+                std::vector<SortLevel> lv;
+                for (size_t c = 0; c < nKeys; ++c)
+                {
+                    if (c == nKeys - 1)
+                        for (const auto& v : valLv) lv.push_back(v);
+                    lv.push_back(SortLevel{ false, c, keyDir[c] });
+                }
+                return lv;
+            };
+
+            const auto rowLevels = makeLevels(K, hasCols ? 0 : V, rowSortSpec);
             std::vector<size_t> rowOrder(nG);
             std::iota(rowOrder.begin(), rowOrder.end(), (size_t)0);
             std::stable_sort(rowOrder.begin(), rowOrder.end(), [&](size_t x, size_t y)
             {
-                if (rowSortSpec.empty())
+                for (const auto& l : rowLevels)
                 {
-                    for (size_t c = 0; c < K; ++c)
-                    {
-                        const int cv = cmpObj(rowGroups[x].key[c], rowGroups[y].key[c]);
-                        if (cv != 0) return cv < 0;
-                    }
-                    return false;
-                }
-                for (const auto& [idx, dir] : rowSortSpec)
-                {
-                    int cv = 0;
-                    if (idx >= 1 && (size_t)idx <= K)
-                        cv = cmpObj(rowGroups[x].key[(size_t)idx - 1],
-                                    rowGroups[y].key[(size_t)idx - 1]);
-                    else if (!hasCols && (size_t)idx <= K + V)
-                        cv = cmpObj(groupAgg[x][(size_t)idx - K - 1],
-                                    groupAgg[y][(size_t)idx - K - 1]);
-                    else
-                        continue;
-                    if (cv != 0) return dir > 0 ? cv < 0 : cv > 0;
+                    const int cv = l.isValue
+                        ? cmpObj(groupAgg[x][l.idx], groupAgg[y][l.idx])
+                        : cmpObj(rowGroups[x].key[l.idx], rowGroups[y].key[l.idx]);
+                    if (cv != 0) return l.dir > 0 ? cv < 0 : cv > 0;
                 }
                 return false;
             });
@@ -421,12 +412,16 @@ namespace egtools::functions
             std::vector<size_t> colOrder(hasCols ? nC : 0);
             if (hasCols)
             {
+                const auto colLevels = makeLevels(Kc, 0, colSortSpec);
                 std::iota(colOrder.begin(), colOrder.end(), (size_t)0);
                 std::stable_sort(colOrder.begin(), colOrder.end(), [&](size_t x, size_t y)
                 {
-                    const int cv = cmpObj(colGroups[x].key[0], colGroups[y].key[0]);
-                    const int dir = colSortSpec.empty() ? 1 : colSortSpec[0].second;
-                    return dir > 0 ? cv < 0 : cv > 0;
+                    for (const auto& l : colLevels)
+                    {
+                        const int cv = cmpObj(colGroups[x].key[l.idx], colGroups[y].key[l.idx]);
+                        if (cv != 0) return l.dir > 0 ? cv < 0 : cv > 0;
+                    }
+                    return false;
                 });
             }
 
@@ -498,82 +493,172 @@ namespace egtools::functions
             }
             else
             {
-                // ---- PIVOTBY: (1 + nC [+합계])열 × (헤더 + nG [+합계])행 ----
+                // ---- PIVOTBY: (K + 열라인×V)열 × (Kc[+값이름] 헤더행 + 행라인)행 ----
                 const bool wantRowGrand = rowDepth != 0;
+                const bool wantRowSub = abs(rowDepth) == 2;
                 const bool rowAtTop = rowDepth < 0;
                 const bool wantColGrand = colDepth != 0;
+                const bool wantColSub = abs(colDepth) == 2;
                 const bool colAtLeft = colDepth < 0;
 
-                // 원시 합(PERCENTOF 분모/분자)과 교차 존재 여부.
-                std::vector<std::vector<double>> rawCell(nG, std::vector<double>(nC, 0.0));
-                std::vector<double> rawRowTot(nG, 0.0), rawColTot(nC, 0.0);
-                double rawGrand = 0.0;
+                // 원시 합(PERCENTOF 분모, 값 열별).
+                std::vector<std::vector<double>> rawRow, rawCol;
+                std::vector<double> rawGrand(V, 0.0);
                 if (fn == L"PERCENTOF")
                 {
+                    rawRow.assign(nG, std::vector<double>(V, 0.0));
+                    rawCol.assign(nC, std::vector<double>(V, 0.0));
                     double d;
-                    for (size_t g = 0; g < nG; ++g)
-                        for (size_t c = 0; c < nC; ++c)
-                            for (auto r : cross[g][c])
-                                if (asNum(vv.at(r, 0), d))
-                                { rawCell[g][c] += d; rawRowTot[g] += d; rawColTot[c] += d; rawGrand += d; }
+                    for (size_t i = 0; i < dataRows.size(); ++i)
+                        for (size_t v = 0; v < V; ++v)
+                            if (asNum(vv.at(dataRows[i], (ExcelArray::col_t)v), d))
+                            {
+                                rawRow[rgIdx[i]][v] += d;
+                                rawCol[cgIdx[i]][v] += d;
+                                rawGrand[v] += d;
+                            }
                 }
 
-                // 셀 값 계산. rowIdx/colIdx == SIZE_MAX 는 합계 행/열.
+                // 출력 라인: 리프(그룹 1개)·부분합(첫 필드 블록)·총계(전체).
+                struct Line { std::vector<size_t> gs; int kind; };   // 0=리프 1=부분합 2=총계
+                auto buildLines = [&cmpObj](const std::vector<size_t>& order,
+                                            const std::vector<Group>& groups,
+                                            bool wantGrand, bool wantSub, bool grandFirst)
+                {
+                    std::vector<Line> lines;
+                    if (wantGrand && grandFirst) lines.push_back(Line{ {}, 2 });
+                    const size_t n = order.size();
+                    size_t i = 0;
+                    while (i < n)
+                    {
+                        size_t j = i;
+                        Line sub{ {}, 1 };
+                        while (j < n && cmpObj(groups[order[i]].key[0], groups[order[j]].key[0]) == 0)
+                            sub.gs.push_back(order[j++]);
+                        if (wantSub && grandFirst) lines.push_back(sub);
+                        for (size_t g = i; g < j; ++g) lines.push_back(Line{ {order[g]}, 0 });
+                        if (wantSub && !grandFirst) lines.push_back(std::move(sub));
+                        i = j;
+                    }
+                    if (wantGrand && !grandFirst) lines.push_back(Line{ {}, 2 });
+                    return lines;
+                };
+                const auto rowLines = buildLines(rowOrder, rowGroups, wantRowGrand, wantRowSub, rowAtTop);
+                const auto colLines = buildLines(colOrder, colGroups, wantColGrand, wantColSub, colAtLeft);
+
+                // 셀 값 계산 — 라인 쌍의 교차 행 집합을 집계.
                 // PERCENTOF 분모: relative_to 0=열합(기본), 1=행합, 2=총합.
                 // 합계 열의 열합 = 총합, 합계 행의 행합 = 총합 (관측된 네이티브 규칙).
-                auto pivotCell = [&](size_t g, size_t c) -> ExcelObj
+                auto lineCells = [&](const Line& rl, const Line& cl, size_t v)
                 {
-                    const bool grandRow = g == SIZE_MAX;
-                    const bool grandCol = c == SIZE_MAX;
-                    // 대상 행 집합.
-                    const std::vector<ExcelArray::row_t>* rows;
-                    if (grandRow && grandCol) rows = &dataRows;
-                    else if (grandRow) rows = &colGroups[c].rows;
-                    else if (grandCol) rows = &rowGroups[g].rows;
-                    else rows = &cross[g][c];
-
-                    if (!grandRow && !grandCol && rows->empty())
+                    std::vector<const ExcelObj*> cells;
+                    auto push = [&](const std::vector<ExcelArray::row_t>& rows)
+                    {
+                        for (auto r : rows) cells.push_back(&vv.at(r, (ExcelArray::col_t)v));
+                    };
+                    if (rl.kind == 2 && cl.kind == 2) push(dataRows);
+                    else if (rl.kind == 2) for (auto c : cl.gs) push(colGroups[c].rows);
+                    else if (cl.kind == 2) for (auto g : rl.gs) push(rowGroups[g].rows);
+                    else for (auto g : rl.gs) for (auto c : cl.gs) push(cross[g][c]);
+                    return cells;
+                };
+                auto pivotCell = [&](const Line& rl, const Line& cl, size_t v) -> ExcelObj
+                {
+                    // 의도적 차이(plan/21 D5): 네이티브는 다중 값(V>1)일 때 합계/
+                    // 부분합 '열'의 데이터 셀을 비워 두지만, EG는 값 열별로 집계해
+                    // 채운다(사용자 결정 2026-08-07). 빈 교차는 종류 무관 빈칸.
+                    auto cells = lineCells(rl, cl, v);
+                    if (cells.empty())
                         return ExcelObj(std::wstring_view(L""));   // 빈 교차 = 빈칸
-
                     if (fn != L"PERCENTOF")
-                        return aggregate(fn, cellsOf(*rows, 0));
-
+                        return aggregate(fn, cells);
                     double num = 0, d;
-                    for (auto r : *rows) if (asNum(vv.at(r, 0), d)) num += d;
-                    double denom;
-                    if (relativeTo == 2) denom = rawGrand;
-                    else if (relativeTo == 1) denom = grandRow ? rawGrand : rawRowTot[g];
-                    else denom = grandCol ? rawGrand : rawColTot[c];
+                    for (auto* o : cells) if (asNum(*o, d)) num += d;
+                    double denom = 0;
+                    if (relativeTo == 2) denom = rawGrand[v];
+                    else if (relativeTo == 1)
+                    {
+                        if (rl.kind == 2) denom = rawGrand[v];
+                        else for (auto g : rl.gs) denom += rawRow[g][v];
+                    }
+                    else
+                    {
+                        if (cl.kind == 2) denom = rawGrand[v];
+                        else for (auto c : cl.gs) denom += rawCol[c][v];
+                    }
                     if (denom == 0.0) return ExcelObj(CellError::Div0);
                     return ExcelObj(num / denom);
                 };
 
-                // 헤더 행 (열 키는 항상 필요).
+                // 라벨: 부분합 존재 시 총계는 "총합계"(행/열 각각 판정).
+                const std::wstring& rowGrandLabel = wantRowSub ? kGrandTotal : kTotal;
+                const std::wstring& colGrandLabel = wantColSub ? kGrandTotal : kTotal;
+                const ExcelObj blank(std::wstring_view(L""));
+
+                // 헤더(네이티브 실측 배치) —
+                //   표시 모드(2·3): [열 필드명 ", " 연결 1행] + [열 키 Kc행] +
+                //                   [행 필드명 + 값 이름 1행]
+                //   숨김 모드(0·1): [열 키 Kc행]만 (값 이름 행 없음, 다중 값이어도).
+                // 부분합 열 헤더 = 블록 키(레벨 0)만, 총계 열 = 라벨(레벨 0)만.
+                if (showHeaders)
+                {
+                    std::wstring joined;
+                    for (size_t c = 0; c < Kc; ++c)
+                    {
+                        if (c) joined += L", ";
+                        joined += colFieldNames[c];
+                    }
+                    std::vector<ExcelObj> h;
+                    for (size_t c = 0; c < K; ++c) h.emplace_back(blank);
+                    h.emplace_back(std::wstring_view(joined));
+                    out.push_back(std::move(h));   // 이후 열은 그리드 패딩으로 빈칸
+                }
+                for (size_t lvl = 0; lvl < Kc; ++lvl)
                 {
                     std::vector<ExcelObj> h;
-                    h.emplace_back(std::wstring_view(showHeaders ? keyNames[0] : L""));
-                    if (wantColGrand && colAtLeft) h.emplace_back(std::wstring_view(kTotal));
-                    for (size_t ci = 0; ci < nC; ++ci)
-                        h.emplace_back(colGroups[colOrder[ci]].key[0]);
-                    if (wantColGrand && !colAtLeft) h.emplace_back(std::wstring_view(kTotal));
+                    for (size_t c = 0; c < K; ++c) h.emplace_back(blank);
+                    for (const auto& cl : colLines)
+                        for (size_t v = 0; v < V; ++v)
+                        {
+                            if (cl.kind == 0) h.emplace_back(colGroups[cl.gs[0]].key[lvl]);
+                            else if (cl.kind == 1)
+                                h.emplace_back(lvl == 0
+                                    ? ExcelObj(colGroups[cl.gs[0]].key[0]) : blank);
+                            else
+                                h.emplace_back(lvl == 0
+                                    ? ExcelObj(std::wstring_view(colGrandLabel)) : blank);
+                        }
+                    out.push_back(std::move(h));
+                }
+                if (showHeaders)
+                {
+                    std::vector<ExcelObj> h;
+                    for (size_t c = 0; c < K; ++c)
+                        h.emplace_back(std::wstring_view(keyNames[c]));
+                    for (const auto& cl : colLines)
+                        for (size_t v = 0; v < V; ++v)
+                            h.emplace_back(std::wstring_view(valNames[v]));
                     out.push_back(std::move(h));
                 }
 
-                auto emitDataRow = [&](size_t g /*실제 그룹 인덱스; SIZE_MAX=합계*/)
+                // 데이터 행: 행 키 K열 + 라인×값 셀.
+                // 부분합 행 라벨 = 첫 키 값(나머지 키 열 빈칸), 총계 행 = 라벨.
+                for (const auto& rl : rowLines)
                 {
                     std::vector<ExcelObj> row;
-                    if (g == SIZE_MAX) row.emplace_back(std::wstring_view(kTotal));
-                    else row.emplace_back(rowGroups[g].key[0]);
-                    if (wantColGrand && colAtLeft) row.push_back(pivotCell(g, SIZE_MAX));
-                    for (size_t ci = 0; ci < nC; ++ci)
-                        row.push_back(pivotCell(g, colOrder[ci]));
-                    if (wantColGrand && !colAtLeft) row.push_back(pivotCell(g, SIZE_MAX));
+                    if (rl.kind == 0)
+                        for (const auto& k : rowGroups[rl.gs[0]].key) row.emplace_back(k);
+                    else
+                    {
+                        row.emplace_back(rl.kind == 1 ? ExcelObj(rowGroups[rl.gs[0]].key[0])
+                                                      : ExcelObj(std::wstring_view(rowGrandLabel)));
+                        for (size_t c = 1; c < K; ++c) row.emplace_back(blank);
+                    }
+                    for (const auto& cl : colLines)
+                        for (size_t v = 0; v < V; ++v)
+                            row.push_back(pivotCell(rl, cl, v));
                     out.push_back(std::move(row));
-                };
-
-                if (wantRowGrand && rowAtTop) emitDataRow(SIZE_MAX);
-                for (size_t gi = 0; gi < nG; ++gi) emitDataRow(rowOrder[gi]);
-                if (wantRowGrand && !rowAtTop) emitDataRow(SIZE_MAX);
+                }
             }
 
             // 그리드 → 배열.

@@ -38,6 +38,7 @@ Returns a spilled 2-D array of group key columns plus aggregated value columns. 
 ## Notes
 
 - The function argument is text instead of the native eta-lambda; the supported aggregators are SUM/AVERAGE/COUNT/COUNTA/MAX/MIN/PRODUCT/MEDIAN/MODE.SNGL/STDEV.S/STDEV.P/VAR.S/VAR.P/CONCAT/ARRAYTOTEXT/PERCENTOF (16, same set as native), plus EGTools extensions TEXTJOIN/LARGE/SMALL/PERCENTILE·QUARTILE(.INC/.EXC) - the extension parameter (TEXTJOIN delimiter, LARGE/SMALL k, PERCENTILE p, QUARTILE 0-4) is passed via relative_to (any other name returns #VALUE!). field_relationship is accepted for compatibility but ignored.
+- sort_order keeps the key-field hierarchy: a key-field number only sets that field's sort direction, and a value-column number sorts by the aggregated value in place of the last key field (ties fall back to that key in ascending order).
 - Total/subtotal labels follow the UI language (Korean UI: 합계/총합계, English UI: Total/Grand Total). Subtotal rows are labeled with the first key value.
 - When field_headers is omitted, a header row is auto-detected if the first row is all text and non-text values appear below it.
 - Supported: Excel 2010+. Registered as `GROUPBY` (drop-in) on hosts without the native function, and as `EG.GROUPBY` on modern Excel that has it.
