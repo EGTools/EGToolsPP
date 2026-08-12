@@ -33,5 +33,6 @@ Returns the week number within the month as a scalar number. An unparseable date
 
 - Weekday numbers are 1=Sun to 7=Sat; defaults are Monday start and Thursday owner.
 - The owning month and week are decided by the week's owner weekday.
+- If the date is an array, the function is applied element-wise and spills an array of the same shape (an error element returns that error).
 - Related function: MONTHBHYWEEK
 - Supported: Excel 2010+. Always registered as `WEEKNUMOFMONTH` on every Excel version.

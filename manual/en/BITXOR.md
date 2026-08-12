@@ -31,5 +31,6 @@ Returns the bitwise XOR of two numbers as a scalar number. Returns #NUM! if an a
 ## Notes
 
 - Non-numeric arguments also return #NUM!, not #VALUE!.
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related functions: BITAND, BITOR
 - Supported: Excel 2010+. Registered as `BITXOR` (drop-in) on hosts without the native function, and as `EG.BITXOR` on modern Excel that has it.

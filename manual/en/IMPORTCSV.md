@@ -34,4 +34,5 @@ Returns the CSV content as a spilled 2-D array; numeric and date (yyyy-M-d style
 - Delimiter is fixed to comma and encoding to UTF-8 (a BOM takes precedence); use IMPORTTEXT for other delimiters or encodings.
 - Double-quoted fields (including "" escapes) are recognized.
 - Negative skip_rows/take_rows count from the end.
+- An array in the path and take_rows returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Registered as `IMPORTCSV` (drop-in) on hosts without the native function, and as `EG.IMPORTCSV` on modern Excel that has it.

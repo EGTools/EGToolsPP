@@ -20,7 +20,7 @@ Calcula las horas netas de trabajo restando los descansos.
 
 ## Devuelve
 
-Se derrama como matriz del mismo tamaño que inicio/fin (escalar si son valores únicos); los valores son números en unidades de día (1 día = 1). Si los tamaños de las matrices de inicio y fin no coinciden o la matriz de descansos tiene menos de 2 columnas, devuelve #VALUE!; las celdas de inicio/fin no numéricas producen texto vacío, y una celda cuyo fin con fecha es anterior a su inicio produce #VALUE!.
+Se derrama como matriz con el tamaño resultante de difundir inicio y fin (escalar si son valores únicos); los valores son números en unidades de día (1 día = 1). Si los tamaños de inicio y fin no se pueden difundir (tamaños distintos que no sean 1) o la matriz de descansos tiene menos de 2 columnas, devuelve #VALUE!; las celdas de inicio/fin no numéricas producen texto vacío, y una celda cuyo fin con fecha es anterior a su inicio produce #VALUE!.
 
 ## Ejemplos
 
@@ -35,4 +35,5 @@ Se derrama como matriz del mismo tamaño que inicio/fin (escalar si son valores 
 - El resultado está en unidades de día; multiplique por 24 para obtener horas.
 - Si solo se indican horas y el fin es menor que el inicio, se considera que cruza la medianoche.
 - Los intervalos de descanso superpuestos se combinan automáticamente, y los descansos que cruzan la medianoche se dividen para el cálculo.
+- Inicio y fin admiten difusión escalar↔matriz; p. ej., =NETWORKHOUR(A2:A100,$B$1) fija la hora de fin en una sola celda.
 - Compatibilidad: Excel 2010+. Se registra siempre como `NETWORKHOUR` en todas las versiones de Excel.

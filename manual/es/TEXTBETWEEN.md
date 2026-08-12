@@ -36,5 +36,6 @@ Devuelve el texto extraído como un texto único (escalar). Devuelve #VALUE! cua
 
 - La búsqueda de claves ignora mayúsculas y minúsculas.
 - Si el 4.º argumento es un número, selecciona solo la N-ésima sección; si es texto, es el separador de unión de todas las secciones (predeterminado ",").
+- Si el texto es una matriz, se procesa elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error); una matriz en las claves inicial y final y los demás argumentos devuelve #VALUE!.
 - Función relacionada: TEXTREPLACE
 - Compatibilidad: Excel 2010+. Se registra siempre como `TEXTBETWEEN` en todas las versiones de Excel.

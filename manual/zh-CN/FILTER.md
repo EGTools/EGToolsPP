@@ -34,5 +34,6 @@
 
 - include 中的文本和空值按 FALSE 处理（原生函数返回 #VALUE!）。
 - 无结果且省略 if_empty 时返回 #N/A 而非 #CALC!。
+- include 含错误值时，整个结果为该错误。
 - 相关函数：SORT、UNIQUE。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `FILTER` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.FILTER`。 在部分旧版本中因保留字冲突注册为 `xFILTER`。

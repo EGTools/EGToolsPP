@@ -33,5 +33,6 @@ Returns the maximum numeric value among cells meeting all criteria, as a numeric
 ## Notes
 
 - Criteria support numbers, comparison operators (e.g. ">5") and wildcards (*, ?); text comparison is case-insensitive.
+- If a criteria value is an array, the function is computed element-wise and spills an array of the same shape. An error criteria value is treated as no match, while an error in a value that passes the criteria is returned as that error.
 - Related functions: MINIFS.
 - Supported: Excel 2010+. Registered as `MAXIFS` (drop-in) on hosts without the native function, and as `EG.MAXIFS` on modern Excel that has it.

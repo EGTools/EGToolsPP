@@ -36,4 +36,5 @@ Busca una coincidencia y, si tiene éxito, devuelve una cadena vacía (""), y la
 - Copia a través del portapapeles la imagen (msoPicture/msoLinkedPicture) cuya TopLeftCell es la celda coincidente del rango de imágenes.
 - modo_coincidencia: 0 exacta (predeterminado), -1 valor menor, 1 valor mayor, 2 caracteres comodín, 3 expresión regular; modo_busqueda: 1 desde el principio (predeterminado), -1 desde el final.
 - Mover imágenes o cambiar formatos por sí solo no provoca un recálculo (se necesita F9); al ser de tipo macro, también se excluye del recálculo multiproceso.
+- Una matriz en el valor buscado devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `ILOOKUP` en todas las versiones de Excel.

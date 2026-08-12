@@ -31,5 +31,6 @@ Returns the number of combinations with repetition (scalar number). Non-numeric 
 ## Notes
 
 - Fractional parts are truncated; computed as C(n+k-1, k).
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: PERMUTATIONA
 - Supported: Excel 2010+. Registered as `COMBINA` (drop-in) on hosts without the native function, and as `EG.COMBINA` on modern Excel that has it.

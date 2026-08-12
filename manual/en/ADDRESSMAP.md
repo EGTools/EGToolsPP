@@ -32,4 +32,5 @@ Returns an empty string ("") on success; a cadastral map picture (VWorld WMS) ar
 
 - No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.
 - Geocodes the address (road then parcel) and fetches a WMS map that includes the continuous cadastral layers.
+- An array in the address or api_key returns #VALUE! (an array api_key is rejected before saving, preventing a bad key from being stored) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `ADDRESSMAP` on every Excel version.

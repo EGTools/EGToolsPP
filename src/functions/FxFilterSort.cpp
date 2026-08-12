@@ -71,7 +71,12 @@ namespace egtools::functions
                 {
                     std::vector<ExcelArray::row_t> keep;
                     for (ExcelArray::row_t i = 0; i < R; ++i)
+                    {
+                        // include의 오류는 전체 결과로 전파(네이티브 실측).
+                        if (inc.at(i, 0).type() == ExcelType::Err)
+                            return returnValue(ExcelObj(inc.at(i, 0)));
                         if (truthyCell(inc.at(i, 0))) keep.push_back(i);
+                    }
                     if (keep.empty())
                         return ifEmpty.isMissing() ? returnValue(CellError::NA)
                                                    : returnValue(ExcelObj(ifEmpty));
@@ -83,7 +88,11 @@ namespace egtools::functions
                 {
                     std::vector<ExcelArray::col_t> keep;
                     for (ExcelArray::col_t j = 0; j < C; ++j)
+                    {
+                        if (inc.at(0, j).type() == ExcelType::Err)
+                            return returnValue(ExcelObj(inc.at(0, j)));
                         if (truthyCell(inc.at(0, j))) keep.push_back(j);
+                    }
                     if (keep.empty())
                         return ifEmpty.isMissing() ? returnValue(CellError::NA)
                                                    : returnValue(ExcelObj(ifEmpty));
@@ -105,18 +114,44 @@ namespace egtools::functions
                 ExcelArray a(array);
                 const ExcelArray::row_t R = a.nRows();
                 const ExcelArray::col_t C = a.nCols();
-                const int idx = idxA.isMissing() ? 1 : idxA.get<int>(1);
-                const int order = orderA.isMissing() ? 1 : orderA.get<int>(1);
                 const bool byCol = byColA.isMissing() ? false : (byColA.get<double>(0.0) != 0.0);
+
+                // sort_index·sort_order는 배열 허용 = 다중 키 우선순위 정렬
+                // (네이티브 정합, plan/22 T3). order만 배열이면 #VALUE!(T9);
+                // order가 스칼라면 전 키에 적용.
+                auto readIntList = [](const ExcelObj& o, int def, std::vector<int>& out)
+                {
+                    if (o.isMissing()) { out.push_back(def); return true; }
+                    if (o.isType(ExcelType::Multi))
+                    {
+                        ExcelArray v(o);
+                        const size_t n = (size_t)v.nRows() * v.nCols();
+                        if (n == 0) return false;
+                        for (size_t i = 0; i < n; ++i) out.push_back(v.at(i).get<int>(def));
+                        return true;
+                    }
+                    out.push_back(o.get<int>(def));
+                    return true;
+                };
+                std::vector<int> idxs, orders;
+                if (!readIntList(idxA, 1, idxs) || !readIntList(orderA, 1, orders))
+                    return returnValue(CellError::Value);
+                if (orders.size() > idxs.size()) return returnValue(CellError::Value);
+                if (orders.size() < idxs.size()) orders.resize(idxs.size(), orders[0]);
 
                 if (!byCol)
                 {
-                    if (idx < 1 || (ExcelArray::col_t)idx > C) return returnValue(CellError::Value);
+                    for (int ix : idxs)
+                        if (ix < 1 || (ExcelArray::col_t)ix > C) return returnValue(CellError::Value);
                     std::vector<ExcelArray::row_t> ord(R);
                     std::iota(ord.begin(), ord.end(), (ExcelArray::row_t)0);
                     std::stable_sort(ord.begin(), ord.end(), [&](auto r1, auto r2) {
-                        int c = ExcelObj::compare(a.at(r1, idx - 1), a.at(r2, idx - 1));
-                        return order < 0 ? c > 0 : c < 0;
+                        for (size_t k = 0; k < idxs.size(); ++k)
+                        {
+                            int c = ExcelObj::compare(a.at(r1, idxs[k] - 1), a.at(r2, idxs[k] - 1));
+                            if (c != 0) return orders[k] < 0 ? c > 0 : c < 0;
+                        }
+                        return false;
                     });
                     std::vector<ExcelObj> vals;
                     for (auto r : ord) for (ExcelArray::col_t j = 0; j < C; ++j) vals.emplace_back(a.at(r, j));
@@ -124,12 +159,17 @@ namespace egtools::functions
                 }
                 else
                 {
-                    if (idx < 1 || (ExcelArray::row_t)idx > R) return returnValue(CellError::Value);
+                    for (int ix : idxs)
+                        if (ix < 1 || (ExcelArray::row_t)ix > R) return returnValue(CellError::Value);
                     std::vector<ExcelArray::col_t> ord(C);
                     std::iota(ord.begin(), ord.end(), (ExcelArray::col_t)0);
                     std::stable_sort(ord.begin(), ord.end(), [&](auto c1, auto c2) {
-                        int c = ExcelObj::compare(a.at(idx - 1, c1), a.at(idx - 1, c2));
-                        return order < 0 ? c > 0 : c < 0;
+                        for (size_t k = 0; k < idxs.size(); ++k)
+                        {
+                            int c = ExcelObj::compare(a.at(idxs[k] - 1, c1), a.at(idxs[k] - 1, c2));
+                            if (c != 0) return orders[k] < 0 ? c > 0 : c < 0;
+                        }
+                        return false;
                     });
                     std::vector<ExcelObj> vals;
                     for (ExcelArray::row_t i = 0; i < R; ++i) for (auto c : ord) vals.emplace_back(a.at(i, c));

@@ -32,5 +32,6 @@ Devuelve la letra código de muestra según ISO 2859-1 como texto escalar de un 
 
 - Los guiones y espacios en el nivel de inspección se ignoran ("G-2" = "G2").
 - Calcula con las tablas ISO 2859-1:1999 integradas.
+- Todos los argumentos aceptan matrices, por lo que una lista de lotes o una tabla de AQL puede calcularse de una vez: elemento a elemento con derrame de la misma forma; los escalares se repiten, un vector columna × un vector fila se expande como producto externo y los elementos con tamaños no coincidentes dan #N/A.
 - Funciones relacionadas: SAMPLINGSIZE, SAMPLINGAC, SAMPLINGRE
 - Compatibilidad: Excel 2010+. Se registra siempre como `SAMPLINGLABEL` en todas las versiones de Excel.

@@ -34,5 +34,6 @@ Devuelve una matriz con todos los valores de la matriz dispuestos en una sola co
 
 - Las cadenas vacías ("") también se consideran valores vacíos y se excluyen con las opciones de ignorar 1 y 3.
 - Si se excluyen todos los valores, devuelve #VALUE! en lugar del #CALC! de la función nativa.
+- Una matriz en las opciones de omitir y por columnas devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Función relacionada: TOROW
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `TOCOL` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.TOCOL`.

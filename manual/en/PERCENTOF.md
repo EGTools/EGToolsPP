@@ -32,4 +32,5 @@ Returns a scalar number: the sum of the subset divided by the sum of all data. M
 
 - Non-numeric values are ignored when summing.
 - Passing "PERCENTOF" as the function argument of GROUPBY/PIVOTBY computes per-group shares.
+- Error values, however, are not ignored — the error becomes the result (the original error is preserved instead of native's #NUM!).
 - Supported: Excel 2010+. Registered as `PERCENTOF` (drop-in) on hosts without the native function, and as `EG.PERCENTOF` on modern Excel that has it.

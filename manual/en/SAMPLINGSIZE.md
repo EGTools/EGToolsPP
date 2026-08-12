@@ -37,5 +37,6 @@ Returns the ISO 2859-1 sample size n as a scalar number. An AQL outside 0-1000 o
 
 - If the tabled n exceeds the lot size, the lot size is returned; a lot size of 1 returns 1.
 - Adding 10 to plan forces that plan, ignoring the table's switch marks (*, ++).
+- All arguments accept arrays, so a LOT list or an AQL table can be computed at once — element-wise with a same-shape spill; scalars are broadcast, a column vector × a row vector expands to their outer product, and size-mismatched elements yield #N/A.
 - Related functions: SAMPLINGLABEL, SAMPLINGAC, SAMPLINGRE
 - Supported: Excel 2010+. Always registered as `SAMPLINGSIZE` on every Excel version.

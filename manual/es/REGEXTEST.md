@@ -33,5 +33,6 @@ Devuelve un valor lógico TRUE/FALSE (escalar) que indica si hay coincidencia. D
 ## Notas
 
 - La sintaxis de expresiones regulares es la de ECMAScript de std::wregex (puede diferir en algunos aspectos del PCRE2 de la versión nativa de 365).
+- text·pattern aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Funciones relacionadas: REGEXEXTRACT, REGEXREPLACE
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `REGEXTEST` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.REGEXTEST`.

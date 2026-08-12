@@ -36,4 +36,5 @@ Returns a text file (local path or URL) split by delimiter or fixed widths as a 
 - The default delimiter is tab. String value(s) are delimiters; a numeric array ({1,11,21}) is interpreted as 1-based ascending fixed-width column start positions.
 - encoding accepts charset names like "euc-kr" or a codepage number; a BOM takes precedence.
 - Negative skip_rows/take_rows count from the end.
+- An array in the path and take_rows returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Registered as `IMPORTTEXT` (drop-in) on hosts without the native function, and as `EG.IMPORTTEXT` on modern Excel that has it.

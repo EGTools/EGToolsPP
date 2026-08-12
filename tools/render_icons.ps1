@@ -6,6 +6,9 @@
 #   <line x1 y1 x2 y2>  + 속성 fill / stroke / stroke-width / stroke-linecap /
 #   stroke-linejoin. 아이콘 원본은 이 부분집합 안에서만 작성한다(디자인 SoT는 SVG).
 #
+# 예외: about_64.png는 SVG가 아니라 EG 로고 래스터(resources/icons/EGlogo.png,
+# 256px 원본)를 64px로 축소한 정적 자산이다 — 이 스크립트가 생성하지 않는다.
+#
 # 사용: powershell -ExecutionPolicy Bypass -File tools\render_icons.ps1 [-Sizes 64,32]
 # 기본 64px — 고DPI 리본에서 Office가 축소 방향으로 스케일링해 선명하다
 # (32px 임베드는 125~150% 배율에서 확대되며 계단 현상, 2026-08-04 사용자 피드백).

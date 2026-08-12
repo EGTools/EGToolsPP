@@ -36,4 +36,5 @@ Finds a match and, on success, returns an empty string ("") while the picture an
 - Copies the picture (msoPicture/msoLinkedPicture) whose TopLeftCell is the matched cell in image_range, via the clipboard.
 - match_mode: 0 exact (default), -1 next smaller, 1 next larger, 2 wildcard, 3 regex; search_mode: 1 first-to-last (default), -1 last-to-first.
 - Moving pictures or changing formats alone does not trigger recalculation (press F9); macro-type, excluded from multithreaded recalculation.
+- An array in the lookup value returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `ILOOKUP` on every Excel version.

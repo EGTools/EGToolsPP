@@ -32,4 +32,5 @@ Returns a date-time serial value (scalar number): an integer for date only, a fr
 - Hanja units (年月日時分秒) and AM/PM markers (오전/오후, AM/PM, 上午/下午) are recognized.
 - Month-day only text uses the current year; two-digit years above 31 are mapped to the 2000s.
 - Apply a date/time number format to the result cell.
+- If the text is an array, the function is applied element-wise and spills an array of the same shape (an error element returns that error).
 - Supported: Excel 2010+. Always registered as `TODATETIME` on every Excel version.

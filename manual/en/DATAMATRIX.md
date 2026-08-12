@@ -32,4 +32,5 @@ Returns an empty string ("") on success; the DataMatrix picture is inserted sepa
 
 - gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.
 - The image keeps its square aspect ratio within the calling cell.
+- An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `DATAMATRIX` on every Excel version.

@@ -1,12 +1,18 @@
 // FxRegex.cpp — regular-expression functions (REGEXTEST, REGEXEXTRACT,
 // REGEXREPLACE). Uses std::wregex (ECMAScript flavor). $1.. backreferences
 // supported in REGEXREPLACE replacement.
+//
+// text/pattern/replacement lift element-wise with broadcast (네이티브 정합,
+// plan/22 T5·T6·U12): array in → array out; REGEXEXTRACT의 mode 1·2처럼
+// 원소별 결과가 배열이면 네이티브처럼 첫 값으로 강등된다(mapLift).
 
 #include "../core/Registry.h"
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
+#include "../core/Apply.h"
 
 #include <xlOil/xlOil.h>
+#include <optional>
 #include <string>
 #include <vector>
 #include <regex>
@@ -27,6 +33,23 @@ namespace egtools::functions
         {
             return o.isMissing() ? false : (o.get<int>(0) != 0);
         }
+
+        // Per-element regex: reuse a precompiled regex when the pattern is a
+        // scalar; otherwise compile the element's pattern.
+        struct RegexSource
+        {
+            bool icase;
+            std::optional<std::wregex> pre;   // set when pattern arg is scalar
+            explicit RegexSource(const ExcelObj& patA, bool ic) : icase(ic)
+            {
+                if (!patA.isType(ExcelType::Multi))
+                    pre = buildRegex(patA.toString(), ic);   // invalid → throws → #VALUE!
+            }
+            std::wregex make(const ExcelObj& p) const
+            {
+                return buildRegex(p.toString(), icase);
+            }
+        };
     }
 
     void registerRegex()
@@ -35,13 +58,21 @@ namespace egtools::functions
         egtools::core::registerFn(L"REGEXTEST",
             [](const ExcelObj& textA, const ExcelObj& patA, const ExcelObj& ciA) -> ExcelObj*
             {
-                try
-                {
-                    const std::wstring text = textA.toString();
-                    auto re = buildRegex(patA.toString(), caseInsensitive(ciA));
-                    return returnValue(ExcelObj(std::regex_search(text, re)));
-                }
-                catch (...) { return returnValue(CellError::Value); }
+                const RegexSource src(patA, caseInsensitive(ciA));
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& t, const ExcelObj& p) -> ExcelObj
+                    {
+                        try
+                        {
+                            const std::wstring text = t.toString();
+                            if (src.pre)
+                                return ExcelObj(std::regex_search(text, *src.pre));
+                            const auto re = src.make(p);
+                            return ExcelObj(std::regex_search(text, re));
+                        }
+                        catch (...) { return ExcelObj(CellError::Value); }
+                    },
+                    textA, patA);
             });
 
         // REGEXEXTRACT(text, pattern, [return_mode], [case_insensitivity]).
@@ -51,39 +82,47 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& patA, const ExcelObj& modeA,
                const ExcelObj& ciA) -> ExcelObj*
             {
-                try
-                {
-                    const std::wstring text = textA.toString();
-                    const int mode = modeA.isMissing() ? 0 : modeA.get<int>(0);
-                    auto re = buildRegex(patA.toString(), caseInsensitive(ciA));
-
-                    if (mode == 1)
+                const int mode = modeA.isMissing() ? 0 : modeA.get<int>(0);
+                const RegexSource src(patA, caseInsensitive(ciA));
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& t, const ExcelObj& p) -> ExcelObj
                     {
-                        std::vector<ExcelObj> vals;
-                        for (std::wsregex_iterator it(text.begin(), text.end(), re), end; it != end; ++it)
-                            vals.emplace_back(std::wstring_view(it->str()));
-                        if (vals.empty()) return returnValue(CellError::NA);
-                        return egtools::core::output(egtools::core::makeArray(
-                            (ExcelArrayBuilder::row_t)vals.size(), 1, vals));
-                    }
+                        try
+                        {
+                            const std::wstring text = t.toString();
+                            std::optional<std::wregex> local;
+                            const std::wregex& re = src.pre ? *src.pre
+                                                            : local.emplace(src.make(p));
 
-                    std::wsmatch m;
-                    if (!std::regex_search(text, m, re)) return returnValue(CellError::NA);
+                            if (mode == 1)
+                            {
+                                std::vector<ExcelObj> vals;
+                                for (std::wsregex_iterator it(text.begin(), text.end(), re), end;
+                                     it != end; ++it)
+                                    vals.emplace_back(std::wstring_view(it->str()));
+                                if (vals.empty()) return ExcelObj(CellError::NA);
+                                return egtools::core::makeArray(
+                                    (ExcelArrayBuilder::row_t)vals.size(), 1, vals);
+                            }
 
-                    if (mode == 2)
-                    {
-                        std::vector<ExcelObj> vals;
-                        for (size_t i = 1; i < m.size(); ++i)
-                            vals.emplace_back(std::wstring_view(m[i].str()));
-                        if (vals.empty()) return returnValue(CellError::NA);
-                        return egtools::core::output(egtools::core::makeArray(
-                            1, (ExcelArrayBuilder::col_t)vals.size(), vals));
-                    }
+                            std::wsmatch m;
+                            if (!std::regex_search(text, m, re)) return ExcelObj(CellError::NA);
 
-                    std::wstring s = m[0].str();   // mode 0
-                    return returnValue(ExcelObj(std::wstring_view(s)));
-                }
-                catch (...) { return returnValue(CellError::Value); }
+                            if (mode == 2)
+                            {
+                                std::vector<ExcelObj> vals;
+                                for (size_t i = 1; i < m.size(); ++i)
+                                    vals.emplace_back(std::wstring_view(m[i].str()));
+                                if (vals.empty()) return ExcelObj(CellError::NA);
+                                return egtools::core::makeArray(
+                                    1, (ExcelArrayBuilder::col_t)vals.size(), vals);
+                            }
+
+                            return ExcelObj(std::wstring_view(m[0].str()));   // mode 0
+                        }
+                        catch (...) { return ExcelObj(CellError::Value); }
+                    },
+                    textA, patA);
             });
 
         // REGEXREPLACE(text, pattern, replacement, [occurrence], [case_insensitivity]).
@@ -92,36 +131,43 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& patA, const ExcelObj& repA,
                const ExcelObj& occA, const ExcelObj& ciA) -> ExcelObj*
             {
-                try
-                {
-                    const std::wstring text = textA.toString();
-                    const std::wstring rep = repA.toString();
-                    const int occ = occA.isMissing() ? 0 : occA.get<int>(0);
-                    auto re = buildRegex(patA.toString(), caseInsensitive(ciA));
-
-                    if (occ <= 0)
+                const int occ = occA.isMissing() ? 0 : occA.get<int>(0);
+                const RegexSource src(patA, caseInsensitive(ciA));
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& t, const ExcelObj& p, const ExcelObj& r) -> ExcelObj
                     {
-                        std::wstring out = std::regex_replace(text, re, rep);
-                        return returnValue(ExcelObj(std::wstring_view(out)));
-                    }
+                        try
+                        {
+                            const std::wstring text = t.toString();
+                            const std::wstring rep = r.toString();
+                            std::optional<std::wregex> local;
+                            const std::wregex& re = src.pre ? *src.pre
+                                                            : local.emplace(src.make(p));
 
-                    // Replace only the Nth occurrence.
-                    std::wstring out;
-                    out.reserve(text.size());
-                    int n = 0;
-                    auto last = text.cbegin();
-                    for (std::wsregex_iterator it(text.begin(), text.end(), re), end; it != end; ++it)
-                    {
-                        const auto& mm = *it;
-                        ++n;
-                        out.append(last, text.cbegin() + mm.position(0));
-                        out.append(n == occ ? mm.format(rep) : mm[0].str());
-                        last = text.cbegin() + mm.position(0) + mm.length(0);
-                    }
-                    out.append(last, text.cend());
-                    return returnValue(ExcelObj(std::wstring_view(out)));
-                }
-                catch (...) { return returnValue(CellError::Value); }
+                            if (occ <= 0)
+                                return ExcelObj(std::wstring_view(
+                                    std::regex_replace(text, re, rep)));
+
+                            // Replace only the Nth occurrence.
+                            std::wstring out;
+                            out.reserve(text.size());
+                            int n = 0;
+                            auto last = text.cbegin();
+                            for (std::wsregex_iterator it(text.begin(), text.end(), re), end;
+                                 it != end; ++it)
+                            {
+                                const auto& mm = *it;
+                                ++n;
+                                out.append(last, text.cbegin() + mm.position(0));
+                                out.append(n == occ ? mm.format(rep) : mm[0].str());
+                                last = text.cbegin() + mm.position(0) + mm.length(0);
+                            }
+                            out.append(last, text.cend());
+                            return ExcelObj(std::wstring_view(out));
+                        }
+                        catch (...) { return ExcelObj(CellError::Value); }
+                    },
+                    textA, patA, repA);
             });
     }
 }

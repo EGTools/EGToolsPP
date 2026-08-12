@@ -32,5 +32,6 @@ Returns the ISO 2859-1 sample size code letter as a one-character text scalar. A
 
 - Hyphens and spaces in the level are ignored ("G-2" = "G2").
 - Based on the built-in ISO 2859-1:1999 tables.
+- All arguments accept arrays, so a LOT list or an AQL table can be computed at once — element-wise with a same-shape spill; scalars are broadcast, a column vector × a row vector expands to their outer product, and size-mismatched elements yield #N/A.
 - Related functions: SAMPLINGSIZE, SAMPLINGAC, SAMPLINGRE
 - Supported: Excel 2010+. Always registered as `SAMPLINGLABEL` on every Excel version.

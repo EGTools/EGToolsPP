@@ -34,4 +34,5 @@
 - 支持类型：CODE128、CODE39/93、EAN13/8、UPC-A/E、ITF、CODABAR、PDF417、QRCODE（默认）、DATAMATRIX、AZTEC、GS1-128/GS1DATAMATRIX/GS1QRCODE（也接受数字代码）。
 - 选项参数为数字时解释为边距（2D 格式），为 TRUE 时解释为在下方显示文本（1D 格式）。
 - 图片大小适配调用单元格，2D 格式保持纵横比。
+- 文本指定为数组时返回 #VALUE!（每个单元格一张图片）— 多条数据请将公式按行复制使用。
 - 支持：Excel 2010+。在所有 Excel 版本中均按 `BARCODE` 名称注册。

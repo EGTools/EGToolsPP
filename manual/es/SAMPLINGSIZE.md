@@ -37,5 +37,6 @@ Devuelve el tamaño de muestra n según ISO 2859-1 como número escalar. Si el A
 
 - Si el n calculado supera la cantidad del lote, se devuelve la cantidad del lote; si la cantidad del lote es 1, se devuelve 1.
 - Sumar 10 al plan fuerza ese plan e ignora las reglas de cambio de la tabla (*, ++).
+- Todos los argumentos aceptan matrices, por lo que una lista de lotes o una tabla de AQL puede calcularse de una vez: elemento a elemento con derrame de la misma forma; los escalares se repiten, un vector columna × un vector fila se expande como producto externo y los elementos con tamaños no coincidentes dan #N/A.
 - Funciones relacionadas: SAMPLINGLABEL, SAMPLINGAC, SAMPLINGRE
 - Compatibilidad: Excel 2010+. Se registra siempre como `SAMPLINGSIZE` en todas las versiones de Excel.

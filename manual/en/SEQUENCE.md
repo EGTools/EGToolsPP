@@ -33,5 +33,6 @@ Returns a rows-by-cols array of sequential numbers filled row by row; on dynamic
 ## Notes
 
 - Omitting rows defaults it to 1 (native requires it).
+- Arrays in All arguments return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Related functions: RANDARRAY.
 - Supported: Excel 2010+. Registered as `SEQUENCE` (drop-in) on hosts without the native function, and as `EG.SEQUENCE` on modern Excel that has it.

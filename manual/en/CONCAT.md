@@ -19,7 +19,7 @@ Concatenates text from values and ranges (no delimiter).
 
 ## Returns
 
-Returns a single text value (scalar) concatenating every argument (including ranges/arrays) in order. The implementation itself returns no error values.
+Returns a single text value (scalar) concatenating every argument (including ranges/arrays) in order. If any argument contains an error value, that error is returned.
 
 ## Examples
 

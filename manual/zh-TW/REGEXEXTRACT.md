@@ -34,5 +34,6 @@
 ## 備註
 
 - 正規表示式語法為 std::wregex 的 ECMAScript（可能與原生 365 的 PCRE2 略有差異）。
+- text·pattern 可指定陣列並逐元素計算，以相同形狀的陣列溢出傳回（錯誤元素原樣傳回）；陣列 text 與傳回模式 1·2 併用時，各元素結果會降級為第一個相符項。
 - 相關函數：REGEXTEST、REGEXREPLACE
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `REGEXEXTRACT` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.REGEXEXTRACT`。

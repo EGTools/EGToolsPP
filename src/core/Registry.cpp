@@ -59,13 +59,16 @@ namespace egtools::core
         const std::wstring name = registeredName(bareName);
 
         // Record the runtime name while the UDF executes, for core::output()'s
-        // outermost-call check on legacy hosts (see detail::namedUdf).
+        // outermost-call check on legacy hosts (see detail::namedUdf). Also the
+        // last catch before xlOil turns an escaped exception into a TEXT cell
+        // value — return #VALUE! instead (plan/22 §M2, same as namedUdfImpl).
         xloil::DynamicExcelFunc<> named =
             [name, fn = std::move(fn)](const xloil::FuncInfo& info,
                                        const xloil::ExcelObj** args)
             {
                 UdfNameScope scope(name);
-                return fn(info, args);
+                try { return fn(info, args); }
+                catch (...) { return xloil::returnValue(xloil::CellError::Value); }
             };
 
         // Build the argument list for a given arg-count cap and register. Returns

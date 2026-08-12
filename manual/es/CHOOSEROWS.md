@@ -33,4 +33,5 @@ Devuelve una matriz formada por las filas seleccionadas; en las versiones de Exc
 
 - Los números de fila negativos se cuentan desde el final.
 - Para seleccionar columnas, use CHOOSECOLS.
+- Los números de fila también aceptan matrices como {1,3} o SEQUENCE(n).
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `CHOOSEROWS` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.CHOOSEROWS`.

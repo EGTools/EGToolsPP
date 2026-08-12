@@ -36,5 +36,6 @@
 ## 备注
 
 - 批量为 1 时返回 0。
+- 所有参数都可指定数组，可一次计算 LOT 列表或 AQL 表 — 按元素计算并以相同形状的数组溢出返回；标量重复使用，列向量×行向量按外积扩展，大小不匹配的元素为 #N/A。
 - 相关函数：SAMPLINGSIZE、SAMPLINGRE、SAMPLINGLABEL
 - 支持：Excel 2010+。在所有 Excel 版本中均按 `SAMPLINGAC` 名称注册。

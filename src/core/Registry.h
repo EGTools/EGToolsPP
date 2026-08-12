@@ -60,13 +60,26 @@ namespace egtools::core
         // nested UDF must return its array in-memory only (see Spill.cpp). The
         // wrapper preserves fn's exact signature so RegisterLambda's argument
         // deduction is unaffected.
+        //
+        // The wrapper is also the LAST catch before xlOil's DynamicRegister
+        // handler, which turns an escaped std::exception into a plain TEXT cell
+        // value (returnValue(e.what()) — not an error, invisible to IFERROR).
+        // Catching here instead returns a proper #VALUE! for every UDF, so
+        // argument-conversion throws (e.g. get<T> on an array/Nil) surface as
+        // errors. See plan/22 §메커니즘 M2.
         template <class TFunc, class TRet, class TClass, class... Args>
         auto namedUdfImpl(const std::wstring& name, TFunc fn, TRet (TClass::*)(Args...) const)
         {
             return [name, fn = std::move(fn)](Args... args) -> TRet
             {
                 UdfNameScope scope(name);
-                return fn(static_cast<Args&&>(args)...);
+                if constexpr (std::is_same_v<TRet, xloil::ExcelObj*>)
+                {
+                    try { return fn(static_cast<Args&&>(args)...); }
+                    catch (...) { return xloil::returnValue(xloil::CellError::Value); }
+                }
+                else
+                    return fn(static_cast<Args&&>(args)...);
             };
         }
 
@@ -76,7 +89,13 @@ namespace egtools::core
             return [name, fn = std::move(fn)](Args... args) mutable -> TRet
             {
                 UdfNameScope scope(name);
-                return fn(static_cast<Args&&>(args)...);
+                if constexpr (std::is_same_v<TRet, xloil::ExcelObj*>)
+                {
+                    try { return fn(static_cast<Args&&>(args)...); }
+                    catch (...) { return xloil::returnValue(xloil::CellError::Value); }
+                }
+                else
+                    return fn(static_cast<Args&&>(args)...);
             };
         }
 

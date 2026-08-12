@@ -30,5 +30,6 @@ Devuelve el número de días que resulta de restar la fecha inicial a la fecha f
 
 ## Notas
 
-- El texto con formato de fecha (como "2026-01-15") no se interpreta; los valores no numéricos se tratan como 0.
+- El texto con formato de fecha (como "2026-01-15") no se interpreta y devuelve #VALUE!; las celdas vacías se tratan como 0.
+- Ambos argumentos de fecha aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `DAYS` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.DAYS`.

@@ -34,4 +34,5 @@
 - 自動判別 RSS 2.0 與 Atom。query "items"（預設）傳回 Title/Summary/URL/Author/Created 5 欄。
 - created 欄位的 RFC822/ISO8601 日期會轉換為 Excel 序列值（忽略時區位移）。
 - 因使用 COM(MSXML)，不參與多執行緒重算，且需要網際網路連線。
+- url指定為陣列時傳回 #VALUE! — 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在所有 Excel 版本中一律以 `IMPORTFEED` 原名註冊。

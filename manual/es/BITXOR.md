@@ -31,5 +31,6 @@ Devuelve el XOR bit a bit de dos números como número (escalar). Devuelve #NUM!
 ## Notas
 
 - Los argumentos no numéricos también devuelven #NUM!, no #VALUE!.
+- Todos los argumentos aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Funciones relacionadas: BITAND, BITOR
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `BITXOR` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.BITXOR`.

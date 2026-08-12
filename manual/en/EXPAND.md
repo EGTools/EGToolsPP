@@ -35,4 +35,5 @@ Returns the array expanded to rows x cols; on dynamic-array hosts the result spi
 
 - Omitting rows or cols keeps the source dimension.
 - Omitting pad_with pads with #N/A.
+- Arrays in rows·columns·pad_with return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Supported: Excel 2010+. Registered as `EXPAND` (drop-in) on hosts without the native function, and as `EG.EXPAND` on modern Excel that has it.

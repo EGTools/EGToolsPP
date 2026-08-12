@@ -31,4 +31,5 @@ Returns the HTTP(S) GET response body as a scalar text value decoded as UTF-8. A
 - Implemented with a WinHTTP GET request; requires an internet connection.
 - The response body is always interpreted as UTF-8.
 - Registered thread-safe, so it runs in parallel under multi-threaded recalculation.
+- An array in url returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Registered as `WEBSERVICE` (drop-in) on hosts without the native function, and as `EG.WEBSERVICE` on modern Excel that has it.

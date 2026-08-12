@@ -35,7 +35,8 @@ Returns an array of the split text, spilling on dynamic-array hosts. Ragged rows
 
 ## Notes
 
-- Each delimiter argument accepts a single text only (the native array-of-delimiters form is not supported).
+- An array of delimiters acts as a list of alternative delimiters (native-compatible multi-delimiter support).
 - match_mode=1 ignores case.
+- If text is an array, the result has the same shape where each element is the first token of that text (native-compatible demotion lifting).
 - Related functions: TEXTBEFORE, TEXTAFTER, TEXTJOIN
 - Supported: Excel 2010+. Registered as `TEXTSPLIT` (drop-in) on hosts without the native function, and as `EG.TEXTSPLIT` on modern Excel that has it.

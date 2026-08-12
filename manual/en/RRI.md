@@ -30,5 +30,6 @@ Returns the equivalent interest rate per period for the growth of an investment 
 
 ## Notes
 
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: PDURATION
 - Supported: Excel 2010+. Registered as `RRI` (drop-in) on hosts without the native function, and as `EG.RRI` on modern Excel that has it.

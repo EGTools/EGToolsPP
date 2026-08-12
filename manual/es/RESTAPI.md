@@ -34,4 +34,5 @@ Devuelve el cuerpo de la respuesta como un único valor escalar de texto (interp
 - Usa WinHTTP y requiere conexión de red. El tiempo límite de recepción de la respuesta es de 30 segundos.
 - El cuerpo de la respuesta se devuelve tal cual, independientemente del código de estado HTTP.
 - Está registrada como no macro y segura para subprocesos, por lo que puede recalcularse en paralelo.
+- Una matriz en la dirección, el método y el cuerpo devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `RESTAPI` en todas las versiones de Excel.

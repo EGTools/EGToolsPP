@@ -22,7 +22,7 @@ Runs VLOOKUP for many keys at once, returning one or more columns.
 
 ## Returns
 
-Returns a spilled array of key-rows x return-columns; rows without a match get if_not_found (default ""). Returns #VALUE! when a required argument is missing, lookup_array is not an array, lookup_value has more than one column, or a return column number is invalid.
+Returns a spilled array of lookup-elements (row-major) x return-columns; rows without a match get if_not_found (default ""). Returns #VALUE! when a required argument is missing, lookup_array is not an array, or a return column number is invalid.
 
 ## Examples
 
@@ -37,4 +37,5 @@ Returns a spilled array of key-rows x return-columns; rows without a match get i
 - Exact match is hash-based; with duplicate keys the first row wins.
 - Approximate match sorts internally and uses binary search, so the data need not be pre-sorted.
 - Key comparison is case-insensitive.
+- lookup_value also accepts a horizontal (1×N) or 2-D array; values are read in row-major order and results are returned vertically.
 - Supported: Excel 2010+. Always registered as `MVLOOKUP` on every Excel version.

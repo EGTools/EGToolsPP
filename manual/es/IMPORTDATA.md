@@ -34,4 +34,5 @@ Devuelve el contenido CSV/TSV de una URL o de un archivo local como una matriz d
 - Si se omite delimiter, se detecta automáticamente: tabulación si la primera línea contiene una tabulación; de lo contrario, coma.
 - Las llamadas de versiones anteriores que pasan un nombre de juego de caracteres como segundo argumento (IMPORTDATA(url,"euc-kr")) también se admiten por compatibilidad.
 - En lugar del comportamiento de Google, que conserva solo las líneas no vacías, se mantienen las líneas vacías interiores y solo se eliminan las líneas vacías del final.
+- Una matriz en url devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `IMPORTDATA` en todas las versiones de Excel.

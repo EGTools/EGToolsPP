@@ -31,5 +31,5 @@ Devuelve el valor alternativo si el valor es el error #N/A; en caso contrario, d
 
 ## Notas
 
-- Con una entrada de matriz, solo se sustituyen los elementos #N/A (elemento a elemento; devuelve una matriz que se derrama).
+- Tanto el valor como el valor alternativo aceptan matrices y se difunden entre sí, sustituyendo solo #N/A elemento a elemento (los escalares se repiten, los elementos de tamaño no coincidente dan #N/A; la matriz resultante se derrama).
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `IFNA` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.IFNA`.

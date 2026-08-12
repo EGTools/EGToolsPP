@@ -22,6 +22,7 @@
 #include "../core/Registry.h"
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
+#include "../core/Apply.h"
 #include "../core/LateCom.h"
 #include "../core/Aggregate.h"
 #include "ImageInsert.h"
@@ -312,8 +313,9 @@ namespace egtools::functions
                         : ExcelObj(values);
                 };
 
-                std::wstring fn = upperW(funcA.toString());
-                if (fn.empty())
+                std::wstring fn = funcA.isType(ExcelType::Multi)
+                    ? std::wstring() : upperW(funcA.toString());
+                if (!funcA.isType(ExcelType::Multi) && fn.empty())
                 {
                     // no aggregator: spill the visible cells (visible rows × visible cols)
                     std::vector<ExcelObj> flat;
@@ -331,13 +333,11 @@ namespace egtools::functions
                         (ExcelArrayBuilder::row_t)outR, (ExcelArrayBuilder::col_t)outC, flat));
                 }
 
-                // GROUPBY 전용(PERCENTOF)은 여기서 지원하지 않는다.
-                if (fn == L"PERCENTOF") return returnValue(CellError::Value);
-
                 // collect visible cells; VB rule — a visible error is returned
                 // as-is unless the aggregator is COUNT/COUNTA
                 std::vector<ExcelObj> owned;
                 owned.reserve((size_t)nR * nC);
+                std::optional<ExcelObj> firstErr;
                 for (long i = 0; i < nR; ++i)
                 {
                     if (rHid[(size_t)i]) continue;
@@ -345,8 +345,7 @@ namespace egtools::functions
                     {
                         if (cHid[(size_t)j]) continue;
                         ExcelObj v = valueAt(i, j);
-                        if (v.type() == ExcelType::Err && fn.find(L"COUNT") == std::wstring::npos)
-                            return returnValue(std::move(v));
+                        if (v.type() == ExcelType::Err && !firstErr) firstErr = v;
                         owned.emplace_back(std::move(v));
                     }
                 }
@@ -354,8 +353,20 @@ namespace egtools::functions
                 vals.reserve(owned.size());
                 for (auto& o : owned) vals.push_back(&o);
 
-                return returnValue(core::aggregateObjs(fn, vals,
-                    optA.isMissing() ? nullptr : &optA));
+                // 집계자 이름·옵션은 원소별 리프팅(집계자 목록 → 집계값 배열).
+                return core::mapLift(
+                    [&](const ExcelObj& fe, const ExcelObj& oe) -> ExcelObj
+                    {
+                        const std::wstring f = upperW(fe.toString());
+                        // GROUPBY 전용(PERCENTOF)은 여기서 지원하지 않는다.
+                        if (f.empty() || f == L"PERCENTOF")
+                            return ExcelObj(CellError::Value);
+                        if (firstErr && f.find(L"COUNT") == std::wstring::npos)
+                            return ExcelObj(*firstErr);
+                        return core::aggregateObjs(f, vals,
+                                                   oe.isMissing() ? nullptr : &oe);
+                    },
+                    funcA, optA);
             },
             /*macro*/ true, /*threadsafe*/ false);
 
@@ -364,6 +375,9 @@ namespace egtools::functions
             [](const ExcelObj& findA, const ExcelObj& lookupA, const RangeArg& imgRef,
                const ExcelObj& notFoundA, const ExcelObj& matchA, const ExcelObj& searchA) -> ExcelObj*
             {
+                // 그림 함수는 셀당 1장 — 배열 찾을값은 거부(plan/22 그룹 C).
+                if (findA.isType(ExcelType::Multi))
+                    return returnValue(CellError::Value);
                 if (findA.isMissing() || !lookupA.isType(ExcelType::Multi))
                     return returnValue(CellError::Value);
                 ExcelArray lookup(lookupA);

@@ -32,5 +32,6 @@ Returns the process capability index Cp = (USL-LSL)/(6σ) as a scalar number. Mi
 
 - Uses the sample standard deviation (n-1).
 - If only one limit is given, the missing side is treated as the mean.
+- USL·LSL accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: CPK
 - Supported: Excel 2010+. Always registered as `CP` on every Excel version.

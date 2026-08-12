@@ -34,4 +34,5 @@ Devuelve una tabla (matriz de dos dimensiones) o una lista (matriz de N×1) de u
 - La página se analiza con MSHTML tras eliminar los bloques <script>, por lo que no se puede importar el contenido dinámico generado por scripts.
 - Los rowspan/colspan de las tablas se normalizan en una cuadrícula; el valor se coloca solo en la celda superior izquierda.
 - Usa COM, por lo que se excluye del recálculo multiproceso y requiere conexión a Internet.
+- Una matriz en url devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `IMPORTHTML` en todas las versiones de Excel.

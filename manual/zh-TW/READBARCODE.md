@@ -33,4 +33,5 @@
 - 可讀取 WIC 支援的 PNG/JPG/BMP/GIF 格式，本機檔案路徑與 http(s) URL 皆可使用。
 - 結果類型：1 文字(預設)、2 代碼文字(控制字元以 <GS> 等顯示)、3 格式、4 符號體系 ID、5 Raw HEX。
 - 也會嘗試旋轉或低品質圖片(TryHarder/TryRotate)，但只讀取一個條碼。
+- 來源指定為陣列時傳回 #VALUE! — 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在所有 Excel 版本中一律以 `READBARCODE` 原名註冊。

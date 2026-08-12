@@ -34,4 +34,5 @@
 - 支援類型：CODE128、CODE39/93、EAN13/8、UPC-A/E、ITF、CODABAR、PDF417、QRCODE(預設)、DATAMATRIX、AZTEC、GS1-128/GS1DATAMATRIX/GS1QRCODE(也接受數字代碼)。
 - 選項引數為數字時解讀為邊界(2D 格式)，為 TRUE 時解讀為在下方顯示文字(1D 格式)。
 - 圖片大小會配合呼叫儲存格，2D 格式會維持長寬比例。
+- 文字指定為陣列時傳回 #VALUE!（每個儲存格一張圖片）— 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在所有 Excel 版本中一律以 `BARCODE` 原名註冊。

@@ -33,5 +33,6 @@ Devuelve el número redondeado hacia arriba al múltiplo de significance (escala
 ## Notas
 
 - El signo de significance se ignora; se usa su valor absoluto.
+- Todos los argumentos aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: FLOOR.MATH
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `CEILING.MATH` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.CEILING.MATH`.

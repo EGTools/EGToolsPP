@@ -33,4 +33,5 @@ Returns an array made of the selected rows; on dynamic-array hosts the result sp
 
 - Negative row numbers count from the end.
 - Use CHOOSECOLS to select columns.
+- Row numbers also accept arrays such as {1,3} or SEQUENCE(n).
 - Supported: Excel 2010+. Registered as `CHOOSEROWS` (drop-in) on hosts without the native function, and as `EG.CHOOSEROWS` on modern Excel that has it.

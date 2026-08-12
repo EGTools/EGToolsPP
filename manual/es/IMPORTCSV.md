@@ -34,4 +34,5 @@ Devuelve el contenido del CSV como una matriz derramada de dos dimensiones; el t
 - El separador es la coma y la codificación es UTF-8, ambos fijos (si hay BOM, el BOM tiene prioridad). Si necesita otro separador u otra codificación, use IMPORTTEXT.
 - Se reconocen los campos entre comillas dobles (incluido el escape "").
 - Si se indican valores negativos en skip_rows/take_rows, se cuentan desde el final.
+- Una matriz en la ruta y take_rows devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `IMPORTCSV` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.IMPORTCSV`.

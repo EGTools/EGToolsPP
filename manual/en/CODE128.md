@@ -35,4 +35,5 @@ Returns an empty string ("") on success; the Code 128 barcode picture is inserte
 - gs1=TRUE encodes (AI)value text as fully FNC1-compliant GS1-128 (symbology identifier ]C1).
 - The image fills the calling cell (1D format).
 - text_size is a relative value that scales the text band height.
+- An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `CODE128` on every Excel version.

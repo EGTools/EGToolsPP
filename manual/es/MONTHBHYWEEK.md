@@ -33,5 +33,6 @@ Devuelve el mes (1~12, número escalar) al que pertenece la semana de la fecha. 
 
 - Los números de día de la semana van de 1=domingo a 7=sábado; los valores predeterminados son inicio en lunes y jueves como día de referencia.
 - El mes al que pertenece una semana se determina por el mes que contiene su día de referencia.
+- Si la fecha es una matriz, la función se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error).
 - Función relacionada: WEEKNUMOFMONTH
 - Compatibilidad: Excel 2010+. Se registra siempre como `MONTHBHYWEEK` en todas las versiones de Excel.

@@ -33,5 +33,6 @@ Devuelve una matriz de números aleatorios de tamaño rows×cols; se derrama. De
 ## Notas
 
 - Con integer=TRUE genera enteros de min a max (ambos incluidos); en caso contrario, números reales mayores o iguales que min y menores que max.
+- Una matriz en Todos los argumentos devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Función relacionada: SEQUENCE.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `RANDARRAY` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.RANDARRAY`.

@@ -34,4 +34,5 @@ RSS/ATOM 피드 자료를 가져옵니다.
 - RSS 2.0과 Atom을 자동 판별합니다. query "items"(기본)는 Title/Summary/URL/Author/Created 5열을 반환합니다.
 - created 필드의 RFC822/ISO8601 날짜는 Excel 직렬값으로 변환합니다(시간대 오프셋은 무시).
 - COM(MSXML) 사용으로 다중 스레드 재계산에서 제외되며 인터넷 연결이 필요합니다.
+- url에 배열을 지정하면 #VALUE!를 반환합니다 — 여러 건은 수식을 행별로 복사해 사용합니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `IMPORTFEED` 이름 그대로 등록됩니다.

@@ -33,4 +33,5 @@ Returns the x,y coordinates of the results as a spilled array (n-by-3 including 
 
 - No API key ships with the add-in. Get one at https://www.vworld.kr and pass it once as the last argument; stored in the registry, and a rejected key is deleted automatically with a reissue guide.
 - Address search (search_type 1) retries road then parcel (jibun) automatically.
+- An array in the search text or api_key returns #VALUE! (an array api_key is rejected before saving, preventing a bad key from being stored) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `GEOSEARCH` on every Excel version.

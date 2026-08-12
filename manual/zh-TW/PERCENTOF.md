@@ -32,4 +32,5 @@
 
 - 非數字的值在計算合計時會被忽略。
 - 在 GROUPBY/PIVOTBY 的 function 引數指定 "PERCENTOF" 即可求得各群組的組成比例。
+- 但錯誤值不會被忽略，該錯誤會成為結果（保留原錯誤而非原生的 #NUM!）。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `PERCENTOF` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.PERCENTOF`。

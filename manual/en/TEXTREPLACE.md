@@ -35,5 +35,6 @@ Returns the text with every StartKey..EndKey section replaced, as a single scala
 
 - Key matching ignores case.
 - A start key without a matching end key is itself replaced and the rest of the text is kept.
+- If the text is an array, it is processed element-wise and spills an array of the same shape (an error element returns that error); an array in start_key, end_key and the other arguments returns #VALUE!.
 - Related function: TEXTBETWEEN
 - Supported: Excel 2010+. Always registered as `TEXTREPLACE` on every Excel version.

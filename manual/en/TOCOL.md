@@ -34,5 +34,6 @@ Returns every value of the array laid out as a single column (N x 1); on dynamic
 
 - Empty strings ("") count as blanks for ignore options 1 and 3.
 - If every value is filtered out, returns #VALUE! instead of the native #CALC!.
+- Arrays in the ignore and scan-by-column options return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Related function: TOROW
 - Supported: Excel 2010+. Registered as `TOCOL` (drop-in) on hosts without the native function, and as `EG.TOCOL` on modern Excel that has it.

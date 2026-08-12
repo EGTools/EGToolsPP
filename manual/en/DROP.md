@@ -34,5 +34,6 @@ Returns the array with the given number of rows/columns removed; on dynamic-arra
 
 - Negative rows/cols drop from the end.
 - An empty result returns #VALUE! instead of the native #CALC!.
+- Arrays in rows·columns return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Related function: TAKE
 - Supported: Excel 2010+. Registered as `DROP` (drop-in) on hosts without the native function, and as `EG.DROP` on modern Excel that has it.

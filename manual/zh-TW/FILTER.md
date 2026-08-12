@@ -34,5 +34,6 @@
 
 - include 中的文字與空值視為 FALSE（原生函數為 #VALUE!）。
 - 無結果且省略 if_empty 時，傳回 #N/A 而非 #CALC!。
+- include 含錯誤值時，整個結果為該錯誤。
 - 相關函數：SORT、UNIQUE。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `FILTER` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.FILTER`。 在部分舊版 Excel 中因保留字衝突，會以 `xFILTER` 名稱註冊。

@@ -117,6 +117,11 @@ namespace egtools::functions
         ExcelObj* restApi(const ExcelObj& urlObj, const ExcelObj& methodObj,
                           const ExcelObj& headersObj, const ExcelObj& bodyObj)
         {
+            // 네트워크 함수는 배열 인수를 받지 않는다(plan/22 그룹 C) — 여러 건은
+            // 수식을 행별로 복사해 사용. 배열 본문/메서드가 그대로 전송되는 것도 차단.
+            if (urlObj.isType(ExcelType::Multi) || methodObj.isType(ExcelType::Multi)
+                || bodyObj.isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             if (urlObj.isMissing()) return returnValue(CellError::Value);
             const std::wstring url = trimW(urlObj.toString());
             if (url.empty()) return returnValue(CellError::Value);
@@ -202,6 +207,10 @@ namespace egtools::functions
 
         ExcelObj* exRate(const ExcelObj& currObj, const ExcelObj& dateObj)
         {
+            // 네트워크 함수는 배열 인수를 받지 않는다(plan/22 그룹 C). 특히 날짜
+            // 배열이 조용히 "오늘"로 계산되던 무성 오답을 차단한다.
+            if (currObj.isType(ExcelType::Multi) || dateObj.isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             std::wstring curr = currObj.isMissing() ? L"USD" : trimW(currObj.toString());
             if (curr.empty()) curr = L"USD";
             for (auto& c : curr) c = (wchar_t)std::towupper(c);

@@ -20,7 +20,7 @@ Calculates net working hours minus break times.
 
 ## Returns
 
-Spills an array the same shape as start/end (scalar for single values); values are day fractions (1 = 24 hours). Mismatched start/end shapes or a break array with fewer than 2 columns return #VALUE!; non-numeric start/end cells yield empty text, and a date-bearing end earlier than its start yields #VALUE! for that cell.
+Spills an array sized by broadcasting start and end (scalar for single values); values are day fractions (1 = 24 hours). Start/end shapes that cannot be broadcast (differing sizes other than 1) or a break array with fewer than 2 columns return #VALUE!; non-numeric start/end cells yield empty text, and a date-bearing end earlier than its start yields #VALUE! for that cell.
 
 ## Examples
 
@@ -35,4 +35,5 @@ Spills an array the same shape as start/end (scalar for single values); values a
 - Results are in days; multiply by 24 for hours.
 - With time-only values, an end smaller than its start is treated as crossing midnight.
 - Overlapping break intervals are merged; breaks crossing midnight are split.
+- Start and end support scalar↔array broadcasting — e.g. =NETWORKHOUR(A2:A100,$B$1) fixes the end time to one cell.
 - Supported: Excel 2010+. Always registered as `NETWORKHOUR` on every Excel version.

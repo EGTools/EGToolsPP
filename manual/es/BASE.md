@@ -33,5 +33,6 @@ Devuelve el texto que representa el número en la base indicada (escalar). Si nu
 
 - La parte fraccionaria de number se descarta (redondeo hacia abajo).
 - Si el resultado es más corto que min_length, se rellena con ceros por la izquierda.
+- Todos los argumentos aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: DECIMAL
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `BASE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.BASE`.

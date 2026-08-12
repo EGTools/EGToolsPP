@@ -4,6 +4,7 @@
 #include "../core/Registry.h"
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
+#include "../core/Apply.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -39,16 +40,24 @@ namespace egtools::functions
 
         size_t width(const Grid& g) { return g.empty() ? 0 : g[0].size(); }
 
-        ExcelObj* emit(const Grid& g)
+        // Grid → array ExcelObj (스칼라 코어용 — mapLift가 스필/강등을 결정).
+        ExcelObj gridObj(const Grid& g)
         {
-            if (g.empty() || g[0].empty()) return returnValue(CellError::Value);
+            if (g.empty() || g[0].empty()) return ExcelObj(CellError::Value);
             const auto rows = (ExcelArrayBuilder::row_t)g.size();
             const auto cols = (ExcelArrayBuilder::col_t)g[0].size();
             std::vector<ExcelObj> flat;
             flat.reserve((size_t)rows * cols);
             for (auto& row : g)
                 for (auto& cell : row) flat.emplace_back(cell);
-            return egtools::core::output(egtools::core::makeArray(rows, cols, flat));
+            return egtools::core::makeArray(rows, cols, flat);
+        }
+
+        ExcelObj* emit(const Grid& g)
+        {
+            if (g.empty() || g[0].empty()) return returnValue(CellError::Value);
+            ExcelObj o = gridObj(g);
+            return egtools::core::output(std::move(o));
         }
 
         bool isBlank(const ExcelObj& v)
@@ -115,24 +124,29 @@ namespace egtools::functions
                 Grid g = readGrid(array);
                 if (g.empty()) return returnValue(CellError::Value);
                 const size_t R = g.size(), C = width(g);
-                auto slice = [](size_t n, const ExcelObj& a, bool present) -> std::pair<size_t, size_t> {
-                    if (!present) return { 0, n };
-                    int k = a.get<int>(0);
-                    if (k >= 0) return { 0, std::min((size_t)k, n) };
-                    size_t cnt = std::min((size_t)(-k), n);
-                    return { n - cnt, cnt };
-                };
-                auto [r0, rn] = slice(R, rowsA, !rowsA.isMissing());
-                auto [c0, cn] = slice(C, colsA, !colsA.isMissing());
-                if (rn == 0 || cn == 0) return returnValue(CellError::Value);
-                Grid out;
-                for (size_t i = 0; i < rn; ++i)
+                // rows/cols 배열 → 강등 리프팅(네이티브 정합, plan/22 U01).
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& re, const ExcelObj& ce) -> ExcelObj
                 {
-                    std::vector<ExcelObj> row;
-                    for (size_t j = 0; j < cn; ++j) row.emplace_back(g[r0 + i][c0 + j]);
-                    out.push_back(std::move(row));
-                }
-                return emit(out);
+                    auto slice = [](size_t n, const ExcelObj& a) -> std::pair<size_t, size_t> {
+                        if (a.isMissing()) return { 0, n };
+                        int k = a.get<int>(0);
+                        if (k >= 0) return { 0, std::min((size_t)k, n) };
+                        size_t cnt = std::min((size_t)(-k), n);
+                        return { n - cnt, cnt };
+                    };
+                    auto [r0, rn] = slice(R, re);
+                    auto [c0, cn] = slice(C, ce);
+                    if (rn == 0 || cn == 0) return ExcelObj(CellError::Value);
+                    Grid out;
+                    for (size_t i = 0; i < rn; ++i)
+                    {
+                        std::vector<ExcelObj> row;
+                        for (size_t j = 0; j < cn; ++j) row.emplace_back(g[r0 + i][c0 + j]);
+                        out.push_back(std::move(row));
+                    }
+                    return gridObj(out);
+                }, rowsA, colsA);
             });
 
         // DROP(array, rows, [cols]) — drop first/last |rows| rows and |cols| cols.
@@ -142,24 +156,28 @@ namespace egtools::functions
                 Grid g = readGrid(array);
                 if (g.empty()) return returnValue(CellError::Value);
                 const size_t R = g.size(), C = width(g);
-                auto keep = [](size_t n, const ExcelObj& a, bool present) -> std::pair<size_t, size_t> {
-                    if (!present) return { 0, n };
-                    int k = a.get<int>(0);
-                    size_t d = std::min((size_t)std::abs(k), n);
-                    if (k >= 0) return { d, n - d };          // drop from start
-                    return { 0, n - d };                       // drop from end
-                };
-                auto [r0, rn] = keep(R, rowsA, !rowsA.isMissing());
-                auto [c0, cn] = keep(C, colsA, !colsA.isMissing());
-                if (rn == 0 || cn == 0) return returnValue(CellError::Value);
-                Grid out;
-                for (size_t i = 0; i < rn; ++i)
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& re, const ExcelObj& ce) -> ExcelObj
                 {
-                    std::vector<ExcelObj> row;
-                    for (size_t j = 0; j < cn; ++j) row.emplace_back(g[r0 + i][c0 + j]);
-                    out.push_back(std::move(row));
-                }
-                return emit(out);
+                    auto keep = [](size_t n, const ExcelObj& a) -> std::pair<size_t, size_t> {
+                        if (a.isMissing()) return { 0, n };
+                        int k = a.get<int>(0);
+                        size_t d = std::min((size_t)std::abs(k), n);
+                        if (k >= 0) return { d, n - d };          // drop from start
+                        return { 0, n - d };                       // drop from end
+                    };
+                    auto [r0, rn] = keep(R, re);
+                    auto [c0, cn] = keep(C, ce);
+                    if (rn == 0 || cn == 0) return ExcelObj(CellError::Value);
+                    Grid out;
+                    for (size_t i = 0; i < rn; ++i)
+                    {
+                        std::vector<ExcelObj> row;
+                        for (size_t j = 0; j < cn; ++j) row.emplace_back(g[r0 + i][c0 + j]);
+                        out.push_back(std::move(row));
+                    }
+                    return gridObj(out);
+                }, rowsA, colsA);
             });
 
         // TOROW(array, [ignore], [scan_by_col]) — flatten into one row.
@@ -169,21 +187,26 @@ namespace egtools::functions
         {
             Grid g = readGrid(array);
             if (g.empty()) return returnValue(CellError::Value);
-            const int ignore = ignoreA.isMissing() ? 0 : ignoreA.get<int>(0);
-            const bool byCol = byColA.isMissing() ? false : (byColA.get<double>(0.0) != 0.0);
             const size_t R = g.size(), C = width(g);
-            std::vector<ExcelObj> vals;
-            auto consider = [&](const ExcelObj& v) {
-                if ((ignore == 1 || ignore == 3) && isBlank(v)) return;
-                if ((ignore == 2 || ignore == 3) && isErr(v)) return;
-                vals.emplace_back(v);
-            };
-            if (byCol) for (size_t j = 0; j < C; ++j) for (size_t i = 0; i < R; ++i) consider(g[i][j]);
-            else       for (size_t i = 0; i < R; ++i) for (size_t j = 0; j < C; ++j) consider(g[i][j]);
-            if (vals.empty()) return returnValue(CellError::Value);
-            return egtools::core::output(asRow
-                ? egtools::core::makeArray(1, (ExcelArrayBuilder::col_t)vals.size(), vals)
-                : egtools::core::makeArray((ExcelArrayBuilder::row_t)vals.size(), 1, vals));
+            // 옵션 배열 → 강등 리프팅.
+            return egtools::core::mapLift(
+                [&, asRow](const ExcelObj& ie, const ExcelObj& be) -> ExcelObj
+            {
+                const int ignore = ie.isMissing() ? 0 : ie.get<int>(0);
+                const bool byCol = be.isMissing() ? false : (be.get<double>(0.0) != 0.0);
+                std::vector<ExcelObj> vals;
+                auto consider = [&](const ExcelObj& v) {
+                    if ((ignore == 1 || ignore == 3) && isBlank(v)) return;
+                    if ((ignore == 2 || ignore == 3) && isErr(v)) return;
+                    vals.emplace_back(v);
+                };
+                if (byCol) for (size_t j = 0; j < C; ++j) for (size_t i = 0; i < R; ++i) consider(g[i][j]);
+                else       for (size_t i = 0; i < R; ++i) for (size_t j = 0; j < C; ++j) consider(g[i][j]);
+                if (vals.empty()) return ExcelObj(CellError::Value);
+                return asRow
+                    ? egtools::core::makeArray(1, (ExcelArrayBuilder::col_t)vals.size(), vals)
+                    : egtools::core::makeArray((ExcelArrayBuilder::row_t)vals.size(), 1, vals);
+            }, ignoreA, byColA);
         };
         egtools::core::registerFn(L"TOROW",
             [flatten](const ExcelObj& a, const ExcelObj& ig, const ExcelObj& bc) -> ExcelObj*
@@ -201,9 +224,23 @@ namespace egtools::functions
                 if (g.empty()) return returnValue(CellError::Value);
                 const size_t R = g.size();
                 Grid out;
+                // 인덱스 인수는 배열도 허용(네이티브: {1,3}, SEQUENCE(n) 등).
                 for (size_t k = 1; k < info.numArgs(); ++k)
                 {
                     if (args[k]->isMissing()) continue;
+                    if (args[k]->isType(ExcelType::Multi))
+                    {
+                        ExcelArray a(*args[k]);
+                        const size_t n = (size_t)a.nRows() * a.nCols();
+                        for (size_t i = 0; i < n; ++i)
+                        {
+                            size_t r;
+                            if (!resolveIndex(a.at(i).get<int>(0), R, r))
+                                return returnValue(CellError::Value);
+                            out.push_back(g[r]);
+                        }
+                        continue;
+                    }
                     size_t r;
                     if (!resolveIndex(args[k]->get<int>(0), R, r)) return returnValue(CellError::Value);
                     out.push_back(g[r]);
@@ -221,9 +258,23 @@ namespace egtools::functions
                 if (g.empty()) return returnValue(CellError::Value);
                 const size_t C = width(g);
                 std::vector<size_t> cols;
+                // 인덱스 인수는 배열도 허용(네이티브 정합).
                 for (size_t k = 1; k < info.numArgs(); ++k)
                 {
                     if (args[k]->isMissing()) continue;
+                    if (args[k]->isType(ExcelType::Multi))
+                    {
+                        ExcelArray a(*args[k]);
+                        const size_t n = (size_t)a.nRows() * a.nCols();
+                        for (size_t i = 0; i < n; ++i)
+                        {
+                            size_t c;
+                            if (!resolveIndex(a.at(i).get<int>(0), C, c))
+                                return returnValue(CellError::Value);
+                            cols.push_back(c);
+                        }
+                        continue;
+                    }
                     size_t c;
                     if (!resolveIndex(args[k]->get<int>(0), C, c)) return returnValue(CellError::Value);
                     cols.push_back(c);
@@ -247,19 +298,23 @@ namespace egtools::functions
                 Grid g = readGrid(array);
                 if (g.empty()) return returnValue(CellError::Value);
                 const size_t R = g.size(), C = width(g);
-                const size_t nr = rowsA.isMissing() ? R : (size_t)rowsA.get<int>((int)R);
-                const size_t nc = colsA.isMissing() ? C : (size_t)colsA.get<int>((int)C);
-                if (nr < R || nc < C) return returnValue(CellError::Value);
-                const ExcelObj pad = padA.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(padA);
-                Grid out;
-                for (size_t i = 0; i < nr; ++i)
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& re, const ExcelObj& ce, const ExcelObj& pe) -> ExcelObj
                 {
-                    std::vector<ExcelObj> row;
-                    for (size_t j = 0; j < nc; ++j)
-                        row.emplace_back((i < R && j < C) ? g[i][j] : pad);
-                    out.push_back(std::move(row));
-                }
-                return emit(out);
+                    const size_t nr = re.isMissing() ? R : (size_t)re.get<int>((int)R);
+                    const size_t nc = ce.isMissing() ? C : (size_t)ce.get<int>((int)C);
+                    if (nr < R || nc < C) return ExcelObj(CellError::Value);
+                    const ExcelObj pad = pe.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(pe);
+                    Grid out;
+                    for (size_t i = 0; i < nr; ++i)
+                    {
+                        std::vector<ExcelObj> row;
+                        for (size_t j = 0; j < nc; ++j)
+                            row.emplace_back((i < R && j < C) ? g[i][j] : pad);
+                        out.push_back(std::move(row));
+                    }
+                    return gridObj(out);
+                }, rowsA, colsA, padA);
             });
 
         // Flatten a grid into a single row-major vector (for WRAP*).
@@ -274,23 +329,28 @@ namespace egtools::functions
             [flat1d](const ExcelObj& vec, const ExcelObj& wcA, const ExcelObj& padA) -> ExcelObj*
             {
                 std::vector<ExcelObj> v = flat1d(readGrid(vec));
-                const int wc = wcA.get<int>(0);
-                if (v.empty() || wc <= 0) return returnValue(CellError::Value);
-                const ExcelObj pad = padA.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(padA);
-                const size_t cols = (size_t)wc;
-                const size_t rows = (v.size() + cols - 1) / cols;
-                Grid out;
-                for (size_t i = 0; i < rows; ++i)
+                if (v.empty()) return returnValue(CellError::Value);
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& we, const ExcelObj& pe) -> ExcelObj
                 {
-                    std::vector<ExcelObj> row;
-                    for (size_t j = 0; j < cols; ++j)
+                    const int wc = we.isMissing() ? 0 : we.get<int>(0);
+                    if (wc <= 0) return ExcelObj(CellError::Value);
+                    const ExcelObj pad = pe.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(pe);
+                    const size_t cols = (size_t)wc;
+                    const size_t rows = (v.size() + cols - 1) / cols;
+                    Grid out;
+                    for (size_t i = 0; i < rows; ++i)
                     {
-                        const size_t k = i * cols + j;
-                        row.emplace_back(k < v.size() ? v[k] : pad);
+                        std::vector<ExcelObj> row;
+                        for (size_t j = 0; j < cols; ++j)
+                        {
+                            const size_t k = i * cols + j;
+                            row.emplace_back(k < v.size() ? v[k] : pad);
+                        }
+                        out.push_back(std::move(row));
                     }
-                    out.push_back(std::move(row));
-                }
-                return emit(out);
+                    return gridObj(out);
+                }, wcA, padA);
             });
 
         // WRAPCOLS(vector, wrap_count, [pad_with]) — wrap a vector into columns.
@@ -298,15 +358,20 @@ namespace egtools::functions
             [flat1d](const ExcelObj& vec, const ExcelObj& wcA, const ExcelObj& padA) -> ExcelObj*
             {
                 std::vector<ExcelObj> v = flat1d(readGrid(vec));
-                const int wc = wcA.get<int>(0);
-                if (v.empty() || wc <= 0) return returnValue(CellError::Value);
-                const ExcelObj pad = padA.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(padA);
-                const size_t rows = (size_t)wc;
-                const size_t cols = (v.size() + rows - 1) / rows;
-                Grid out(rows, std::vector<ExcelObj>(cols, pad));
-                for (size_t k = 0; k < v.size(); ++k)
-                    out[k % rows][k / rows] = v[k];   // fill column-major
-                return emit(out);
+                if (v.empty()) return returnValue(CellError::Value);
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& we, const ExcelObj& pe) -> ExcelObj
+                {
+                    const int wc = we.isMissing() ? 0 : we.get<int>(0);
+                    if (wc <= 0) return ExcelObj(CellError::Value);
+                    const ExcelObj pad = pe.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(pe);
+                    const size_t rows = (size_t)wc;
+                    const size_t cols = (v.size() + rows - 1) / rows;
+                    Grid out(rows, std::vector<ExcelObj>(cols, pad));
+                    for (size_t k = 0; k < v.size(); ++k)
+                        out[k % rows][k / rows] = v[k];   // fill column-major
+                    return gridObj(out);
+                }, wcA, padA);
             });
 
         // TRIMRANGE(array, [trim_rows], [trim_cols]) — drop blank edge rows/cols.
@@ -331,34 +396,38 @@ namespace egtools::functions
                 }
                 else if (!array.isMissing()) g.push_back({ ExcelObj(array) });
                 if (g.empty()) return returnValue(CellError::Value);
-                const int mr = rowsA.isMissing() ? 3 : rowsA.get<int>(3);
-                const int mc = colsA.isMissing() ? 3 : colsA.get<int>(3);
-                if (mr < 0 || mr > 3 || mc < 0 || mc > 3) return returnValue(CellError::Value);
-
                 const size_t R = g.size(), C = width(g);
-                auto blankRow = [&](size_t r) {
-                    for (size_t j = 0; j < C; ++j) if (!isBlank(g[r][j])) return false;
-                    return true;
-                };
-                auto blankCol = [&](size_t c) {
-                    for (size_t i = 0; i < R; ++i) if (!isBlank(g[i][c])) return false;
-                    return true;
-                };
-                size_t r0 = 0, r1 = R, c0 = 0, c1 = C;   // half-open [r0,r1) × [c0,c1)
-                if (mr & 1) while (r0 < r1 && blankRow(r0)) ++r0;
-                if (mr & 2) while (r1 > r0 && blankRow(r1 - 1)) --r1;
-                if (mc & 1) while (c0 < c1 && blankCol(c0)) ++c0;
-                if (mc & 2) while (c1 > c0 && blankCol(c1 - 1)) --c1;
-                if (r0 >= r1 || c0 >= c1) return returnValue(CellError::Value);
-
-                Grid out;
-                for (size_t i = r0; i < r1; ++i)
+                return egtools::core::mapLift(
+                    [&](const ExcelObj& re, const ExcelObj& ce) -> ExcelObj
                 {
-                    std::vector<ExcelObj> row;
-                    for (size_t j = c0; j < c1; ++j) row.emplace_back(g[i][j]);
-                    out.push_back(std::move(row));
-                }
-                return emit(out);
+                    const int mr = re.isMissing() ? 3 : re.get<int>(3);
+                    const int mc = ce.isMissing() ? 3 : ce.get<int>(3);
+                    if (mr < 0 || mr > 3 || mc < 0 || mc > 3) return ExcelObj(CellError::Value);
+
+                    auto blankRow = [&](size_t r) {
+                        for (size_t j = 0; j < C; ++j) if (!isBlank(g[r][j])) return false;
+                        return true;
+                    };
+                    auto blankCol = [&](size_t c) {
+                        for (size_t i = 0; i < R; ++i) if (!isBlank(g[i][c])) return false;
+                        return true;
+                    };
+                    size_t r0 = 0, r1 = R, c0 = 0, c1 = C;   // half-open [r0,r1) × [c0,c1)
+                    if (mr & 1) while (r0 < r1 && blankRow(r0)) ++r0;
+                    if (mr & 2) while (r1 > r0 && blankRow(r1 - 1)) --r1;
+                    if (mc & 1) while (c0 < c1 && blankCol(c0)) ++c0;
+                    if (mc & 2) while (c1 > c0 && blankCol(c1 - 1)) --c1;
+                    if (r0 >= r1 || c0 >= c1) return ExcelObj(CellError::Value);
+
+                    Grid out;
+                    for (size_t i = r0; i < r1; ++i)
+                    {
+                        std::vector<ExcelObj> row;
+                        for (size_t j = c0; j < c1; ++j) row.emplace_back(g[i][j]);
+                        out.push_back(std::move(row));
+                    }
+                    return gridObj(out);
+                }, rowsA, colsA);
             });
     }
 }

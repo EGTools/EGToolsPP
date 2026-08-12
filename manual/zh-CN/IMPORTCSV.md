@@ -34,4 +34,5 @@
 - 固定为逗号分隔·UTF-8 编码（有 BOM 时以 BOM 优先）。需要其他分隔符·编码时使用 IMPORTTEXT。
 - 可识别双引号引用字段（含 "" 转义）。
 - skip_rows/take_rows 为负数时从末尾计算。
+- 路径·take_rows指定为数组时返回 #VALUE! — 多条数据请将公式按行复制使用。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `IMPORTCSV` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.IMPORTCSV`。

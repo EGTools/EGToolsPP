@@ -8,6 +8,7 @@
 // 전부 순수 계산(비매크로형).
 
 #include "../core/Registry.h"
+#include "../core/Apply.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -465,26 +466,39 @@ namespace egtools::functions
             return ExcelObj(grid[(size_t)L][(size_t)idx].val);
         }
 
+        // Scalar core — 전 인수 원소별 리프팅 대상(LOT 목록·AQL 표가 흔한 용법).
+        ExcelObj samplingOne(const ExcelObj& lotObj, const ExcelObj& aqlObj,
+                             const ExcelObj& typeObj, const ExcelObj& inspObj,
+                             const ExcelObj& planObj, const ExcelObj& roundObj,
+                             int acReSize)
+        {
+            const long lot = (long)(lotObj.isMissing() ? 0 : lotObj.get<double>(0.0));
+            if (lot == 1)
+                return ExcelObj((double)(acReSize == 1 ? 0 : 1));
+            const double aql = aqlObj.isMissing() ? -1 : aqlObj.get<double>(-1);
+            if (aql < 0 || aql > 1000) return ExcelObj(CellError::Value);
+            int plan = planObj.isMissing() ? 0 : planObj.get<int>(0);
+            if (plan == 0) plan = 1;
+            if (plan < 1 || plan > 15) return ExcelObj(CellError::Value);
+            int round = roundObj.isMissing() ? 0 : roundObj.get<int>(0);
+            if (round == 0) round = 1;
+            if (round < 1 || round > 5) return ExcelObj(CellError::Value);
+
+            return aqlValue(lot, aql, normalizeSampleType(typeObj),
+                            normalizeInspection(inspObj), acReSize,
+                            plan, round, 0);
+        }
+
         ExcelObj* sampling(const ExcelObj& lotObj, const ExcelObj& aqlObj,
                            const ExcelObj& typeObj, const ExcelObj& inspObj,
                            const ExcelObj& planObj, const ExcelObj& roundObj,
                            int acReSize)
         {
-            const long lot = (long)(lotObj.isMissing() ? 0 : lotObj.get<double>(0.0));
-            if (lot == 1)
-                return returnValue(ExcelObj((double)(acReSize == 1 ? 0 : 1)));
-            const double aql = aqlObj.isMissing() ? -1 : aqlObj.get<double>(-1);
-            if (aql < 0 || aql > 1000) return returnValue(CellError::Value);
-            int plan = planObj.isMissing() ? 0 : planObj.get<int>(0);
-            if (plan == 0) plan = 1;
-            if (plan < 1 || plan > 15) return returnValue(CellError::Value);
-            int round = roundObj.isMissing() ? 0 : roundObj.get<int>(0);
-            if (round == 0) round = 1;
-            if (round < 1 || round > 5) return returnValue(CellError::Value);
-
-            return returnValue(aqlValue(lot, aql, normalizeSampleType(typeObj),
-                                        normalizeInspection(inspObj), acReSize,
-                                        plan, round, 0));
+            return egtools::core::mapLift(
+                [acReSize](const ExcelObj& le, const ExcelObj& ae, const ExcelObj& te,
+                           const ExcelObj& ie, const ExcelObj& pe, const ExcelObj& re)
+                { return samplingOne(le, ae, te, ie, pe, re, acReSize); },
+                lotObj, aqlObj, typeObj, inspObj, planObj, roundObj);
         }
 
         // ---- CP / CPK ------------------------------------------------------
@@ -515,18 +529,25 @@ namespace egtools::functions
             return true;
         }
 
+        // 규격(USL/LSL)은 원소별 리프팅 대상(규격 세트 여러 개 → Cp/Cpk 배열).
+        // 기존에는 배열 규격이 isNumType에 걸러져 조용히 무시되고 그럴듯한
+        // 오답이 나왔다(plan/22 A-P0).
         ExcelObj* cpFn(const ExcelObj& data, const ExcelObj& uslObj, const ExcelObj& lslObj)
         {
             if (data.isMissing()) return returnValue(CellError::Value);
             double avg, sd;
             if (!collectStats(data, avg, sd)) return returnValue(CellError::Num);
             if (sd == 0) return returnValue(CellError::Div0);
-            const bool hasU = !uslObj.isMissing() && isNumType(uslObj);
-            const bool hasL = !lslObj.isMissing() && isNumType(lslObj);
-            if (!hasU && !hasL) return returnValue(CellError::Value);
-            const double usl = hasU ? uslObj.get<double>(0.0) : avg;
-            const double lsl = hasL ? lslObj.get<double>(0.0) : avg;
-            return returnValue(ExcelObj((usl - lsl) / (6 * sd)));
+            return egtools::core::mapLift(
+                [avg, sd](const ExcelObj& ue, const ExcelObj& le) -> ExcelObj
+                {
+                    const bool hasU = !ue.isMissing() && isNumType(ue);
+                    const bool hasL = !le.isMissing() && isNumType(le);
+                    if (!hasU && !hasL) return ExcelObj(CellError::Value);
+                    const double usl = hasU ? ue.get<double>(0.0) : avg;
+                    const double lsl = hasL ? le.get<double>(0.0) : avg;
+                    return ExcelObj((usl - lsl) / (6 * sd));
+                }, uslObj, lslObj);
         }
 
         ExcelObj* cpkFn(const ExcelObj& data, const ExcelObj& uslObj, const ExcelObj& lslObj)
@@ -535,13 +556,17 @@ namespace egtools::functions
             double avg, sd;
             if (!collectStats(data, avg, sd)) return returnValue(CellError::Num);
             if (sd == 0) return returnValue(CellError::Div0);
-            const bool hasU = !uslObj.isMissing() && isNumType(uslObj);
-            const bool hasL = !lslObj.isMissing() && isNumType(lslObj);
-            if (!hasU && !hasL) return returnValue(CellError::Value);
-            double cpk = 1e308;
-            if (hasU) cpk = (std::min)(cpk, (uslObj.get<double>(0.0) - avg) / (3 * sd));
-            if (hasL) cpk = (std::min)(cpk, (avg - lslObj.get<double>(0.0)) / (3 * sd));
-            return returnValue(ExcelObj(cpk));
+            return egtools::core::mapLift(
+                [avg, sd](const ExcelObj& ue, const ExcelObj& le) -> ExcelObj
+                {
+                    const bool hasU = !ue.isMissing() && isNumType(ue);
+                    const bool hasL = !le.isMissing() && isNumType(le);
+                    if (!hasU && !hasL) return ExcelObj(CellError::Value);
+                    double cpk = 1e308;
+                    if (hasU) cpk = (std::min)(cpk, (ue.get<double>(0.0) - avg) / (3 * sd));
+                    if (hasL) cpk = (std::min)(cpk, (avg - le.get<double>(0.0)) / (3 * sd));
+                    return ExcelObj(cpk);
+                }, uslObj, lslObj);
         }
     }
 
@@ -550,11 +575,15 @@ namespace egtools::functions
         egtools::core::registerFn(L"SAMPLINGLABEL",
             [](const ExcelObj& lot, const ExcelObj& type) -> ExcelObj*
             {
-                const long n = (long)(lot.isMissing() ? 0 : lot.get<double>(0.0));
-                CellError err = CellError::Value;
-                const std::wstring s = samplingLabel(n, normalizeSampleType(type), err);
-                if (s.empty()) return returnValue(err);
-                return returnValue(ExcelObj(std::wstring_view(s)));
+                return egtools::core::mapLift(
+                    [](const ExcelObj& le, const ExcelObj& te) -> ExcelObj
+                    {
+                        const long n = (long)(le.isMissing() ? 0 : le.get<double>(0.0));
+                        CellError err = CellError::Value;
+                        const std::wstring s = samplingLabel(n, normalizeSampleType(te), err);
+                        if (s.empty()) return ExcelObj(err);
+                        return ExcelObj(std::wstring_view(s));
+                    }, lot, type);
             });
 
         egtools::core::registerFn(L"SAMPLINGSIZE",

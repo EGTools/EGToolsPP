@@ -35,7 +35,8 @@ Devuelve una matriz con el texto dividido, que se derrama en las versiones de Ex
 
 ## Notas
 
-- El argumento de separador solo admite un texto único (no se admite la forma de matriz con varios separadores que permite la función nativa).
+- Una matriz de separadores funciona como lista de separadores alternativos (compatible con la función nativa).
 - Con match_mode=1 se ignoran mayúsculas y minúsculas.
+- Si texto es una matriz, el resultado tiene la misma forma y cada elemento es el primer token de ese texto (reducción al primer valor, igual que la función nativa).
 - Funciones relacionadas: TEXTBEFORE, TEXTAFTER, TEXTJOIN
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `TEXTSPLIT` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.TEXTSPLIT`.

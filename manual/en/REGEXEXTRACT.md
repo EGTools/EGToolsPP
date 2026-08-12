@@ -34,5 +34,6 @@ return_mode 0 returns the first match (scalar text), 1 returns all matches (one-
 ## Notes
 
 - The regex flavor is std::wregex ECMAScript (may differ from native 365's PCRE2 in places).
+- text and pattern accept arrays and are computed element-wise, spilling an array of the same shape (an error element returns that error); with an array text and return_mode 1 or 2, each element yields only its first match (demotion).
 - Related functions: REGEXTEST, REGEXREPLACE
 - Supported: Excel 2010+. Registered as `REGEXEXTRACT` (drop-in) on hosts without the native function, and as `EG.REGEXEXTRACT` on modern Excel that has it.

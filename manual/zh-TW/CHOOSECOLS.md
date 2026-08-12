@@ -34,4 +34,5 @@
 
 - 欄號為負數時，從結尾往回計算。
 - 若要選取列，請使用 CHOOSEROWS。
+- 欄號也可指定 {1,3} 或 SEQUENCE(n) 之類的陣列。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `CHOOSECOLS` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.CHOOSECOLS`。

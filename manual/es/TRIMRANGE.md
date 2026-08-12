@@ -33,4 +33,5 @@ Devuelve la matriz sin las filas/columnas vacías de los bordes y se derrama. De
 
 - La función TRIMRANGE nativa recorta una referencia; esta implementación se basa en valores, por lo que también se puede usar con literales de matriz y resultados de fórmulas.
 - Las cadenas vacías ("") también se consideran valores vacíos.
+- Una matriz en el modo de recorte devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `TRIMRANGE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.TRIMRANGE`.

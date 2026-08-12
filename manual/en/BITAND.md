@@ -31,5 +31,6 @@ Returns the bitwise AND of two numbers as a scalar number. Returns #NUM! if an a
 ## Notes
 
 - Non-numeric arguments also return #NUM!, not #VALUE!.
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related functions: BITOR, BITXOR
 - Supported: Excel 2010+. Registered as `BITAND` (drop-in) on hosts without the native function, and as `EG.BITAND` on modern Excel that has it.

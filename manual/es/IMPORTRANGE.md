@@ -32,4 +32,5 @@ Devuelve los valores de una hoja de cálculo compartida de Google Sheets como un
 - Solo se pueden importar hojas de Google Sheets con el uso compartido mediante enlace activado — los documentos no compartidos devuelven una página de inicio de sesión (HTML), lo que produce #N/A.
 - La hoja se selecciona mediante el gid de la URL (gid=0 de forma predeterminada). La parte del nombre de hoja de range_address se ignora.
 - Se usa el punto de conexión de exportación TSV, por lo que solo se importan los valores, sin conservar el formato.
+- Una matriz en url devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `IMPORTRANGE` en todas las versiones de Excel.

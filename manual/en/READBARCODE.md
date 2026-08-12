@@ -33,4 +33,5 @@ Returns the decoded barcode content shaped like the result_type argument (spills
 - Reads WIC-supported formats (PNG/JPG/BMP/GIF) from a local file path or an http(s) URL.
 - result_type: 1 text (default), 2 code text (control characters shown as <GS> etc.), 3 format, 4 symbology id, 5 raw hex.
 - Tries rotated/low-quality images too (TryHarder/TryRotate) but decodes only one barcode.
+- An array in source returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `READBARCODE` on every Excel version.

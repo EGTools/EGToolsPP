@@ -34,4 +34,5 @@ Returns an empty string ("") on success; the barcode picture is inserted separat
 - Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).
 - The option argument is a margin when numeric (2D types) or TRUE to draw the text below the bars (1D types).
 - The image is sized to the calling cell; 2D types keep their aspect ratio.
+- An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `BARCODE` on every Excel version.

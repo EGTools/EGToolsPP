@@ -35,5 +35,6 @@ Devuelve el texto con las sustituciones aplicadas como un texto único (escalar)
 
 - La búsqueda de claves ignora mayúsculas y minúsculas.
 - Si se encuentra una clave inicial sin clave final, solo se sustituye esa clave inicial y el resto del texto se conserva.
+- Si el texto es una matriz, se procesa elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error); una matriz en las claves inicial y final y los demás argumentos devuelve #VALUE!.
 - Función relacionada: TEXTBETWEEN
 - Compatibilidad: Excel 2010+. Se registra siempre como `TEXTREPLACE` en todas las versiones de Excel.

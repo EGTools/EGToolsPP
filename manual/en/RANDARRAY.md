@@ -33,5 +33,6 @@ Returns a rows-by-cols array of random numbers; on dynamic-array hosts it spills
 ## Notes
 
 - With integer=TRUE, generates integers from min to max inclusive; otherwise reals in [min, max).
+- Arrays in All arguments return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Related functions: SEQUENCE.
 - Supported: Excel 2010+. Registered as `RANDARRAY` (drop-in) on hosts without the native function, and as `EG.RANDARRAY` on modern Excel that has it.

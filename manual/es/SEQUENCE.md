@@ -33,5 +33,6 @@ Devuelve una matriz de números consecutivos de tamaño rows×cols (incrementado
 ## Notas
 
 - Si se omite rows, se toma como 1 (en la función nativa es un argumento obligatorio).
+- Una matriz en Todos los argumentos devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Función relacionada: RANDARRAY.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `SEQUENCE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.SEQUENCE`.

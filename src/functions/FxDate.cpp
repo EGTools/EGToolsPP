@@ -50,15 +50,29 @@ namespace egtools::functions
 
     void registerDate()
     {
-        // DAYS(end_date, start_date): whole-day difference.
+        // DAYS(end_date, start_date): whole-day difference. 두 인수 모두
+        // 원소별 리프팅(네이티브 정합, plan/22 U06).
         egtools::core::registerFn(L"DAYS",
             [](const ExcelObj& endDate, const ExcelObj& startDate) -> ExcelObj*
             {
                 if (endDate.isMissing() || startDate.isMissing())
                     return returnValue(CellError::Value);
-                const double e = std::floor(endDate.get<double>(0.0));
-                const double s = std::floor(startDate.get<double>(0.0));
-                return returnValue(ExcelObj(e - s));
+                return egtools::core::mapLift(
+                    [](const ExcelObj& ee, const ExcelObj& se) -> ExcelObj
+                    {
+                        const auto te = ee.type(), ts = se.type();
+                        auto numOk = [](ExcelType t) {
+                            return t == ExcelType::Num || t == ExcelType::Int
+                                || t == ExcelType::Bool || t == ExcelType::Nil;
+                        };
+                        if (!numOk(te) || !numOk(ts)) return ExcelObj(CellError::Value);
+                        // Nil(빈 셀)은 0 — get<T>의 default는 Missing 전용(plan/22 M2).
+                        const double e = (te == ExcelType::Nil)
+                            ? 0.0 : std::floor(ee.get<double>(0.0));
+                        const double s = (ts == ExcelType::Nil)
+                            ? 0.0 : std::floor(se.get<double>(0.0));
+                        return ExcelObj(e - s);
+                    }, endDate, startDate);
             });
 
         // ISOWEEKNUM(date): ISO 8601 week number (element-wise).

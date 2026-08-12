@@ -36,4 +36,5 @@
 - 省略 delimiter 时默认制表符。字符串（可多个）作为分隔符，数字数组（{1,11,21}）解释为固定宽度列的起始位置（从 1 起升序）。
 - encoding 支持 "euc-kr" 等字符集名或代码页编号，有 BOM 时以 BOM 优先。
 - skip_rows/take_rows 为负数时从末尾计算。
+- 路径·take_rows指定为数组时返回 #VALUE! — 多条数据请将公式按行复制使用。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `IMPORTTEXT` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.IMPORTTEXT`。

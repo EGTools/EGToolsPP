@@ -458,6 +458,8 @@ namespace egtools::functions
             const bool byCol = byColObj.isMissing() ? false : (byColObj.get<double>(0.0) != 0.0);
             const bool ignoreEmpty = ignoreObj.isMissing() ? false
                                                            : (ignoreObj.get<double>(0.0) != 0.0);
+            // 배열 채움값은 결과 셀에 그대로 복사되어 조용히 #VALUE!로 오염됨 — 거부.
+            if (padObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             const ExcelObj pad = padObj.isMissing() ? ExcelObj(std::wstring_view(L""))
                                                     : ExcelObj(padObj);
 
@@ -735,9 +737,11 @@ namespace egtools::functions
             std::vector<ExcelObj> keys;
             if (keysObj.isType(ExcelType::Multi))
             {
+                // 세로/가로/2D 검색값 모두 허용(행 우선 평탄화) — 결과는 검색값
+                // 개수만큼 세로 스택. 기존에는 가로 1×N을 거부했다(plan/22 A-P1).
                 ExcelArray k(keysObj);
-                if (k.nCols() > 1) return returnValue(CellError::Value);
-                for (size_t r = 0; r < k.nRows(); ++r) keys.push_back(ExcelObj(k.at(r)));
+                const size_t n = (size_t)k.nRows() * k.nCols();
+                for (size_t i = 0; i < n; ++i) keys.push_back(ExcelObj(k.at(i)));
             }
             else keys.push_back(ExcelObj(keysObj));
 
@@ -751,6 +755,8 @@ namespace egtools::functions
             }
             if (cols.empty()) return returnValue(CellError::Value);
             const bool approx = modeObj.isMissing() ? false : (modeObj.get<double>(0.0) != 0.0);
+            // 배열 없을때값은 미일치 셀을 조용히 #VALUE!로 오염시킴 — 거부.
+            if (nfObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             const ExcelObj notFound = nfObj.isMissing() ? ExcelObj(std::wstring_view(L""))
                                                         : ExcelObj(nfObj);
 

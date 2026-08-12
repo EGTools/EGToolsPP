@@ -36,5 +36,6 @@ Returns the extracted text as a single scalar. Returns #VALUE! when text, start 
 
 - Key matching ignores case.
 - If the 4th argument is a number it selects the Nth section; if text, it is the joiner for all sections (default ",").
+- If the text is an array, it is processed element-wise and spills an array of the same shape (an error element returns that error); an array in start_key, end_key and the other arguments returns #VALUE!.
 - Related function: TEXTREPLACE
 - Supported: Excel 2010+. Always registered as `TEXTBETWEEN` on every Excel version.

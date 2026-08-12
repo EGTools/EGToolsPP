@@ -32,5 +32,6 @@ Devuelve tal cual el valor de la primera condición verdadera (escalar o matriz)
 ## Notas
 
 - Las condiciones de texto o vacías se tratan como FALSE (la función nativa devuelve #VALUE!).
+- Las condiciones y los valores aceptan matrices y se evalúan elemento a elemento, derramando una matriz de la misma forma; si una condición evaluada es un error, ese elemento devuelve el error (los errores de argumentos no usados no se propagan).
 - Función relacionada: SWITCH.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `IFS` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.IFS`.

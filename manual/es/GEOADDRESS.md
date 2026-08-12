@@ -33,4 +33,5 @@ Devuelve el texto de la dirección correspondiente a las coordenadas (con tipo_d
 ## Notas
 
 - La clave API no se distribuye con el complemento. Obténgala en la plataforma abierta de información espacial VWorld (https://www.vworld.kr) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y, si la clave es rechazada, se elimina automáticamente y se devuelve una guía para obtener una nueva.
+- Una matriz en las coordenadas x·y o api_key devuelve #VALUE! (una matriz en api_key se rechaza antes de guardarse, lo que evita almacenar una clave incorrecta); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `GEOADDRESS` en todas las versiones de Excel.

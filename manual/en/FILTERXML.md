@@ -33,4 +33,5 @@ Returns the matched node text as a scalar when the XPath matches one node, or a 
 - Parsed with MSXML6; the function itself does no networking — combine with WEBSERVICE for remote XML.
 - Results are node text values and are always returned as text.
 - Uses COM, so it is excluded from multi-threaded recalculation (not thread-safe).
+- Arrays in xml·xpath return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Supported: Excel 2010+. Registered as `FILTERXML` (drop-in) on hosts without the native function, and as `EG.FILTERXML` on modern Excel that has it.

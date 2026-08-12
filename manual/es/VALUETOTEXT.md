@@ -32,5 +32,6 @@ Devuelve la representación de texto del valor como un texto único (escalar). L
 ## Notas
 
 - En el formato estricto (1), las comillas dobles dentro del texto se escriben duplicadas ("").
+- Si value es una matriz, la función se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error).
 - Función relacionada: ARRAYTOTEXT
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `VALUETOTEXT` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.VALUETOTEXT`.

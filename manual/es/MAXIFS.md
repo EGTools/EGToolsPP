@@ -33,5 +33,6 @@ Devuelve como escalar numérico el valor máximo entre los valores numéricos de
 ## Notas
 
 - Los criterios admiten números, operadores de comparación (p. ej. ">5") y caracteres comodín (*, ?); la comparación de texto no distingue mayúsculas y minúsculas.
+- Si un valor de criterio es una matriz, se calcula elemento a elemento y se derrama una matriz de la misma forma. Un valor de criterio con error se trata como no coincidente, mientras que un error en un valor que cumple los criterios se devuelve como ese error.
 - Función relacionada: MINIFS.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `MAXIFS` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.MAXIFS`.

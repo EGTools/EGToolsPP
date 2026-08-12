@@ -35,4 +35,5 @@ Devuelve el resultado de la extracción (o eliminación) como un texto único (e
 - La clase N también incluye el punto decimal '.'.
 - Si la opción no es una combinación de las letras -SANKJH, toda la opción se interpreta como una expresión regular ECMAScript (std::wregex).
 - Si la opción comienza con '-', los caracteres correspondientes se eliminan en lugar de extraerse.
+- Si el texto es una matriz, se procesa elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error); una matriz en las opciones y el separador devuelve #VALUE!.
 - Compatibilidad: Excel 2010+. Se registra siempre como `STREXT` en todas las versiones de Excel.

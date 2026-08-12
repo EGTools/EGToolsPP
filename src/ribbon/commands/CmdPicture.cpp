@@ -30,6 +30,21 @@ namespace egtools::commands
                 margin, 0.0, maxV, 0.3);
         }
 
+        // 셰이프 컬렉션(Shapes/ShapeRange)에 그림이 하나라도 있는지.
+        bool hasPicture(IDispatch* shapes)
+        {
+            const long n = getLong(shapes, L"Count", 0);
+            for (long i = 1; i <= n; ++i)
+            {
+                IDispatch* shape = getObjectIdx(shapes, L"Item", i);
+                if (!shape) continue;
+                Releaser rs{ shape };
+                const long type = getLong(shape, L"Type", 0);
+                if (type == msoPicture || type == msoLinkedPicture) return true;
+            }
+            return false;
+        }
+
         // 셰이프 하나를 좌상단 셀(병합 영역)에 맞춘다. 회전 90/270 보정 포함
         // (VB C03_Picture.vb:304-321과 동일 수식).
         void fitShape(IDispatch* shape, double off)
@@ -132,12 +147,6 @@ namespace egtools::commands
         using egtools::i18n::t;
         try
         {
-            double off = 0.3;
-            if (!askMargin(off, 10.0)) return;
-
-            auto& app = xloil::thisApp();
-            xloil::PauseExcel pause(app);
-
             IDispatch* ad = appDisp();
             if (!ad) return;
             Releaser rApp{ ad };
@@ -147,6 +156,13 @@ namespace egtools::commands
             IDispatch* shapes = getObject(sel, L"ShapeRange");
             if (!shapes) { msgInfo(t(L"cmd.pic.noneSelected")); return; }
             Releaser rShapes{ shapes };
+            if (!hasPicture(shapes)) { msgInfo(t(L"cmd.pic.noneSelected")); return; }
+
+            double off = 0.3;
+            if (!askMargin(off, 10.0)) return;
+
+            auto& app = xloil::thisApp();
+            xloil::PauseExcel pause(app);
 
             const long n = getLong(shapes, L"Count", 0);
             for (long i = 1; i <= n; ++i)
@@ -164,16 +180,8 @@ namespace egtools::commands
     void pictureFitAll()
     {
         using egtools::i18n::t;
-        long count = 0;
         try
         {
-            if (!msgOkCancel(t(L"cmd.pic.fitAllConfirm"))) return;
-            double off = 0.3;
-            if (!askMargin(off, 5.0)) return;
-
-            auto& app = xloil::thisApp();
-            xloil::PauseExcel pause(app);
-
             IDispatch* ad = appDisp();
             if (!ad) return;
             Releaser rApp{ ad };
@@ -183,6 +191,14 @@ namespace egtools::commands
             IDispatch* shapes = getObject(sh, L"Shapes");
             if (!shapes) return;
             Releaser rShapes{ shapes };
+            if (!hasPicture(shapes)) { msgInfo(t(L"cmd.pic.fitAllNone")); return; }
+
+            if (!msgOkCancel(t(L"cmd.pic.fitAllConfirm"))) return;
+            double off = 0.3;
+            if (!askMargin(off, 5.0)) return;
+
+            auto& app = xloil::thisApp();
+            xloil::PauseExcel pause(app);
 
             const long n = getLong(shapes, L"Count", 0);
             for (long i = 1; i <= n; ++i)
@@ -194,10 +210,9 @@ namespace egtools::commands
                 if (type != msoPicture && type != msoLinkedPicture) continue;
                 statusBar(ad, getBStr(shape, L"Name") + L" is processing...");
                 fitShape(shape, off);
-                ++count;
             }
             statusBarClear(ad);
-            msgInfo(t(count > 0 ? L"cmd.pic.fitAllDone" : L"cmd.pic.fitAllNone"));
+            msgInfo(t(L"cmd.pic.fitAllDone"));
         }
         catch (...) {}
     }
@@ -734,19 +749,10 @@ namespace egtools::commands
 
             // 그림 유무 선확인
             {
-                long pics = 0;
                 IDispatch* shapes = getObject(sh, L"Shapes");
                 Releaser rs{ shapes };
-                const long n = shapes ? getLong(shapes, L"Count", 0) : 0;
-                for (long i = 1; i <= n; ++i)
-                {
-                    IDispatch* shape = getObjectIdx(shapes, L"Item", i);
-                    if (!shape) continue;
-                    Releaser rShp{ shape };
-                    const long type = getLong(shape, L"Type", 0);
-                    if (type == msoPicture || type == msoLinkedPicture) ++pics;
-                }
-                if (pics == 0) { msgInfo(t(L"cmd.export.none")); return; }
+                if (!shapes || !hasPicture(shapes))
+                { msgInfo(t(L"cmd.export.none")); return; }
             }
 
             std::wstring destDir;

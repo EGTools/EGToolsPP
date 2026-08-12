@@ -37,5 +37,6 @@ Devuelve el texto único (escalar) situado después del separador. Devuelve #VAL
 
 - Con match_end=1, el final del texto (instancia positiva) o su inicio (instancia negativa) se considera un separador virtual.
 - Con match_mode=1 se ignoran mayúsculas y minúsculas.
+- Si texto es una matriz, se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error); un separador en matriz devuelve #VALUE!.
 - Funciones relacionadas: TEXTBEFORE, TEXTSPLIT
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `TEXTAFTER` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.TEXTAFTER`.

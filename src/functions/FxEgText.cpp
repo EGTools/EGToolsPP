@@ -195,14 +195,14 @@ namespace egtools::functions
 
         // ---- STREXT --------------------------------------------------------
 
-        ExcelObj* strExt(const ExcelObj& textObj, const ExcelObj& optObj,
-                         const ExcelObj& delimObj)
+        ExcelObj strExtOne(const ExcelObj& textObj, const ExcelObj& optObj,
+                           const ExcelObj& delimObj)
         {
             if (textObj.isMissing() || optObj.isMissing())
-                return returnValue(CellError::Value);
+                return ExcelObj(CellError::Value);
             const std::wstring text = textObj.toString();
             std::wstring opt = trimWs(optObj.toString());
-            if (opt.empty()) return returnValue(CellError::Value);
+            if (opt.empty()) return ExcelObj(CellError::Value);
             const std::wstring delim = delimObj.isMissing() ? L"" : delimObj.toString();
 
             // 고정 옵션(-SANKJH만으로 구성)인지 판별.
@@ -226,7 +226,7 @@ namespace egtools::functions
                 if (opt.find(L'K') != std::wstring::npos) cls += L"\\x{3130}-\\x{318F}\\x{AC00}-\\x{D7AF}";
                 if (opt.find(L'J') != std::wstring::npos) cls += L"\\x{3040}-\\x{30FF}\\x{31F0}-\\x{31FF}";
                 if (opt.find(L'H') != std::wstring::npos) cls += L"\\x{2E80}-\\x{2EFF}\\x{3400}-\\x{4DBF}\\x{4E00}-\\x{9FFF}\\x{F900}-\\x{FAFF}";
-                if (cls.empty()) return returnValue(CellError::Value);
+                if (cls.empty()) return ExcelObj(CellError::Value);
                 pattern = L"[" + cls + L"]+";
             }
             else
@@ -255,8 +255,8 @@ namespace egtools::functions
 
                 std::wregex re(rx, std::regex_constants::ECMAScript);
                 if (remove)
-                    return returnValue(ExcelObj(std::wstring_view(
-                        std::regex_replace(text, re, L""))));
+                    return ExcelObj(std::wstring_view(
+                        std::regex_replace(text, re, L"")));
 
                 std::wstring out;
                 bool first = true;
@@ -267,9 +267,9 @@ namespace egtools::functions
                     out += it->str();
                     first = false;
                 }
-                return returnValue(ExcelObj(std::wstring_view(out)));
+                return ExcelObj(std::wstring_view(out));
             }
-            catch (...) { return returnValue(CellError::Value); }
+            catch (...) { return ExcelObj(CellError::Value); }
         }
 
         // ---- TEXTREPLACE / TEXTBETWEEN -------------------------------------
@@ -308,15 +308,15 @@ namespace egtools::functions
             if (!cur.empty()) outside.push_back(cur);
         }
 
-        ExcelObj* textReplace(const ExcelObj& textObj, const ExcelObj& skObj,
-                              const ExcelObj& ekObj, const ExcelObj& repObj,
-                              const ExcelObj& incObj)
+        ExcelObj textReplaceOne(const ExcelObj& textObj, const ExcelObj& skObj,
+                                const ExcelObj& ekObj, const ExcelObj& repObj,
+                                const ExcelObj& incObj)
         {
             const std::wstring text = textObj.isMissing() ? L"" : textObj.toString();
             const std::wstring sk = skObj.isMissing() ? L"" : skObj.toString();
             const std::wstring ek = ekObj.isMissing() ? L"" : ekObj.toString();
             if (text.empty() || sk.empty() || ek.empty())
-                return returnValue(ExcelObj(std::wstring_view(text)));
+                return ExcelObj(std::wstring_view(text));
             std::wstring rep = repObj.isMissing() ? L"" : repObj.toString();
             const bool include = incObj.isMissing() ? false : (incObj.get<double>(0.0) != 0.0);
             if (include) rep = sk + rep + ek;
@@ -330,23 +330,23 @@ namespace egtools::functions
                 if (i) out += rep;
                 out += outside[i];
             }
-            return returnValue(ExcelObj(std::wstring_view(out)));
+            return ExcelObj(std::wstring_view(out));
         }
 
-        ExcelObj* textBetween(const ExcelObj& textObj, const ExcelObj& skObj,
-                              const ExcelObj& ekObj, const ExcelObj& delimObj,
-                              const ExcelObj& incObj)
+        ExcelObj textBetweenOne(const ExcelObj& textObj, const ExcelObj& skObj,
+                                const ExcelObj& ekObj, const ExcelObj& delimObj,
+                                const ExcelObj& incObj)
         {
             const std::wstring text = textObj.isMissing() ? L"" : textObj.toString();
             const std::wstring sk = skObj.isMissing() ? L"" : skObj.toString();
             const std::wstring ek = ekObj.isMissing() ? L"" : ekObj.toString();
             if (text.empty() || sk.empty() || ek.empty())
-                return returnValue(CellError::Value);
+                return ExcelObj(CellError::Value);
             const bool include = incObj.isMissing() ? false : (incObj.get<double>(0.0) != 0.0);
 
             std::vector<std::wstring> outside, inside;
             splitByKeys(text, sk, ek, outside, inside);
-            if (inside.empty()) return returnValue(ExcelObj(std::wstring_view(L"")));
+            if (inside.empty()) return ExcelObj(std::wstring_view(L""));
             if (include)
                 for (auto& s : inside) s = sk + s + ek;
 
@@ -355,8 +355,8 @@ namespace egtools::functions
                 (delimObj.type() == ExcelType::Num || delimObj.type() == ExcelType::Int))
             {
                 const int n = delimObj.get<int>(0);
-                if (n < 1 || (size_t)n > inside.size()) return returnValue(CellError::Value);
-                return returnValue(ExcelObj(std::wstring_view(inside[(size_t)n - 1])));
+                if (n < 1 || (size_t)n > inside.size()) return ExcelObj(CellError::Value);
+                return ExcelObj(std::wstring_view(inside[(size_t)n - 1]));
             }
             const std::wstring delim = delimObj.isMissing() ? L"," : delimObj.toString();
             std::wstring out;
@@ -365,7 +365,7 @@ namespace egtools::functions
                 if (i) out += delim;
                 out += inside[i];
             }
-            return returnValue(ExcelObj(std::wstring_view(out)));
+            return ExcelObj(std::wstring_view(out));
         }
 
         // ---- HANTONUMBER ---------------------------------------------------
@@ -432,19 +432,17 @@ namespace egtools::functions
             return out;
         }
 
-        ExcelObj* hanToNumber(const ExcelObj& textObj, const ExcelObj& numOnlyObj)
+        ExcelObj hanToNumberOne(const ExcelObj& textObj, bool numberOnly)
         {
-            if (textObj.isMissing()) return returnValue(CellError::Value);
+            if (textObj.isMissing()) return ExcelObj(CellError::Value);
             std::wstring s = textObj.toString();
-            if (s.empty()) return returnValue(CellError::Value);
-            const bool numberOnly = numOnlyObj.isMissing() ? true
-                                                           : (numOnlyObj.get<double>(1.0) != 0.0);
+            if (s.empty()) return ExcelObj(CellError::Value);
 
             // 아라비아 숫자(또는 .)가 2개 이상 연속이면 금액 표기가 아님.
             for (size_t i = 0; i + 1 < s.size(); ++i)
             {
                 auto isNumCh = [](wchar_t c) { return iswdigit(c) || c == L'.'; };
-                if (isNumCh(s[i]) && isNumCh(s[i + 1])) return returnValue(CellError::Value);
+                if (isNumCh(s[i]) && isNumCh(s[i + 1])) return ExcelObj(CellError::Value);
             }
 
             std::wstring pre, post;
@@ -514,9 +512,9 @@ namespace egtools::functions
                 {
                     wchar_t buf[64];
                     swprintf_s(buf, L"%.0f", result);
-                    return returnValue(ExcelObj(std::wstring_view(buf)));
+                    return ExcelObj(std::wstring_view(buf));
                 }
-                return returnValue(ExcelObj(result));
+                return ExcelObj(result);
             }
 
             // "금1,234원" 형태.
@@ -528,7 +526,7 @@ namespace egtools::functions
             const std::wstring frac = (dot == std::wstring::npos) ? L"" : numTxt.substr(dot);
             const std::wstring formatted = big ? intPart + frac
                                               : groupThousands(intPart) + frac;
-            return returnValue(ExcelObj(std::wstring_view(pre + formatted + post)));
+            return ExcelObj(std::wstring_view(pre + formatted + post));
         }
     }
 
@@ -548,25 +546,46 @@ namespace egtools::functions
                     [opt](const ExcelObj& e) { return trimEndsOne(e, opt); });
             });
 
+        // 텍스트 인수는 원소별 리프팅(D5). 키/옵션/구분자 인수의 배열은 조용한
+        // 오답(정규식·키로 오해석)이 되므로 명시 거부한다(plan/22 A-P0).
         egtools::core::registerFn(L"STREXT",
             [](const ExcelObj& text, const ExcelObj& opt, const ExcelObj& delim) -> ExcelObj*
-            { return strExt(text, opt, delim); });
+            {
+                if (opt.isType(ExcelType::Multi) || delim.isType(ExcelType::Multi))
+                    return returnValue(CellError::Value);
+                return egtools::core::mapUnary(text,
+                    [&](const ExcelObj& e) { return strExtOne(e, opt, delim); });
+            });
 
         egtools::core::registerFn(L"TEXTREPLACE",
             [](const ExcelObj& text, const ExcelObj& sk, const ExcelObj& ek,
                const ExcelObj& rep, const ExcelObj& inc) -> ExcelObj*
-            { return textReplace(text, sk, ek, rep, inc); });
+            {
+                if (sk.isType(ExcelType::Multi) || ek.isType(ExcelType::Multi) ||
+                    rep.isType(ExcelType::Multi))
+                    return returnValue(CellError::Value);
+                return egtools::core::mapUnary(text,
+                    [&](const ExcelObj& e) { return textReplaceOne(e, sk, ek, rep, inc); });
+            });
 
         egtools::core::registerFn(L"TEXTBETWEEN",
             [](const ExcelObj& text, const ExcelObj& sk, const ExcelObj& ek,
                const ExcelObj& delim, const ExcelObj& inc) -> ExcelObj*
-            { return textBetween(text, sk, ek, delim, inc); });
+            {
+                if (sk.isType(ExcelType::Multi) || ek.isType(ExcelType::Multi) ||
+                    delim.isType(ExcelType::Multi))
+                    return returnValue(CellError::Value);
+                return egtools::core::mapUnary(text,
+                    [&](const ExcelObj& e) { return textBetweenOne(e, sk, ek, delim, inc); });
+            });
 
         egtools::core::registerFn(L"HANTONUMBER",
             [](const ExcelObj& text, const ExcelObj& numOnly) -> ExcelObj*
             {
-                try { return hanToNumber(text, numOnly); }
-                catch (...) { return returnValue(CellError::Value); }
+                const bool numberOnly = numOnly.isMissing()
+                    ? true : (numOnly.get<double>(1.0) != 0.0);
+                return egtools::core::mapUnary(text,
+                    [numberOnly](const ExcelObj& e) { return hanToNumberOne(e, numberOnly); });
             });
     }
 }

@@ -19,23 +19,31 @@ namespace egtools::functions
     namespace
     {
         // Flatten an argument (scalar or range/array) into text pieces.
-        void collectText(const ExcelObj& v, std::vector<std::wstring>& out, bool skipEmpty)
+        // 오류 원소를 만나면 그 오류를 반환(집계 함수의 오류 전파 — 네이티브
+        // TEXTJOIN/CONCAT은 입력에 오류가 하나라도 있으면 그 오류가 결과다).
+        // 오류가 없으면 nullopt.
+        std::optional<ExcelObj> collectText(
+            const ExcelObj& v, std::vector<std::wstring>& out, bool skipEmpty)
         {
+            std::optional<ExcelObj> err;
             auto add = [&](const ExcelObj& e)
             {
+                if (err) return;
                 if (e.type() == ExcelType::Missing) return;
+                if (e.type() == ExcelType::Err) { err = ExcelObj(e); return; }
                 std::wstring s = e.toString();
                 if (skipEmpty && s.empty()) return;
                 out.push_back(std::move(s));
             };
-            if (v.isMissing()) return;
+            if (v.isMissing()) return err;
             if (v.isType(ExcelType::Multi))
             {
                 ExcelArray a(v);
                 const size_t n = (size_t)a.nRows() * a.nCols();
-                for (size_t k = 0; k < n; ++k) add(a.at(k));
+                for (size_t k = 0; k < n; ++k) { add(a.at(k)); if (err) break; }
             }
             else add(v);
+            return err;
         }
 
         std::wstring lower(std::wstring s)
@@ -212,13 +220,36 @@ namespace egtools::functions
         egtools::core::registerRawFn(L"TEXTJOIN",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
-                const bool skip = args[0] && args[1] ? args[1]->get<double>(1.0) != 0.0 : true;
-                const std::wstring d = args[0] ? args[0]->toString() : std::wstring();
+                // 오류 전파(네이티브 정합): 구분자·플래그·연결값 어디든 오류가
+                // 있으면 그 오류가 결과다(ignore_empty와 무관).
+                if (args[0] && args[0]->type() == ExcelType::Err)
+                    return returnValue(ExcelObj(*args[0]));
+                if (args[1] && args[1]->type() == ExcelType::Err)
+                    return returnValue(ExcelObj(*args[1]));
+                const bool skip = args[0] && args[1] && !args[1]->isMissing()
+                    ? args[1]->get<double>(1.0) != 0.0 : true;
+                // 구분자 배열 = 로테이션(원소를 순환하며 사용, 네이티브 정합 U17).
+                std::vector<std::wstring> delims;
+                if (args[0] && args[0]->isType(ExcelType::Multi))
+                {
+                    ExcelArray da(*args[0]);
+                    const size_t n = (size_t)da.nRows() * da.nCols();
+                    for (size_t i = 0; i < n; ++i)
+                    {
+                        if (da.at(i).type() == ExcelType::Err)
+                            return returnValue(ExcelObj(da.at(i)));
+                        delims.push_back(da.at(i).toString());
+                    }
+                }
+                if (delims.empty())
+                    delims.push_back(args[0] ? args[0]->toString() : std::wstring());
                 std::vector<std::wstring> parts;
-                for (size_t i = 2; i < info.numArgs(); ++i) collectText(*args[i], parts, skip);
+                for (size_t i = 2; i < info.numArgs(); ++i)
+                    if (auto err = collectText(*args[i], parts, skip))
+                        return returnValue(std::move(*err));
                 std::wstring out;
                 for (size_t i = 0; i < parts.size(); ++i)
-                    { if (i) out += d; out += parts[i]; }
+                    { if (i) out += delims[(i - 1) % delims.size()]; out += parts[i]; }
                 return returnValue(ExcelObj(std::wstring_view(out)));
             });
 
@@ -227,7 +258,9 @@ namespace egtools::functions
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
                 std::vector<std::wstring> parts;
-                for (size_t i = 0; i < info.numArgs(); ++i) collectText(*args[i], parts, false);
+                for (size_t i = 0; i < info.numArgs(); ++i)
+                    if (auto err = collectText(*args[i], parts, false))
+                        return returnValue(std::move(*err));   // 오류 전파(네이티브 정합)
                 std::wstring out;
                 for (auto& s : parts) out += s;
                 return returnValue(ExcelObj(std::wstring_view(out)));
@@ -241,25 +274,32 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
                const ExcelObj& modeA, const ExcelObj& endA, const ExcelObj& nfA) -> ExcelObj*
             {
-                const std::wstring text = textA.toString();
+                // 구분자 배열(네이티브: 대체 후보 목록)은 미구현 — 오답 대신 거부.
+                if (delimA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring delim = delimA.toString();
                 const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
                 if (inst == 0) return returnValue(CellError::Value);
                 const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
                 const bool matchEnd = endA.isMissing() ? false : (endA.get<double>(0.0) != 0.0);
 
-                const size_t at = findInstance(text, delim, inst, ci);
-                if (at != std::wstring::npos)
-                    return returnValue(ExcelObj(text.substr(0, at)));
-                if (matchEnd)
+                // text는 원소별 리프팅(네이티브 정합, plan/22 U12).
+                return egtools::core::mapLift([&](const ExcelObj& t) -> ExcelObj
                 {
-                    const int n = countInstances(text, delim, ci);
-                    if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
-                        return returnValue(ExcelObj(std::wstring_view(text)));
-                    if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
-                        return returnValue(ExcelObj(std::wstring_view(L"")));
-                }
-                return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
+                    const std::wstring text = t.toString();
+                    const size_t at = findInstance(text, delim, inst, ci);
+                    if (at != std::wstring::npos)
+                        return ExcelObj(text.substr(0, at));
+                    if (matchEnd)
+                    {
+                        const int n = countInstances(text, delim, ci);
+                        if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
+                            return ExcelObj(std::wstring_view(text));
+                        if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
+                            return ExcelObj(std::wstring_view(L""));
+                    }
+                    return nfA.isMissing() ? ExcelObj(CellError::NA)
+                                           : egtools::core::demote(ExcelObj(nfA));
+                }, textA);
             });
 
         // TEXTAFTER(text, delimiter, [instance_num], [match_mode], [match_end],
@@ -268,25 +308,30 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& delimA, const ExcelObj& instA,
                const ExcelObj& modeA, const ExcelObj& endA, const ExcelObj& nfA) -> ExcelObj*
             {
-                const std::wstring text = textA.toString();
+                if (delimA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring delim = delimA.toString();
                 const int inst = instA.isMissing() ? 1 : instA.get<int>(1);
                 if (inst == 0) return returnValue(CellError::Value);
                 const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
                 const bool matchEnd = endA.isMissing() ? false : (endA.get<double>(0.0) != 0.0);
 
-                const size_t at = findInstance(text, delim, inst, ci);
-                if (at != std::wstring::npos)
-                    return returnValue(ExcelObj(text.substr(at + delim.size())));
-                if (matchEnd)
+                return egtools::core::mapLift([&](const ExcelObj& t) -> ExcelObj
                 {
-                    const int n = countInstances(text, delim, ci);
-                    if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
-                        return returnValue(ExcelObj(std::wstring_view(L"")));
-                    if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
-                        return returnValue(ExcelObj(std::wstring_view(text)));
-                }
-                return nfA.isMissing() ? returnValue(CellError::NA) : returnValue(ExcelObj(nfA));
+                    const std::wstring text = t.toString();
+                    const size_t at = findInstance(text, delim, inst, ci);
+                    if (at != std::wstring::npos)
+                        return ExcelObj(text.substr(at + delim.size()));
+                    if (matchEnd)
+                    {
+                        const int n = countInstances(text, delim, ci);
+                        if (inst == n + 1)   // 가상 구분자 = 텍스트 끝
+                            return ExcelObj(std::wstring_view(L""));
+                        if (inst == -(n + 1))   // 가상 구분자 = 텍스트 시작
+                            return ExcelObj(std::wstring_view(text));
+                    }
+                    return nfA.isMissing() ? ExcelObj(CellError::NA)
+                                           : egtools::core::demote(ExcelObj(nfA));
+                }, textA);
             });
 
         // TEXTSPLIT(text, col_delim, [row_delim], [ignore_empty], [match_mode], [pad_with]).
@@ -294,58 +339,83 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& colD, const ExcelObj& rowD,
                const ExcelObj& ignoreA, const ExcelObj& modeA, const ExcelObj& padA) -> ExcelObj*
             {
-                const std::wstring text = textA.toString();
                 const bool ci = modeA.isMissing() ? false : (modeA.get<double>(0.0) != 0.0);
                 const bool ignore = ignoreA.isMissing() ? false : (ignoreA.get<double>(0.0) != 0.0);
                 const ExcelObj pad = padA.isMissing() ? ExcelObj(CellError::NA) : ExcelObj(padA);
 
-                std::vector<std::wstring> colDelims, rowDelims;
-                if (!colD.isMissing()) colDelims.push_back(colD.toString());
-                if (!rowD.isMissing()) rowDelims.push_back(rowD.toString());
-
-                // Rows: split by row_delim (or whole text as one row).
-                std::vector<std::wstring> rowStrs = rowDelims.empty()
-                    ? std::vector<std::wstring>{ text } : splitBy(text, rowDelims, ci);
-
-                std::vector<std::vector<std::wstring>> grid;
-                size_t maxCols = 0;
-                for (auto& rs : rowStrs)
+                // 구분자 배열 = 대체 후보 목록(네이티브 정합, plan/22 T2).
+                auto collectDelims = [](const ExcelObj& o, std::vector<std::wstring>& out)
                 {
-                    std::vector<std::wstring> cells = colDelims.empty()
-                        ? std::vector<std::wstring>{ rs } : splitBy(rs, colDelims, ci);
+                    if (o.isMissing()) return;
+                    if (o.isType(ExcelType::Multi))
+                    {
+                        ExcelArray a(o);
+                        const size_t n = (size_t)a.nRows() * a.nCols();
+                        for (size_t i = 0; i < n; ++i)
+                        {
+                            std::wstring s = a.at(i).toString();
+                            if (!s.empty()) out.push_back(std::move(s));
+                        }
+                        return;
+                    }
+                    out.push_back(o.toString());
+                };
+                std::vector<std::wstring> colDelims, rowDelims;
+                collectDelims(colD, colDelims);
+                collectDelims(rowD, rowDelims);
+
+                // text 배열 → 강등 리프팅(원소별 첫 토큰, 네이티브 정합 T1).
+                return egtools::core::mapLift([&](const ExcelObj& te) -> ExcelObj
+                {
+                    const std::wstring text = te.toString();
+
+                    // Rows: split by row_delim (or whole text as one row).
+                    std::vector<std::wstring> rowStrs = rowDelims.empty()
+                        ? std::vector<std::wstring>{ text } : splitBy(text, rowDelims, ci);
+
+                    std::vector<std::vector<std::wstring>> grid;
+                    size_t maxCols = 0;
+                    for (auto& rs : rowStrs)
+                    {
+                        std::vector<std::wstring> cells = colDelims.empty()
+                            ? std::vector<std::wstring>{ rs } : splitBy(rs, colDelims, ci);
+                        if (ignore)
+                        {
+                            std::vector<std::wstring> kept;
+                            for (auto& c : cells) if (!c.empty()) kept.push_back(c);
+                            cells.swap(kept);
+                        }
+                        if (!cells.empty() || !ignore) { maxCols = std::max(maxCols, cells.size()); grid.push_back(std::move(cells)); }
+                    }
                     if (ignore)
                     {
-                        std::vector<std::wstring> kept;
-                        for (auto& c : cells) if (!c.empty()) kept.push_back(c);
-                        cells.swap(kept);
+                        std::vector<std::vector<std::wstring>> kept;
+                        for (auto& r : grid) if (!r.empty()) kept.push_back(std::move(r));
+                        grid.swap(kept);
                     }
-                    if (!cells.empty() || !ignore) { maxCols = std::max(maxCols, cells.size()); grid.push_back(std::move(cells)); }
-                }
-                if (ignore)
-                {
-                    std::vector<std::vector<std::wstring>> kept;
-                    for (auto& r : grid) if (!r.empty()) kept.push_back(std::move(r));
-                    grid.swap(kept);
-                }
-                if (grid.empty() || maxCols == 0) return returnValue(CellError::Value);
+                    if (grid.empty() || maxCols == 0) return ExcelObj(CellError::Value);
 
-                std::vector<ExcelObj> vals;
-                vals.reserve(grid.size() * maxCols);
-                for (auto& r : grid)
-                    for (size_t j = 0; j < maxCols; ++j)
-                        vals.emplace_back(j < r.size() ? ExcelObj(std::wstring_view(r[j])) : pad);
-                return egtools::core::output(egtools::core::makeArray(
-                    (xloil::ExcelArrayBuilder::row_t)grid.size(),
-                    (xloil::ExcelArrayBuilder::col_t)maxCols, vals));
+                    std::vector<ExcelObj> vals;
+                    vals.reserve(grid.size() * maxCols);
+                    for (auto& r : grid)
+                        for (size_t j = 0; j < maxCols; ++j)
+                            vals.emplace_back(j < r.size() ? ExcelObj(std::wstring_view(r[j])) : pad);
+                    return egtools::core::makeArray(
+                        (xloil::ExcelArrayBuilder::row_t)grid.size(),
+                        (xloil::ExcelArrayBuilder::col_t)maxCols, vals);
+                }, textA);
             });
 
         // VALUETOTEXT(value, [format]) — 0 concise (default), 1 strict (quote text).
+        // value는 원소별 리프팅(네이티브 정합, plan/22 U14).
         egtools::core::registerFn(L"VALUETOTEXT",
             [](const ExcelObj& value, const ExcelObj& fmt) -> ExcelObj*
             {
                 const bool strict = fmt.isMissing() ? false : (fmt.get<int>(0) == 1);
-                std::wstring s = valueToText(value, strict);
-                return returnValue(ExcelObj(std::wstring_view(s)));
+                return egtools::core::mapUnary(value, [strict](const ExcelObj& e)
+                {
+                    return ExcelObj(std::wstring_view(valueToText(e, strict)));
+                });
             });
 
         // ARRAYTOTEXT(array, [format]) — 0 list "a, b, c"; 1 strict "{a,b;c,d}".

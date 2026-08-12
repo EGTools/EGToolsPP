@@ -32,5 +32,6 @@ Devuelve el índice de capacidad de proceso Cp = (USL-LSL)/(6σ) como número es
 
 - Utiliza la desviación estándar muestral (n-1).
 - Si solo se indica un límite, el lado faltante se considera igual a la media.
+- USL·LSL aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: CPK
 - Compatibilidad: Excel 2010+. Se registra siempre como `CP` en todas las versiones de Excel.

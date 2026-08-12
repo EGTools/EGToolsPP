@@ -37,4 +37,5 @@
 - 取代文字支援 $1、$2 反向參照。
 - 次序 0（預設）取代全部，N>0 僅取代第 N 個相符項。
 - 正規表示式語法為 std::wregex 的 ECMAScript。
+- text·pattern·replacement指定為陣列時會逐元素計算，以相同形狀的陣列溢出傳回 — 純量會重複使用，欄向量×列向量按外積擴充，大小不符的元素為 #N/A，錯誤元素會原樣傳回該錯誤。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `REGEXREPLACE` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.REGEXREPLACE`。

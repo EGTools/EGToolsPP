@@ -30,5 +30,6 @@ Devuelve el número de períodos necesarios para alcanzar el valor objetivo (nú
 
 ## Notas
 
+- Todos los argumentos aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: RRI
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `PDURATION` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.PDURATION`.

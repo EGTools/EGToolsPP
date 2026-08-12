@@ -82,18 +82,19 @@ namespace egtools::functions
         }
 
         // ---- FILTERXML ----------------------------------------------------
-        ExcelObj* filterXml(const ExcelObj& xmlObj, const ExcelObj& xpathObj)
+        // Scalar core — xml/xpath는 강등 리프팅 대상(로컬 MSXML 파싱, plan/22 T8).
+        ExcelObj filterXmlOne(const ExcelObj& xmlObj, const ExcelObj& xpathObj)
         {
             const std::wstring xml = xmlObj.toString();
             const std::wstring xpath = xpathObj.toString();
-            if (xml.empty() || xpath.empty()) return returnValue(CellError::Value);
+            if (xml.empty() || xpath.empty()) return ExcelObj(CellError::Value);
 
             IXMLDOMDocument2* doc = nullptr;
             HRESULT hr = CoCreateInstance(__uuidof(DOMDocument60), nullptr,
                 CLSCTX_INPROC_SERVER, __uuidof(IXMLDOMDocument2), (void**)&doc);
-            if (FAILED(hr) || !doc) return returnValue(CellError::Value);
+            if (FAILED(hr) || !doc) return ExcelObj(CellError::Value);
 
-            ExcelObj* result = returnValue(CellError::Value);
+            ExcelObj result(CellError::Value);
             doc->put_async(VARIANT_FALSE);
             doc->put_validateOnParse(VARIANT_FALSE);
 
@@ -127,9 +128,9 @@ namespace egtools::functions
                     list->Release();
 
                     if (vals.empty())
-                        result = returnValue(CellError::NA);
+                        result = ExcelObj(CellError::NA);
                     else if (vals.size() == 1)
-                        result = returnValue(ExcelObj(std::wstring_view(vals[0])));
+                        result = ExcelObj(std::wstring_view(vals[0]));
                     else
                     {
                         size_t strLen = 0;
@@ -137,7 +138,7 @@ namespace egtools::functions
                         ExcelArrayBuilder b((ExcelArrayBuilder::row_t)vals.size(), 1, strLen);
                         for (size_t i = 0; i < vals.size(); ++i)
                             b((ExcelArrayBuilder::row_t)i, 0) = ExcelObj(std::wstring_view(vals[i]));
-                        result = egtools::core::output(b.toExcelObj());
+                        result = b.toExcelObj();
                     }
                 }
             }
@@ -148,6 +149,10 @@ namespace egtools::functions
         // ---- WEBSERVICE ---------------------------------------------------
         ExcelObj webservice(const ExcelObj& urlObj)
         {
+            // 네트워크 함수는 배열을 받지 않는다(plan/22 그룹 C) — 수식을 행별로
+            // 복사해 호출하는 것이 의도된 사용법. 호출 전에 거부한다.
+            if (urlObj.isType(ExcelType::Multi))
+                return ExcelObj(CellError::Value);
             const std::wstring url = urlObj.toString();
             URL_COMPONENTS uc{}; uc.dwStructSize = sizeof(uc);
             wchar_t host[256]{}, path[4096]{};
@@ -211,7 +216,8 @@ namespace egtools::functions
             [](const ExcelObj& t) -> ExcelObj* { return egtools::core::mapUnary(t, decodeUrlOne); });
 
         egtools::core::registerFn(L"FILTERXML",
-            [](const ExcelObj& xml, const ExcelObj& xpath) -> ExcelObj* { return filterXml(xml, xpath); },
+            [](const ExcelObj& xml, const ExcelObj& xpath) -> ExcelObj*
+            { return egtools::core::mapLift(filterXmlOne, xml, xpath); },
             /*macro*/ false, /*threadsafe*/ false);   // MSXML COM — MTR 워커 불가
 
         egtools::core::registerFn(L"WEBSERVICE",

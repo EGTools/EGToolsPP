@@ -34,5 +34,6 @@ Returns an array keeping only the rows or columns whose include value is truthy;
 
 - Text and blank values in include are treated as FALSE (native returns #VALUE!).
 - With no matches and if_empty omitted, #N/A is returned instead of #CALC!.
+- If include contains an error value, the whole result is that error.
 - Related functions: SORT, UNIQUE.
 - Supported: Excel 2010+. Registered as `FILTER` (drop-in) on hosts without the native function, and as `EG.FILTER` on modern Excel that has it. On some legacy hosts it registers as `xFILTER` due to a keyword conflict.

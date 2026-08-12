@@ -32,4 +32,5 @@ Devuelve una cadena vacía ("") si tiene éxito, y la imagen del código QR se i
 
 - gs1=TRUE se aproxima con separadores GS (0x1D); no es una codificación FNC1 completa. Si se necesita GS1 completo, use CODE128 (GS1-128).
 - La imagen mantiene su proporción cuadrada dentro de la celda que llama.
+- Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `QRCODE` en todas las versiones de Excel.

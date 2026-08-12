@@ -19,7 +19,7 @@ Concatena texto de valores y rangos (sin delimitador).
 
 ## Devuelve
 
-Devuelve un único valor de texto (escalar) que concatena todos los argumentos (incluidos rangos y matrices) en orden. La implementación en sí no devuelve valores de error propios.
+Devuelve un único valor de texto (escalar) que concatena todos los argumentos (incluidos rangos y matrices) en orden. Si algún argumento contiene un valor de error, se devuelve ese error.
 
 ## Ejemplos
 

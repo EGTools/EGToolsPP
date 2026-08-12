@@ -34,5 +34,6 @@ Devuelve tal cual el resultado del primer valor que coincide con la expresión (
 ## Notas
 
 - Si se deja vacío un argumento intermedio, se ignoran los pares valor/resultado posteriores.
+- La expresión, los valores de comparación y los resultados aceptan matrices y se evalúan elemento a elemento, derramando una matriz de la misma forma; un error en la expresión o en un valor de comparación evaluado se propaga.
 - Función relacionada: IFS.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `SWITCH` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.SWITCH`.

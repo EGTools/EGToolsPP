@@ -33,4 +33,5 @@ De forma predeterminada (solo número=TRUE) devuelve un número (escalar); si la
 
 - También reconoce la notación en caracteres chinos (hanja) y sus variantes (一二三, 壹貳參, 拾佰仟萬, etc.).
 - Los espacios y las comas de la entrada se ignoran; los prefijos 금/일금 y los sufijos 원/원정 se restauran tal cual cuando solo número=FALSE.
+- Si el texto es una matriz, se procesa elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error); una matriz en los demás argumentos devuelve #VALUE!.
 - Compatibilidad: Excel 2010+. Se registra siempre como `HANTONUMBER` en todas las versiones de Excel.

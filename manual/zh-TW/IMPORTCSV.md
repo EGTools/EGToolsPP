@@ -34,4 +34,5 @@
 - 分隔符固定為逗號、編碼固定為 UTF-8（有 BOM 時以 BOM 優先）。需要其他分隔符·編碼時請使用 IMPORTTEXT。
 - 可辨識以雙引號引用的欄位（含 "" 逸出）。
 - skip_rows/take_rows 給負數時從末尾起算。
+- 路徑·take_rows指定為陣列時傳回 #VALUE! — 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `IMPORTCSV` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.IMPORTCSV`。

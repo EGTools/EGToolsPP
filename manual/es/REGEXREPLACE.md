@@ -37,4 +37,5 @@ Devuelve el texto sustituido como un texto único (escalar). Devuelve #VALUE! si
 - Se admiten las retrorreferencias $1, $2 en el texto de reemplazo.
 - La ocurrencia 0 (predeterminada) sustituye todas las coincidencias; con N>0 se sustituye solo la N-ésima.
 - La sintaxis de expresiones regulares es la de ECMAScript de std::wregex.
+- text·pattern·replacement aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `REGEXREPLACE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.REGEXREPLACE`.

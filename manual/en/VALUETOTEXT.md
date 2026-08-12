@@ -32,5 +32,6 @@ Returns the text representation of the value as a single text (scalar). The impl
 ## Notes
 
 - In strict (1) format, quotes inside text are doubled ("").
+- If value is an array, the function is applied element-wise and spills an array of the same shape (an error element returns that error).
 - Related function: ARRAYTOTEXT
 - Supported: Excel 2010+. Registered as `VALUETOTEXT` (drop-in) on hosts without the native function, and as `EG.VALUETOTEXT` on modern Excel that has it.

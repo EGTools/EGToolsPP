@@ -34,4 +34,5 @@
 - 지원 종류: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE(기본), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE(숫자 코드도 허용).
 - 옵션 인수는 숫자면 여백(2D 형식), TRUE면 하단 문자 표시(1D 형식)로 해석합니다.
 - 이미지 크기는 호출 셀에 맞춰지며 2D 형식은 가로세로 비율을 유지합니다.
+- 텍스트에 배열을 지정하면 #VALUE!를 반환합니다(셀당 그림 1장) — 여러 건은 수식을 행별로 복사해 사용합니다.
 - 지원: Excel 2010+. 모든 Excel 버전에서 `BARCODE` 이름 그대로 등록됩니다.

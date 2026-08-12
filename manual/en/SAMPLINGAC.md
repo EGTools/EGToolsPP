@@ -36,5 +36,6 @@ Returns the ISO 2859-1 acceptance number Ac as a scalar number. An AQL outside 0
 ## Notes
 
 - A lot size of 1 returns 0.
+- All arguments accept arrays, so a LOT list or an AQL table can be computed at once — element-wise with a same-shape spill; scalars are broadcast, a column vector × a row vector expands to their outer product, and size-mismatched elements yield #N/A.
 - Related functions: SAMPLINGSIZE, SAMPLINGRE, SAMPLINGLABEL
 - Supported: Excel 2010+. Always registered as `SAMPLINGAC` on every Excel version.

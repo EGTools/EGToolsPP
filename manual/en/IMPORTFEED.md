@@ -34,4 +34,5 @@ Returns feed items (or feed info / a single field) as a spilled 2-D array. A mis
 - RSS 2.0 and Atom are auto-detected. query "items" (default) returns five columns: Title/Summary/URL/Author/Created.
 - RFC822/ISO8601 dates in the created field are converted to Excel serial values (time-zone offsets ignored).
 - Uses COM (MSXML), so it is excluded from multi-threaded recalculation; requires an internet connection.
+- An array in url returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `IMPORTFEED` on every Excel version.

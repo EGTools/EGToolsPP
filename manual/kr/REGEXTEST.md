@@ -33,5 +33,6 @@
 ## 참고
 
 - 정규식 문법은 std::wregex의 ECMAScript입니다(네이티브 365의 PCRE2와 일부 다를 수 있습니다).
+- text·pattern에 배열을 지정하면 원소별로 계산해 같은 모양의 배열로 스필됩니다 — 스칼라는 반복, 열 벡터×행 벡터는 외적으로 확장, 크기가 맞지 않는 원소는 #N/A, 오류 원소는 그 오류를 그대로 반환합니다.
 - 관련 함수: REGEXEXTRACT, REGEXREPLACE
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `REGEXTEST` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.REGEXTEST`으로 등록됩니다.

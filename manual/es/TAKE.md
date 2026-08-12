@@ -34,5 +34,6 @@ Devuelve una matriz con el número indicado de filas y columnas tomadas desde el
 
 - Si el número de filas o columnas es negativo, se toman desde el final.
 - Si el resultado es una matriz vacía, devuelve #VALUE! en lugar del #CALC! nativo.
+- Una matriz en filas·columnas devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Función relacionada: DROP
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `TAKE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.TAKE`.

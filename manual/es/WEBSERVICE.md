@@ -31,4 +31,5 @@ Devuelve el cuerpo de la respuesta de una solicitud HTTP(S) GET como texto escal
 - Funciona mediante una solicitud GET de WinHTTP y requiere conexión a Internet.
 - El cuerpo de la respuesta siempre se interpreta como UTF-8.
 - Está registrada como segura para subprocesos, por lo que se ejecuta en paralelo durante el recálculo multiproceso.
+- Una matriz en url devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `WEBSERVICE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.WEBSERVICE`.

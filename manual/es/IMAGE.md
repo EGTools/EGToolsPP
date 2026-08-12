@@ -35,4 +35,5 @@ Siempre devuelve una cadena vacía ("") como escalar y, al terminar el cálculo,
 - A diferencia de la función nativa de 365, el resultado no es un valor dentro de la celda: inserta una forma de imagen flotante (EG.Image_hoja_celda) sobre la celda y, al recalcular, reemplaza la forma existente con el mismo nombre.
 - Los argumentos alt_text, height y width se aceptan por compatibilidad pero se ignoran; con resize_mode 0 (predeterminado) se mantiene la relación de aspecto.
 - En las versiones modernas de Excel que incluyen la función IMAGE nativa, esta función se registra como EG.IMAGE.
+- Una matriz en source devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `IMAGE` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.IMAGE`.

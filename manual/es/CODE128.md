@@ -35,4 +35,5 @@ Devuelve una cadena vacía ("") si tiene éxito, y la imagen del código de barr
 - Con gs1=TRUE, el texto en formato (AI)valor se codifica como GS1-128 totalmente conforme con FNC1 (identificador de simbología ]C1).
 - La imagen llena por completo la celda que llama (formato 1D).
 - tamaño_texto es un valor relativo que se refleja en la altura de la banda de texto inferior.
+- Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `CODE128` en todas las versiones de Excel.

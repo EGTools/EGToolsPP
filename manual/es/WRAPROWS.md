@@ -32,5 +32,6 @@ Devuelve una matriz bidimensional con los valores del vector dispuestos horizont
 ## Notas
 
 - También se acepta una matriz bidimensional como entrada, que se aplana por filas.
+- Una matriz en recuento de ajuste·valor de relleno devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Función relacionada: WRAPCOLS
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `WRAPROWS` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.WRAPROWS`.

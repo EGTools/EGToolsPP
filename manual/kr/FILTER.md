@@ -34,5 +34,6 @@
 
 - include의 텍스트·빈 값은 FALSE로 처리합니다(네이티브는 #VALUE!).
 - 결과가 없고 if_empty를 생략하면 #CALC! 대신 #N/A를 반환합니다.
+- include에 오류 값이 있으면 전체 결과가 그 오류가 됩니다.
 - 관련 함수: SORT, UNIQUE.
 - 지원: Excel 2010+. 네이티브가 없는 구버전에서는 `FILTER` 그대로(드롭인), 네이티브가 있는 최신 Excel에서는 `EG.FILTER`으로 등록됩니다. 일부 구버전에서는 예약어 충돌로 `xFILTER` 이름으로 등록됩니다.

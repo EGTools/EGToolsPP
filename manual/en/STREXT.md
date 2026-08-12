@@ -35,4 +35,5 @@ Returns the extracted (or removed) result as a single text (scalar). Returns #VA
 - The N class also includes the decimal point '.'.
 - If the option is not composed of -SANKJH letters, the whole option is treated as an ECMAScript regex (std::wregex).
 - A leading '-' removes the matched characters instead of extracting them.
+- If the text is an array, it is processed element-wise and spills an array of the same shape (an error element returns that error); an array in the option and separator arguments returns #VALUE!.
 - Supported: Excel 2010+. Always registered as `STREXT` on every Excel version.

@@ -34,4 +34,5 @@ Returns the CSV/TSV content of a URL or local file as a spilled 2-D array; numer
 - When delimiter is omitted it auto-detects: tab if the first line contains a tab, otherwise comma.
 - Legacy calls passing a charset name as the second argument (IMPORTDATA(url,"euc-kr")) are still accepted for backward compatibility.
 - Interior empty lines are kept; only trailing empty lines are dropped.
+- An array in url returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `IMPORTDATA` on every Excel version.

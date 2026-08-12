@@ -32,4 +32,5 @@
 
 - 非数字的值在求和时被忽略。
 - 在 GROUPBY/PIVOTBY 的 function 参数中指定 "PERCENTOF" 可求各组占比。
+- 但错误值不会被忽略，该错误将成为结果（保留原错误而非原生的 #NUM!）。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `PERCENTOF` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.PERCENTOF`。

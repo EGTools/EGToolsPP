@@ -31,5 +31,6 @@ Devuelve el número decimal convertido a partir del texto en la base indicada (e
 ## Notas
 
 - No distingue mayúsculas y minúsculas.
+- Todos los argumentos aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: BASE
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `DECIMAL` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.DECIMAL`.

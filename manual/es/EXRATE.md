@@ -32,4 +32,5 @@ Devuelve el tipo de cambio de referencia en wones coreanos (KRW) como un valor e
 - Consulta por HTTP el tipo de cambio de referencia de smbs.biz (Seoul Money Brokerage Services) — se requiere conexión de red.
 - Si no hay tipo publicado para la fecha indicada, la consulta retrocede hasta 10 días (para cubrir los festivos).
 - CNY se convierte automáticamente en CNH. Está registrada como no macro y segura para subprocesos, por lo que se recalcula en paralelo.
+- Una matriz en la moneda y la fecha devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `EXRATE` en todas las versiones de Excel.

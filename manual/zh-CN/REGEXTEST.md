@@ -33,5 +33,6 @@
 ## 备注
 
 - 正则语法为 std::wregex 的 ECMAScript（与原生 365 的 PCRE2 可能略有差异）。
+- text·pattern指定为数组时按元素计算，以相同形状的数组溢出返回 — 标量重复使用，列向量×行向量按外积扩展，大小不匹配的元素为 #N/A，错误元素原样返回该错误。
 - 相关函数：REGEXEXTRACT、REGEXREPLACE
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `REGEXTEST` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.REGEXTEST`。

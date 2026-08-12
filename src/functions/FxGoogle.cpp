@@ -500,6 +500,7 @@ namespace egtools::functions
         ExcelObj* importFeed(const ExcelObj& urlObj, const ExcelObj& queryObj,
                              const ExcelObj& headersObj, const ExcelObj& numObj)
         {
+            if (urlObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             if (urlObj.isMissing()) return returnValue(CellError::Value);
             const std::wstring url = trimCopy(urlObj.toString());
             if (url.empty()) return returnValue(CellError::Value);
@@ -729,6 +730,7 @@ namespace egtools::functions
         ExcelObj* importHtml(const ExcelObj& urlObj, const ExcelObj& searchObj,
                              const ExcelObj& indexObj, const ExcelObj& localeObj)
         {
+            if (urlObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             const bool decimalComma = localeObj.isMissing()
                 ? false : localeDecimalComma(localeObj.toString());
             if (urlObj.isMissing()) return returnValue(CellError::Value);
@@ -1072,6 +1074,9 @@ namespace egtools::functions
                              const ExcelObj& skipObj, const ExcelObj& takeObj,
                              const ExcelObj& encObj, const ExcelObj& locObj)
         {
+            // 배열 인수 거부(plan/22 그룹 C) — path/take 배열의 무성 오답 차단.
+            if (pathObj.isType(ExcelType::Multi) || takeObj.isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             if (pathObj.isMissing()) return returnValue(CellError::Value);
             ImportOpts opt;
             if (!readDelimiterArg(delimObj, opt)) return returnValue(CellError::Value);
@@ -1088,6 +1093,8 @@ namespace egtools::functions
         ExcelObj* importCsv(const ExcelObj& pathObj, const ExcelObj& skipObj,
                             const ExcelObj& takeObj, const ExcelObj& locObj)
         {
+            if (pathObj.isType(ExcelType::Multi) || takeObj.isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             if (pathObj.isMissing()) return returnValue(CellError::Value);
             ImportOpts opt;
             opt.delims.push_back(L",");
@@ -1103,6 +1110,7 @@ namespace egtools::functions
         ExcelObj* importData(const ExcelObj& urlObj, const ExcelObj& delimObj,
                              const ExcelObj& locObj, const ExcelObj& charsetObj)
         {
+            if (urlObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             if (urlObj.isMissing()) return returnValue(CellError::Value);
             ImportOpts opt;
 
@@ -1173,6 +1181,10 @@ namespace egtools::functions
 
         ExcelObj* importRange(const ExcelObj& urlObj, const ExcelObj& rangeObj)
         {
+            // 배열 인수 거부(plan/22 그룹 C). 특히 range_address 자리에 실수로
+            // 실제 범위 참조를 넘기면 "[R x C]"가 X24 따위로 파싱돼 오답이 났다.
+            if (urlObj.isType(ExcelType::Multi) || rangeObj.isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             if (urlObj.isMissing()) return returnValue(CellError::Value);
             const std::wstring url = trimCopy(urlObj.toString());
             if (url.empty()) return returnValue(CellError::Value);

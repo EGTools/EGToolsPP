@@ -22,7 +22,7 @@ Ejecuta VLOOKUP para muchas claves a la vez, devolviendo una o más columnas.
 
 ## Devuelve
 
-Devuelve una matriz derramada de tamaño filas de valores buscados × columnas de retorno; las filas sin coincidencia reciben if_not_found (predeterminado ""). Si falta un argumento obligatorio, la matriz de búsqueda no es una matriz, el valor buscado tiene más de una columna o un número de columna de retorno no es válido, devuelve #VALUE!.
+Devuelve una matriz derramada de tamaño elementos buscados (por filas) × columnas de retorno; las filas sin coincidencia reciben if_not_found (predeterminado ""). Si falta un argumento obligatorio, la matriz de búsqueda no es una matriz o un número de columna de retorno no es válido, devuelve #VALUE!.
 
 ## Ejemplos
 
@@ -37,4 +37,5 @@ Devuelve una matriz derramada de tamaño filas de valores buscados × columnas d
 - La coincidencia exacta se basa en tablas hash; si hay claves duplicadas, se devuelve la primera fila.
 - La coincidencia aproximada ordena internamente y usa búsqueda binaria, por lo que no es necesario ordenar los datos previamente.
 - La comparación de claves no distingue mayúsculas y minúsculas.
+- El valor buscado también admite matrices horizontales (1×N) o bidimensionales; se leen en orden por filas y el resultado se devuelve en vertical.
 - Compatibilidad: Excel 2010+. Se registra siempre como `MVLOOKUP` en todas las versiones de Excel.

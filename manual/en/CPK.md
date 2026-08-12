@@ -32,5 +32,6 @@ Returns the process capability index Cpk = min((USL-μ)/3σ, (μ-LSL)/3σ) as a 
 
 - Uses the sample standard deviation (n-1).
 - If only one limit is given, only that side is evaluated.
+- USL·LSL accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: CP
 - Supported: Excel 2010+. Always registered as `CPK` on every Excel version.

@@ -36,4 +36,5 @@ Devuelve un archivo de texto (ruta local o URL) dividido por separadores o por a
 - Si se omite delimiter, el valor predeterminado es la tabulación. Las cadenas se interpretan como separadores; una matriz numérica ({1,11,21}) se interpreta como posiciones iniciales de columnas de ancho fijo (base 1, en orden ascendente).
 - encoding admite nombres de juego de caracteres como "euc-kr" o números de página de códigos; si hay BOM, el BOM tiene prioridad.
 - Si se indican valores negativos en skip_rows/take_rows, se cuentan desde el final.
+- Una matriz en la ruta y take_rows devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `IMPORTTEXT` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.IMPORTTEXT`.

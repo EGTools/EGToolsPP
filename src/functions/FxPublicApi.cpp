@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <cwctype>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -132,6 +133,11 @@ namespace egtools::functions
         // datago로 이관한다(사용자 지시 2026-08-04, 슬롯 통일).
         std::wstring resolveKey(const ExcelObj& keyA, const wchar_t* service)
         {
+            // 배열이 오면 toString()이 "[R x C]"가 되어 아래 regSetKey가 저장된
+            // 정상 키를 파괴한다(VB/VBA 판과 공유 슬롯) — 저장 전에 거부.
+            // throw는 레지스트리 공통 catch가 #VALUE!로 표면화한다(plan/22 M2).
+            if (keyA.isType(ExcelType::Multi))
+                throw std::runtime_error("api_key must be a single value");
             std::wstring k = trimWs(keyA.toString());
             if (!k.empty())
             {
@@ -358,6 +364,9 @@ namespace egtools::functions
             [](const ExcelObj& textA, const ExcelObj& infoA, const ExcelObj& rowA,
                const ExcelObj& keyA) -> ExcelObj*
             {
+                // 네트워크 함수는 배열 인수를 받지 않는다(plan/22 그룹 C) —
+                // 여러 건은 수식을 행별로 복사해 사용. 호출 전에 거부.
+                if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = trimWs(textA.toString());
                 if (text.empty()) return returnValue(CellError::Value);
                 const std::wstring key = resolveKey(keyA, L"juso");
@@ -557,6 +566,7 @@ namespace egtools::functions
             [](const ExcelObj& kwA, const ExcelObj& typeA, const ExcelObj& epsgA,
                const ExcelObj& keyA) -> ExcelObj*
             {
+                if (kwA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring kw = trimWs(kwA.toString());
                 if (kw.empty()) return returnValue(CellError::Value);
                 int type = typeA.get<int>(1);
@@ -643,6 +653,7 @@ namespace egtools::functions
         core::registerFn(L"GEOCODER",
             [](const ExcelObj& kwA, const ExcelObj& epsgA, const ExcelObj& keyA) -> ExcelObj*
             {
+                if (kwA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring kw = trimWs(kwA.toString());
                 if (kw.empty()) return returnValue(CellError::Value);
                 long epsg = epsgA.get<int>(4326);
@@ -698,6 +709,8 @@ namespace egtools::functions
             [](const ExcelObj& xA, const ExcelObj& yA, const ExcelObj& rtA,
                const ExcelObj& epsgA, const ExcelObj& keyA) -> ExcelObj*
             {
+                if (xA.isType(ExcelType::Multi) || yA.isType(ExcelType::Multi))
+                    return returnValue(CellError::Value);
                 const double x = xA.get<double>(0.0), y = yA.get<double>(0.0);
                 int rt = rtA.get<int>(1);
                 if (rt == 0) rt = 1;
@@ -753,6 +766,7 @@ namespace egtools::functions
         core::registerFn(L"ADDRESSMAP",
             [](const ExcelObj& addrA, const ExcelObj& scaleA, const ExcelObj& keyA) -> ExcelObj*
             {
+                if (addrA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring addr = trimWs(addrA.toString());
                 if (addr.empty()) return returnValue(CellError::Value);
                 int scale = scaleA.get<int>(5);

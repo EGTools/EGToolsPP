@@ -32,5 +32,6 @@ Returns the vector wrapped into a 2-D array with wrap_count values per row, fill
 ## Notes
 
 - A 2-D array input is also accepted and flattened row-major.
+- Arrays in wrap_count·pad_with return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Related function: WRAPCOLS
 - Supported: Excel 2010+. Registered as `WRAPROWS` (drop-in) on hosts without the native function, and as `EG.WRAPROWS` on modern Excel that has it.

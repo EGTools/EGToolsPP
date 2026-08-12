@@ -33,5 +33,6 @@ Returns the representation in the given radix as text (scalar). A negative or no
 
 - The fractional part of number is truncated (floor).
 - Results shorter than min_length are left-padded with zeros.
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: DECIMAL
 - Supported: Excel 2010+. Registered as `BASE` (drop-in) on hosts without the native function, and as `EG.BASE` on modern Excel that has it.

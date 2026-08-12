@@ -45,3 +45,6 @@ Desktop.ini
 
 # dev-only API keys (plan/22 B4) - never distribute
 .env
+
+# 테스트 중 Excel이 저장하며 계속 변경되는 대용량 샘플 — 추적 제외
+/tests/sample_200k.xlsx

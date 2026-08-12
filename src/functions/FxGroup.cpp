@@ -186,6 +186,9 @@ namespace egtools::functions
             const bool paramAgg = egtools::core::isParamAggregator(fn);
             const ExcelObj* aggParam =
                 (paramAgg && in.relativeTo && !in.relativeTo->isMissing()) ? in.relativeTo : nullptr;
+            // 배열 파라미터는 TEXTJOIN 구분자 등에서 "[R x C]" 조용한 오답이 됨 — 거부.
+            if (aggParam && aggParam->isType(ExcelType::Multi))
+                return returnValue(CellError::Value);
             int relativeTo = 0;
             if (fn == L"PERCENTOF")
             {

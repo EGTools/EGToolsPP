@@ -32,4 +32,5 @@ Returns the values of a shared Google Sheets spreadsheet as a spilled 2-D array;
 - Only link-shared Google Sheets can be imported — unshared documents return an HTML login page, which yields #N/A.
 - The sheet is selected by the gid in the URL (default gid=0); any sheet-name part of range_address is ignored.
 - Data comes from the TSV export endpoint, so only values are imported, without formatting.
+- An array in url returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `IMPORTRANGE` on every Excel version.

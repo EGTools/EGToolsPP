@@ -33,4 +33,5 @@ Devuelve el contenido del código de barras leído de la imagen con la misma for
 - Lee los formatos PNG/JPG/BMP/GIF compatibles con WIC, y admite tanto rutas de archivo locales como URL http(s).
 - tipo_resultado: 1 texto (predeterminado), 2 texto de código (los caracteres de control se muestran como <GS>, etc.), 3 formato, 4 identificador de simbología, 5 HEX sin procesar.
 - También intenta leer imágenes giradas o de baja calidad (TryHarder/TryRotate), pero lee solo un código de barras.
+- Una matriz en el origen devuelve #VALUE!; para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `READBARCODE` en todas las versiones de Excel.

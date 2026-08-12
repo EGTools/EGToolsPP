@@ -33,4 +33,5 @@ By default (number_only=TRUE) returns a number (scalar); when the integer part e
 
 - Hanja notation and variant forms (一二三, 壹貳參, 拾佰仟萬, etc.) are recognized.
 - Spaces and commas in the input are ignored; the 금/일금 and 원/원정 prefix/suffix are restored when number_only=FALSE.
+- If the text is an array, it is processed element-wise and spills an array of the same shape (an error element returns that error); an array in the other arguments returns #VALUE!.
 - Supported: Excel 2010+. Always registered as `HANTONUMBER` on every Excel version.

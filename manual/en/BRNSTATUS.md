@@ -34,4 +34,5 @@ Returns the tax-type text (tax_type) for each business registration number in th
 - When the service rejects the key (HTTP 401/403 etc.), the stored key is deleted automatically and a reissue guide is returned.
 - Numbers stored as **numeric cells** are handled correctly: the number is converted to an integer string without exponent notation, and a 9-digit value whose leading zero was dropped is restored to 10 digits. Non-digit characters such as hyphens and spaces are ignored, and blank cells return empty strings.
 - Requests are batched 100 numbers per POST, so bulk lookups are efficient.
+- Batch lookup of an array of registration numbers (100 per request) is kept as before. An array api_key returns #VALUE! before anything is saved (prevents storing a bad key).
 - Supported: Excel 2010+. Always registered as `BRNSTATUS` on every Excel version.

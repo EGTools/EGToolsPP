@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EGTools++ 정보 — 인포 서클. 모노라인 2px -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <circle cx="16" cy="16" r="11.5" fill="none" stroke="#475569" stroke-width="2"/>
-  <circle cx="16" cy="10.8" r="1.7" fill="#2563EB" stroke="none"/>
-  <line x1="16" y1="15" x2="16" y2="22" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round"/>
-</svg>

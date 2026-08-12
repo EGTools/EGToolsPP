@@ -346,6 +346,8 @@ namespace egtools::functions
             //   생략        → 저장된 data.go.kr 키로 병합(키 없거나 실패하면 내장만)
             //   "키 문자열" → 그 키를 저장하고 사용(설정 중이므로 실패는 오류로 보고)
             //   0 / FALSE   → API를 아예 쓰지 않고 내장 계산만(네트워크 접근 없음)
+            // 배열 api_key는 "[R x C]"로 저장되어 정상 키를 파괴한다 — 거부(plan/22).
+            if (keyObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
             const bool apiOff =
                 !keyObj.isMissing() &&
                 (keyObj.isType(ExcelType::Bool) || keyObj.isType(ExcelType::Num)) &&
@@ -408,17 +410,28 @@ namespace egtools::functions
                 }
                 else { r = 1; c = 1; }
             };
-            size_t nR, nC, eR, eC;
-            dims(startObj, nR, nC);
+            // 브로드캐스트(plan/22): 크기 1인 차원은 반복, 그 외 불일치는 #VALUE!.
+            // `=NETWORKHOUR(A2:A100, $B$1)`처럼 공통 종료시각 고정이 흔한 형태.
+            size_t sR, sC, eR, eC;
+            dims(startObj, sR, sC);
             dims(endObj, eR, eC);
-            if (nR != eR || nC != eC) return returnValue(CellError::Value);
+            auto bcast = [](size_t a, size_t b, size_t& out) {
+                if (a == b || b == 1) { out = a; return true; }
+                if (a == 1) { out = b; return true; }
+                return false;
+            };
+            size_t nR, nC;
+            if (!bcast(sR, eR, nR) || !bcast(sC, eC, nC))
+                return returnValue(CellError::Value);
 
-            auto cellAt = [](const ExcelObj& o, size_t r, size_t c, size_t cols) -> ExcelObj
+            auto cellAt = [](const ExcelObj& o, size_t r, size_t c) -> ExcelObj
             {
                 if (o.isType(ExcelType::Multi))
                 {
                     ExcelArray a(o);
-                    return ExcelObj(a.at(r * cols + c));
+                    const size_t rr = (a.nRows() == 1) ? 0 : r;
+                    const size_t cc = (a.nCols() == 1) ? 0 : c;
+                    return ExcelObj(a.at(rr * a.nCols() + cc));
                 }
                 return ExcelObj(o);
             };
@@ -463,8 +476,8 @@ namespace egtools::functions
             for (size_t r = 0; r < nR; ++r)
                 for (size_t c = 0; c < nC; ++c)
                 {
-                    const ExcelObj s = cellAt(startObj, r, c, nC);
-                    const ExcelObj e = cellAt(endObj, r, c, nC);
+                    const ExcelObj s = cellAt(startObj, r, c);
+                    const ExcelObj e = cellAt(endObj, r, c);
                     const bool sNum = s.type() == ExcelType::Num || s.type() == ExcelType::Int;
                     const bool eNum = e.type() == ExcelType::Num || e.type() == ExcelType::Int;
                     if (!sNum || !eNum)
@@ -508,12 +521,13 @@ namespace egtools::functions
             return true;
         }
 
-        ExcelObj* weekNumOfMonth(const ExcelObj& dateObj, const ExcelObj& sowObj,
-                                 const ExcelObj& oowObj)
+        // Scalar cores — 날짜 인수는 원소별 리프팅(네이티브 WEEKNUM/WEEKDAY 정합).
+        ExcelObj weekNumOfMonthOne(const ExcelObj& dateObj, const ExcelObj& sowObj,
+                                   const ExcelObj& oowObj)
         {
             int owner, sow, oow;
             if (!weekOwnerSerial(dateObj, sowObj, oowObj, owner, sow, oow))
-                return returnValue(CellError::Value);
+                return ExcelObj(CellError::Value);
 
             int y, m, d;
             fromSerial(owner, y, m, d);
@@ -524,18 +538,18 @@ namespace egtools::functions
             if (mm != m) m1 += 7;
             m1 -= weekday1(m1) - oow;
 
-            return returnValue(ExcelObj((double)((owner - m1) / 7 + 1)));
+            return ExcelObj((double)((owner - m1) / 7 + 1));
         }
 
-        ExcelObj* monthByWeek(const ExcelObj& dateObj, const ExcelObj& sowObj,
-                              const ExcelObj& oowObj)
+        ExcelObj monthByWeekOne(const ExcelObj& dateObj, const ExcelObj& sowObj,
+                                const ExcelObj& oowObj)
         {
             int owner, sow, oow;
             if (!weekOwnerSerial(dateObj, sowObj, oowObj, owner, sow, oow))
-                return returnValue(CellError::Value);
+                return ExcelObj(CellError::Value);
             int y, m, d;
             fromSerial(owner, y, m, d);
-            return returnValue(ExcelObj((double)m));
+            return ExcelObj((double)m);
         }
 
         // ---- TODATETIME ----------------------------------------------------
@@ -550,9 +564,10 @@ namespace egtools::functions
             }
         }
 
-        ExcelObj* toDateTime(const ExcelObj& textObj)
+        // Scalar core (원소별 리프팅용 — TODATETIME은 텍스트 열 일괄 변환이 주용도).
+        ExcelObj toDateTimeOne(const ExcelObj& textObj)
         {
-            if (textObj.isMissing()) return returnValue(CellError::Value);
+            if (textObj.isMissing()) return ExcelObj(CellError::Value);
             const std::wstring orig = textObj.toString();
             std::wstring s = orig;
             for (auto& c : s) c = (wchar_t)std::towupper(c);
@@ -632,12 +647,12 @@ namespace egtools::functions
                 else if (am && timePart >= 0.5 && timePart < 13.0 / 24) timePart -= 0.5;
 
                 if (dateSerial >= 0 && timePart > 0)
-                    return returnValue(ExcelObj(dateSerial + timePart));
-                if (dateSerial >= 0) return returnValue(ExcelObj(dateSerial));
-                if (timePart > 0) return returnValue(ExcelObj(timePart));
-                return returnValue(ExcelObj(std::wstring_view(L"")));
+                    return ExcelObj(dateSerial + timePart);
+                if (dateSerial >= 0) return ExcelObj(dateSerial);
+                if (timePart > 0) return ExcelObj(timePart);
+                return ExcelObj(std::wstring_view(L""));
             }
-            catch (...) { return returnValue(CellError::Value); }
+            catch (...) { return ExcelObj(CellError::Value); }
         }
     }
 
@@ -665,17 +680,24 @@ namespace egtools::functions
 
         egtools::core::registerFn(L"WEEKNUMOFMONTH",
             [](const ExcelObj& d, const ExcelObj& sow, const ExcelObj& oow) -> ExcelObj*
-            { return weekNumOfMonth(d, sow, oow); });
+            {
+                return egtools::core::mapUnary(d,
+                    [&](const ExcelObj& e) { return weekNumOfMonthOne(e, sow, oow); });
+            });
 
         egtools::core::registerFn(L"MONTHBHYWEEK",
             [](const ExcelObj& d, const ExcelObj& sow, const ExcelObj& oow) -> ExcelObj*
-            { return monthByWeek(d, sow, oow); });
+            {
+                return egtools::core::mapUnary(d,
+                    [&](const ExcelObj& e) { return monthByWeekOne(e, sow, oow); });
+            });
 
+        // 텍스트는 원소별 리프팅(배열 열 → 변환 열). 기존에는 배열이 "[R x C]"로
+        // 파싱되어 빈 문자열을 무성 반환했다(plan/22 A-P0).
         egtools::core::registerFn(L"TODATETIME",
             [](const ExcelObj& t) -> ExcelObj*
             {
-                try { return toDateTime(t); }
-                catch (...) { return returnValue(CellError::Value); }
+                return egtools::core::mapUnary(t, toDateTimeOne);
             });
     }
 }

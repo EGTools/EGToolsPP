@@ -36,4 +36,5 @@
 - 省略 delimiter 時預設為 Tab。字串（可多個）解讀為分隔符，數字陣列（{1,11,21}）解讀為固定寬度的欄起始位置（以 1 為基準、遞增）。
 - encoding 支援 "euc-kr" 之類的字元集名稱或字碼頁編號；有 BOM 時以 BOM 優先。
 - skip_rows/take_rows 給負數時從末尾起算。
+- 路徑·take_rows指定為陣列時傳回 #VALUE! — 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在沒有原生函數的舊版 Excel 中以 `IMPORTTEXT` 原名註冊（可直接替換），在已內建原生函數的新版 Excel 中則註冊為 `EG.IMPORTTEXT`。

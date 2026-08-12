@@ -32,10 +32,12 @@ Devuelve como matriz la fila (búsqueda vertical) o la columna (búsqueda horizo
 | `=XLOOKUP("b",{"a";"b";"c"},{10;20;30})` | 20 | Búsqueda con coincidencia exacta |
 | `=XLOOKUP(2,{1;2;3},{10,11;20,21;30,31})` | {20,21} | La fila coincidente completa se derrama |
 | `=XLOOKUP(9,{1;2;3},{10;20;30},"none")` | none | Valor alternativo si no hay coincidencia |
+| `=XLOOKUP({2;3},{1;2;3},{"a";"b";"c"})` | {b;c} | Valor buscado en matriz → búsqueda por elementos |
 
 ## Notas
 
 - No se admiten match_mode 2 (caracteres comodín) ni search_mode 2/-2 (búsqueda binaria).
 - Si lookup_array tiene una sola columna se realiza una búsqueda vertical; en caso contrario se busca horizontalmente en la primera fila.
+- Si el valor buscado es una matriz, cada elemento se busca por separado y el resultado se derrama con la misma forma que el valor buscado; si el rango devuelto tiene varias columnas, el resultado de cada elemento se reduce a su primer valor (igual que la función nativa), y un valor buscado con error devuelve ese error.
 - Funciones relacionadas: XMATCH, FILTER.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `XLOOKUP` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.XLOOKUP`.

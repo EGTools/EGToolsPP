@@ -34,5 +34,6 @@ Devuelve una matriz que conserva solo las filas o columnas cuya condición es ve
 
 - Los valores de texto y vacíos de include se tratan como FALSE (la función nativa devuelve #VALUE!).
 - Si no hay resultados y se omite if_empty, devuelve #N/A en lugar de #CALC!.
+- Si include contiene un valor de error, todo el resultado es ese error.
 - Funciones relacionadas: SORT, UNIQUE.
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `FILTER` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.FILTER`. En algunas versiones antiguas se registra como `xFILTER` por un conflicto de palabra reservada.

@@ -33,4 +33,5 @@
 
 - 行号为负数时从末尾数起。
 - 要选择列请使用 CHOOSECOLS。
+- 行号也可指定 {1,3} 或 SEQUENCE(n) 之类的数组。
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `CHOOSEROWS` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.CHOOSEROWS`。

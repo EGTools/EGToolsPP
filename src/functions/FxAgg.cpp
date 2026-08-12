@@ -1,6 +1,11 @@
 // FxAgg.cpp — conditional aggregation / selection (IFS, SWITCH, MAXIFS, MINIFS).
+//
+// IFS의 조건·값, SWITCH의 식·비교값·결과, MAXIFS/MINIFS의 조건값은 원소별
+// 리프팅(브로드캐스트) 대상이다(네이티브 정합, plan/22 U09~U11). 범위 인수
+// (MAXIFS의 최대범위/조건범위)는 집계 데이터라 리프팅하지 않는다.
 
 #include "../core/Registry.h"
+#include "../core/Apply.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -98,8 +103,10 @@ namespace egtools::functions
             return false;
         }
 
-        ExcelObj* maxminIfs(bool isMax, const ExcelObj& vrange,
-                            const ExcelObj* critRange[], const ExcelObj* crit[], int pairs)
+        // Scalar core: aggregate with the given (already non-missing) criteria.
+        ExcelObj maxminIfs(bool isMax, const ExcelObj& vrange,
+                           const ExcelObj* const critRange[],
+                           const ExcelObj* const crit[], int pairs)
         {
             try
             {
@@ -109,9 +116,8 @@ namespace egtools::functions
                 std::vector<const ExcelObj*> cvs;
                 for (int k = 0; k < pairs; ++k)
                 {
-                    if (critRange[k]->isMissing() || crit[k]->isMissing()) continue;
                     ExcelArray ca(*critRange[k]);
-                    if ((size_t)ca.nRows() * ca.nCols() != N) return returnValue(CellError::Value);
+                    if ((size_t)ca.nRows() * ca.nCols() != N) return ExcelObj(CellError::Value);
                     crs.push_back(ca);
                     cvs.push_back(crit[k]);
                 }
@@ -124,6 +130,9 @@ namespace egtools::functions
                     for (size_t c = 0; c < crs.size(); ++c)
                         if (!criteriaMatch(crs[c].at(i), *cvs[c])) { all = false; break; }
                     if (!all) continue;
+                    // 조건을 통과한 행의 값이 오류면 그 오류 전파(네이티브 실측).
+                    if (vr.at(i).type() == ExcelType::Err)
+                        return ExcelObj(vr.at(i));
                     double v;
                     if (asNumber(vr.at(i), v))
                     {
@@ -131,47 +140,68 @@ namespace egtools::functions
                         best = isMax ? (v > best ? v : best) : (v < best ? v : best);
                     }
                 }
-                return returnValue(ExcelObj(found ? best : 0.0));
+                return ExcelObj(found ? best : 0.0);
             }
-            catch (...) { return returnValue(CellError::Value); }
+            catch (...) { return ExcelObj(CellError::Value); }
         }
     }
 
     void registerAgg()
     {
         // IFS(cond1, val1, cond2, val2, …) — variadic up to 254 args (127 pairs).
+        // 조건·값 전 인수가 원소별 리프팅된다: =IFS(A1:A5>3,"큰",TRUE,"작은") →
+        // 5개 배열(네이티브 정합, plan/22 U09).
         egtools::core::registerRawFn(L"IFS",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
-                const size_t n = info.numArgs();
-                for (size_t i = 0; i + 1 < n; i += 2)
-                {
-                    if (args[i]->isMissing()) break;
-                    bool err = false;
-                    if (truthy(*args[i], err)) return returnValue(ExcelObj(*args[i + 1]));
-                    if (err) return returnValue(ExcelObj(*args[i]));
-                }
-                return returnValue(CellError::NA);
+                // 사용되지 않은 인수의 오류는 전파하지 않음(네이티브) → PassThrough
+                // + 내부 규칙: 평가된 조건이 오류면 그 오류를 반환.
+                return egtools::core::mapLiftN(args, info.numArgs(),
+                    [](const ExcelObj* const* e, size_t n) -> ExcelObj
+                    {
+                        for (size_t i = 0; i + 1 < n; i += 2)
+                        {
+                            if (e[i]->isMissing()) break;
+                            bool err = false;
+                            if (truthy(*e[i], err)) return ExcelObj(*e[i + 1]);
+                            if (err) return ExcelObj(*e[i]);
+                        }
+                        return ExcelObj(CellError::NA);
+                    }, egtools::core::LiftErrors::PassThrough);
             });
 
-        // SWITCH(expr, val1, res1, …, [default]) — variadic.
+        // SWITCH(expr, val1, res1, …, [default]) — variadic. 식/비교값/결과가
+        // 원소별 리프팅된다(plan/22 U10).
         egtools::core::registerRawFn(L"SWITCH",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
                 const size_t total = info.numArgs();
                 if (total == 0) return returnValue(CellError::NA);
-                const ExcelObj& expr = *args[0];
-                // Length of the value/result list a[] = args[1..].
-                size_t aN = 0; while (1 + aN < total && !args[1 + aN]->isMissing()) ++aN;
-                size_t j = 0;
-                for (; j + 1 < aN; j += 2)
-                    if (ExcelObj::compare(expr, *args[1 + j]) == 0)
-                        return returnValue(ExcelObj(*args[1 + j + 1]));
-                if (j < aN) return returnValue(ExcelObj(*args[1 + j]));  // trailing default
-                return returnValue(CellError::NA);
+                // 사용되지 않은 인수의 오류는 전파하지 않음(네이티브) → PassThrough
+                // + 내부 규칙: 식/평가된 비교값이 오류면 그 오류를 반환.
+                return egtools::core::mapLiftN(args, total,
+                    [](const ExcelObj* const* e, size_t tot) -> ExcelObj
+                    {
+                        const ExcelObj& expr = *e[0];
+                        if (expr.type() == ExcelType::Err) return ExcelObj(expr);
+                        // Length of the value/result list a[] = e[1..].
+                        size_t aN = 0; while (1 + aN < tot && !e[1 + aN]->isMissing()) ++aN;
+                        size_t j = 0;
+                        for (; j + 1 < aN; j += 2)
+                        {
+                            if (e[1 + j]->type() == ExcelType::Err)
+                                return ExcelObj(*e[1 + j]);
+                            if (ExcelObj::compare(expr, *e[1 + j]) == 0)
+                                return ExcelObj(*e[1 + j + 1]);
+                        }
+                        if (j < aN) return ExcelObj(*e[1 + j]);  // trailing default
+                        return ExcelObj(CellError::NA);
+                    }, egtools::core::LiftErrors::PassThrough);
             });
 
-        // MAXIFS / MINIFS(range, crit_range1, crit1, [crit_range2, crit2, …]) — variadic.
+        // MAXIFS / MINIFS(range, crit_range1, crit1, [crit_range2, crit2, …]) —
+        // variadic. 조건값(crit_i)만 리프팅한다: =MAXIFS(A:A,B:B,{">1",">2"}) →
+        // 1×2 배열(plan/22 U11, 범위 인수는 집계 데이터).
         auto maxminFn = [](bool isMax) {
             return [isMax](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
@@ -184,7 +214,13 @@ namespace egtools::functions
                     crs.push_back(args[i]);
                     cvs.push_back(args[i + 1]);
                 }
-                return maxminIfs(isMax, *args[0], crs.data(), cvs.data(), (int)crs.size());
+                const ExcelObj& vrange = *args[0];
+                // 조건값 오류 = 불일치(네이티브 결과 0) → PassThrough.
+                return egtools::core::mapLiftN(cvs.data(), cvs.size(),
+                    [&](const ExcelObj* const* ce, size_t pairs) -> ExcelObj
+                    {
+                        return maxminIfs(isMax, vrange, crs.data(), ce, (int)pairs);
+                    }, egtools::core::LiftErrors::PassThrough);
             };
         };
         egtools::core::registerRawFn(L"MAXIFS", maxminFn(true));

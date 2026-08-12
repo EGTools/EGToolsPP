@@ -33,5 +33,6 @@ Devuelve el número de semana dentro del mes (número escalar). Si la fecha no s
 
 - Los números de día de la semana van de 1=domingo a 7=sábado; los valores predeterminados son inicio en lunes y jueves como día de referencia.
 - El mes y el número de semana a los que pertenece una semana se calculan según el mes del día de referencia de esa semana.
+- Si la fecha es una matriz, la función se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error).
 - Función relacionada: MONTHBHYWEEK
 - Compatibilidad: Excel 2010+. Se registra siempre como `WEEKNUMOFMONTH` en todas las versiones de Excel.

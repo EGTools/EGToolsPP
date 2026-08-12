@@ -257,6 +257,9 @@ namespace egtools::functions
         core::registerFn(L"BARCODE",
             [encodeFamily](const ExcelObj& textA, const ExcelObj& typeA, const ExcelObj& optA) -> ExcelObj*
             {
+                // 배열이 오면 toString()이 "[R x C]"가 되어 스캔 가능한 오답
+                // 바코드가 생성된다(plan/22 그룹 C) — 그림 함수는 셀당 1장, 거부.
+                if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
                 const std::wstring tname = typeA.isMissing() ? L"QRCODE" : typeA.toString();
@@ -277,6 +280,7 @@ namespace egtools::functions
         core::registerFn(L"QRCODE",
             [encodeFamily](const ExcelObj& textA, const ExcelObj& marginA, const ExcelObj& gs1A) -> ExcelObj*
             {
+                if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
                 bc::TypeInfo ti{ ZXing::BarcodeFormat::QRCode, true, gs1A.get<bool>(false) };
@@ -289,6 +293,7 @@ namespace egtools::functions
         core::registerFn(L"DATAMATRIX",
             [encodeFamily](const ExcelObj& textA, const ExcelObj& marginA, const ExcelObj& gs1A) -> ExcelObj*
             {
+                if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
                 bc::TypeInfo ti{ ZXing::BarcodeFormat::DataMatrix, true, gs1A.get<bool>(false) };
@@ -302,6 +307,7 @@ namespace egtools::functions
             [encodeFamily](const ExcelObj& textA, const ExcelObj& showA,
                            const ExcelObj& gs1A, const ExcelObj& sizeA) -> ExcelObj*
             {
+                if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
                 bc::TypeInfo ti{ ZXing::BarcodeFormat::Code128, false, gs1A.get<bool>(false) };
@@ -316,6 +322,8 @@ namespace egtools::functions
         core::registerFn(L"READBARCODE",
             [](const ExcelObj& srcA, const ExcelObj& typeA) -> ExcelObj*
             {
+                // source는 URL일 수 있어 네트워크 취급 — 배열 거부(plan/22 그룹 C).
+                if (srcA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring source = srcA.toString();
                 if (source.empty()) return returnValue(CellError::Value);
 

@@ -31,5 +31,6 @@ Returns the right-shifted value (floored) as a scalar number. Returns #NUM! if n
 ## Notes
 
 - A negative shift_amount shifts left instead.
+- All arguments accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related function: BITLSHIFT
 - Supported: Excel 2010+. Registered as `BITRSHIFT` (drop-in) on hosts without the native function, and as `EG.BITRSHIFT` on modern Excel that has it.

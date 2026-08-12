@@ -37,5 +37,6 @@ Returns the single text (scalar) after the delimiter. Returns #VALUE! when insta
 
 - match_end=1 treats the end of the text (positive instance) or its start (negative instance) as one virtual delimiter.
 - match_mode=1 ignores case.
+- If text is an array, the function is applied element-wise and spills an array of the same shape (an error element returns that error); an array delimiter returns #VALUE!.
 - Related functions: TEXTBEFORE, TEXTSPLIT
 - Supported: Excel 2010+. Registered as `TEXTAFTER` (drop-in) on hosts without the native function, and as `EG.TEXTAFTER` on modern Excel that has it.

@@ -34,4 +34,5 @@ RSS/ATOM フィードを取り込みます。
 - RSS 2.0 と Atom を自動判別します。query "items"(既定)は Title/Summary/URL/Author/Created の 5 列を返します。
 - created フィールドの RFC822/ISO8601 日付は Excel のシリアル値へ変換します(タイムゾーンオフセットは無視)。
 - COM(MSXML) を使用するためマルチスレッド再計算からは除外され、インターネット接続が必要です。
+- urlに配列を指定すると #VALUE! を返します — 複数件は数式を行ごとにコピーして使用してください。
 - 対応: Excel 2010+。すべての Excel バージョンで `IMPORTFEED` の名前のまま登録されます。

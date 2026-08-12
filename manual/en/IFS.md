@@ -32,5 +32,6 @@ Returns the value paired with the first TRUE condition, as-is (scalar or array).
 ## Notes
 
 - Text or blank conditions are treated as FALSE (native returns #VALUE!).
+- Conditions and values accept arrays and are evaluated element-wise, spilling an array of the same shape; if an evaluated condition is an error, that element becomes the error (errors in unused arguments do not propagate).
 - Related functions: SWITCH.
 - Supported: Excel 2010+. Registered as `IFS` (drop-in) on hosts without the native function, and as `EG.IFS` on modern Excel that has it.

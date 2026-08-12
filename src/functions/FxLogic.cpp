@@ -52,14 +52,25 @@ namespace egtools::functions
 
     void registerLogic()
     {
-        // IFNA(value, value_if_na): replace #N/A with value_if_na (element-wise).
+        // IFNA(value, value_if_na): replace #N/A with value_if_na. Both sides
+        // lift element-wise with broadcast (네이티브 정합, plan/22) — a scalar
+        // value with an array value_if_na, or matching arrays, all work.
         egtools::core::registerFn(L"IFNA",
             [](const ExcelObj& value, const ExcelObj& valueIfNa) -> ExcelObj*
             {
-                return egtools::core::mapUnary(value, [&](const ExcelObj& e)
-                {
-                    return (e == CellError::NA) ? ExcelObj(valueIfNa) : ExcelObj(e);
-                });
+                // 오류 소비 함수 — #N/A를 fn이 직접 다뤄야 하므로 PassThrough.
+                if (valueIfNa.isMissing())
+                    return egtools::core::mapUnary(value, [](const ExcelObj& e)
+                    {
+                        return (e == CellError::NA) ? ExcelObj(CellError::NA) : ExcelObj(e);
+                    }, egtools::core::LiftErrors::PassThrough);
+                return egtools::core::mapLiftEx(
+                    egtools::core::LiftErrors::PassThrough,
+                    [](const ExcelObj& v, const ExcelObj& r)
+                    {
+                        return (v == CellError::NA) ? ExcelObj(r) : ExcelObj(v);
+                    },
+                    value, valueIfNa);
             });
 
         // XOR(logical1, [logical2], …) — 네이티브와 동일한 가변 인수(최대 254).

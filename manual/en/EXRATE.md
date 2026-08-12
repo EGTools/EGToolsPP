@@ -32,4 +32,5 @@ Returns the KRW standard exchange rate as a numeric scalar. Returns #VALUE! for 
 - Fetches the standard rate from smbs.biz (Seoul Money Brokerage) over HTTP — a network connection is required.
 - If no rate is published for the date, it looks back up to 10 days (holidays).
 - CNY is mapped to CNH automatically. Registered non-macro and thread-safe for parallel recalculation.
+- An array in the currency and date returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `EXRATE` on every Excel version.

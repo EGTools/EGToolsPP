@@ -36,5 +36,6 @@ Devuelve el número de aceptación Ac según ISO 2859-1 como número escalar. Si
 ## Notas
 
 - Si la cantidad del lote es 1, devuelve 0.
+- Todos los argumentos aceptan matrices, por lo que una lista de lotes o una tabla de AQL puede calcularse de una vez: elemento a elemento con derrame de la misma forma; los escalares se repiten, un vector columna × un vector fila se expande como producto externo y los elementos con tamaños no coincidentes dan #N/A.
 - Funciones relacionadas: SAMPLINGSIZE, SAMPLINGRE, SAMPLINGLABEL
 - Compatibilidad: Excel 2010+. Se registra siempre como `SAMPLINGAC` en todas las versiones de Excel.

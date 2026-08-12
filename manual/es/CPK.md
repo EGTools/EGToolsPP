@@ -32,5 +32,6 @@ Devuelve el índice de capacidad de proceso Cpk = min((USL-μ)/3σ, (μ-LSL)/3σ
 
 - Utiliza la desviación estándar muestral (n-1).
 - Si solo se indica un límite, se calcula únicamente con ese lado.
+- USL·LSL aceptan matrices y se calculan elemento a elemento, derramando una matriz de la misma forma: los escalares se repiten, un vector columna × un vector fila se expande como producto externo, los elementos con tamaños no coincidentes dan #N/A y un elemento de error devuelve ese error.
 - Función relacionada: CP
 - Compatibilidad: Excel 2010+. Se registra siempre como `CPK` en todas las versiones de Excel.

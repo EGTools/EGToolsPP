@@ -34,5 +34,6 @@
 ## 备注
 
 - 正则语法为 std::wregex 的 ECMAScript（与原生 365 的 PCRE2 可能略有差异）。
+- text·pattern 可指定数组并按元素计算，以相同形状的数组溢出返回（错误元素原样返回该错误）；数组 text 与返回模式 1·2 并用时，各元素结果降级为第一个匹配。
 - 相关函数：REGEXTEST、REGEXREPLACE
 - 支持：Excel 2010+。在没有原生函数的旧版本中按 `REGEXEXTRACT` 原名注册（直接替换），在具有原生函数的新版 Excel 中注册为 `EG.REGEXEXTRACT`。

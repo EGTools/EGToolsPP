@@ -32,5 +32,6 @@ Devuelve el valor numérico convertido del número romano (escalar). Cualquier c
 
 - Los espacios se ignoran y no se distinguen mayúsculas y minúsculas.
 - El texto vacío devuelve 0.
+- Si el texto es una matriz, la función se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error).
 - Funciones relacionadas: BASE, DECIMAL
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `ARABIC` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.ARABIC`.

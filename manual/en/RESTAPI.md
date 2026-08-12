@@ -34,4 +34,5 @@ Returns the response body as a single text scalar (decoded as UTF-8). Returns #V
 - Uses WinHTTP and requires a network connection; the receive timeout is 30 seconds.
 - The response body is returned as-is, regardless of the HTTP status code.
 - Registered non-macro and thread-safe, so it can recalculate in parallel.
+- An array in the URL, method and body returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `RESTAPI` on every Excel version.

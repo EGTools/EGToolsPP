@@ -32,4 +32,5 @@ Devuelve como número escalar la proporción resultante de dividir la suma del s
 
 - Los valores no numéricos se ignoran al calcular las sumas.
 - Si se especifica "PERCENTOF" en el argumento function de GROUPBY/PIVOTBY, se obtiene la proporción de cada grupo.
+- Sin embargo, los valores de error no se ignoran: ese error pasa a ser el resultado (se conserva el error original en lugar del #NUM! nativo).
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `PERCENTOF` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.PERCENTOF`.

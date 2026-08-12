@@ -36,5 +36,6 @@
 
 - 一次抽樣時 Re = Ac + 1。
 - LOT 數量為 1 時傳回 1。
+- 所有引數都可指定陣列，可一次計算 LOT 清單或 AQL 表 — 逐元素計算並以相同形狀的陣列溢出傳回；純量會重複使用，欄向量×列向量按外積擴充，大小不符的元素為 #N/A。
 - 相關函數: SAMPLINGSIZE, SAMPLINGAC, SAMPLINGLABEL
 - 支援: Excel 2010+。在所有 Excel 版本中一律以 `SAMPLINGRE` 原名註冊。

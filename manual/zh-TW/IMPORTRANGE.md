@@ -32,4 +32,5 @@
 - 只能取得已開啟連結共用的 Google Sheets — 未共用的文件會收到登入頁面（HTML）而成為 #N/A。
 - 工作表以 URL 中的 gid 選擇（預設 gid=0）。range_address 的工作表名稱部分會被忽略。
 - 因使用 TSV 匯出端點，只會取得值，不保留格式。
+- url指定為陣列時傳回 #VALUE! — 多筆資料請將公式逐列複製使用。
 - 支援: Excel 2010+。在所有 Excel 版本中一律以 `IMPORTRANGE` 原名註冊。

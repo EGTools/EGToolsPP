@@ -34,5 +34,6 @@ Returns the result paired with the first value equal to the expression (or the t
 ## Notes
 
 - Leaving a middle argument empty truncates the list; later value/result pairs are ignored.
+- The expression, compare values and results accept arrays and are evaluated element-wise, spilling an array of the same shape; an error in the expression or in an evaluated compare value propagates.
 - Related functions: IFS.
 - Supported: Excel 2010+. Registered as `SWITCH` (drop-in) on hosts without the native function, and as `EG.SWITCH` on modern Excel that has it.

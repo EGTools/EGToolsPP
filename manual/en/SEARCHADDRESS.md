@@ -35,4 +35,5 @@ Returns the matching addresses as a spilled text array with the selected info co
 - No API key ships with the add-in. Get one at https://www.juso.go.kr and pass it once as the last argument; it is stored in the registry and can be omitted afterwards.
 - When the service rejects the key (expired/unregistered), the stored key is deleted automatically and a reissue guide is returned.
 - info columns: 1 zip, 2 road address (default), 3 jibun, 4 English — 27 fields in total.
+- An array in the search text or api_key returns #VALUE! (an array api_key is rejected before saving, preventing a bad key from being stored) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `SEARCHADDRESS` on every Excel version.

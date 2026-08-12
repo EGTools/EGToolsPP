@@ -290,6 +290,9 @@ namespace egtools::functions
             {
                 try
                 {
+                    // 그림 함수는 셀당 1장 — 배열 source는 거부(plan/22 그룹 C).
+                    // (기존에는 "[R x C]" 경로 실패로 오류도 그림도 없이 침묵했다.)
+                    if (src.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                     std::wstring source = src.toString();
                     if (source.empty()) return returnValue(CellError::Value);
                     const int mode = modeA.isMissing() ? 0 : modeA.get<int>(0);

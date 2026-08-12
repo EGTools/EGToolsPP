@@ -34,4 +34,5 @@ Devuelve el texto del tipo de tributación (tax_type) de cada número de registr
 - Si el servicio rechaza la clave (HTTP 401/403, etc.), la clave guardada se elimina automáticamente y se devuelve una guía para obtener una nueva.
 - Los números de registro de empresa almacenados como **celdas numéricas** también se consultan tal cual: los números se convierten en cadenas de enteros sin notación exponencial, y los valores de 9 dígitos que perdieron su cero inicial se restauran a 10 dígitos. Los caracteres no numéricos, como guiones y espacios, se ignoran, y las celdas vacías devuelven cadenas vacías.
 - Las solicitudes se agrupan en lotes de 100 por POST, por lo que es adecuada para consultas masivas.
+- La consulta por lotes de una matriz de números de registro (100 por solicitud) se mantiene como antes. Una matriz en api_key devuelve #VALUE! antes de guardar nada (evita almacenar una clave incorrecta).
 - Compatibilidad: Excel 2010+. Se registra siempre como `BRNSTATUS` en todas las versiones de Excel.

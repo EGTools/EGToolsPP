@@ -31,5 +31,5 @@ Returns value_if_na when the value is the #N/A error, otherwise the value itself
 
 ## Notes
 
-- For array input, only #N/A elements are replaced (element-wise, array result spills).
+- Both value and value_if_na accept arrays and are broadcast against each other, replacing only #N/A element-wise (scalars repeat, size-mismatched elements yield #N/A; the array result spills).
 - Supported: Excel 2010+. Registered as `IFNA` (drop-in) on hosts without the native function, and as `EG.IFNA` on modern Excel that has it.

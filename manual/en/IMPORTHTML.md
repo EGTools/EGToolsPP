@@ -34,4 +34,5 @@ Returns a web-page table (2-D array) or list (N-by-1 array) as a spilled array; 
 - The page is parsed with MSHTML after removing <script> blocks, so script-generated dynamic content cannot be imported.
 - Table rowspan/colspan are normalized onto a grid; the value goes into the top-left cell only.
 - Uses COM, so it is excluded from multi-threaded recalculation; requires an internet connection.
+- An array in url returns #VALUE! — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `IMPORTHTML` on every Excel version.

@@ -33,4 +33,5 @@ Returns the array with blank edge rows/columns removed, spilled. Returns #VALUE!
 
 - Native TRIMRANGE trims a reference; this implementation is value-based, so array literals and formula results work too.
 - Empty strings ("") count as blank.
+- Arrays in the trim mode return an array of that argument's shape where each element is the first value of that element's result (native-compatible demotion lifting).
 - Supported: Excel 2010+. Registered as `TRIMRANGE` (drop-in) on hosts without the native function, and as `EG.TRIMRANGE` on modern Excel that has it.

@@ -35,4 +35,5 @@ Devuelve la matriz expandida al tamaño indicado de filas × columnas; en las ve
 
 - Si se omiten las filas o las columnas, se conserva el tamaño original.
 - Si se omite el valor de relleno, se rellena con #N/A.
+- Una matriz en filas·columnas·valor de relleno devuelve una matriz con la forma de ese argumento, donde cada elemento es el primer valor del resultado de ese elemento (reducción al primer valor, igual que la función nativa).
 - Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `EXPAND` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.EXPAND`.

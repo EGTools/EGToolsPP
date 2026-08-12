@@ -33,5 +33,6 @@ Returns a logical TRUE/FALSE (scalar) indicating whether a match exists. Returns
 ## Notes
 
 - The regex flavor is std::wregex ECMAScript (may differ from native 365's PCRE2 in places).
+- text·pattern accept arrays and are computed element-wise, spilling an array of the same shape — scalars are broadcast, a column vector × a row vector expands to their outer product, size-mismatched elements yield #N/A, and an error element returns that error.
 - Related functions: REGEXEXTRACT, REGEXREPLACE
 - Supported: Excel 2010+. Registered as `REGEXTEST` (drop-in) on hosts without the native function, and as `EG.REGEXTEST` on modern Excel that has it.
