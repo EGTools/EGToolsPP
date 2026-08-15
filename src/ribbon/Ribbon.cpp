@@ -241,7 +241,7 @@ namespace egtools::ribbon
         };
         constexpr SplitDef kSbTools = {
             L"egpp.sbTools",
-            { L"egpp.recalcBtn", L"onRecalc", L"recalc", nullptr, nullptr },
+            { L"egpp.clearErrorBtn", L"onClearError", L"clear-error", nullptr, nullptr },
             L"egpp.mnTools", kToolsMenuItems, _countof(kToolsMenuItems),
         };
         constexpr ControlDef kToolsControls[] = { { nullptr, &kSbTools } };

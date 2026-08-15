@@ -74,7 +74,7 @@ Details: [Forms](forms.md)
 
 ## Group: Utilities
 
-Frequently used helpers (split button, default = Recalculate All). Details: [Utilities](utilities.md)
+Frequently used helpers (split button, default = Clear Errors). Details: [Utilities](utilities.md)
 
 | Menu item | Description |
 |---|---|

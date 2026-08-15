@@ -3,7 +3,7 @@
 **Ubicación**: pestaña `EGTools` de la cinta → grupo `Herramientas`
 
 Botón dividido que reúne funciones auxiliares de uso frecuente. Al pulsar el botón
-directamente se ejecuta la acción predeterminada, **Recalcular todo**; al pulsar la
+directamente se ejecuta la acción predeterminada, **Limpiar errores**; al pulsar la
 flecha se despliega un menú con 10 elementos.
 
 ## Eliminar estilos

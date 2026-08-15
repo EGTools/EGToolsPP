@@ -71,7 +71,7 @@ Detalles: [Formularios](forms.md)
 
 ## Grupo: Herramientas
 
-Colección de utilidades de uso frecuente (botón dividido, acción predeterminada = Recalcular todo). Detalles: [Herramientas](utilities.md)
+Colección de utilidades de uso frecuente (botón dividido, acción predeterminada = Limpiar errores). Detalles: [Herramientas](utilities.md)
 
 | Menú | Descripción |
 |---|---|
