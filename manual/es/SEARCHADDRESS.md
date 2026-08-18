@@ -32,7 +32,7 @@ Devuelve las direcciones encontradas como una matriz de texto compuesta por las 
 
 ## Notas
 
-- La clave API no se distribuye con el complemento. Obténgala en el servicio de direcciones de Corea (https://www.juso.go.kr ) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y puede omitirse después.
+- La clave API no se distribuye con el complemento. Obténgala en el [servicio de direcciones de Corea](https://www.juso.go.kr) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y puede omitirse después.
 - Si el servicio rechaza la clave (caducada/no registrada), la clave guardada se elimina automáticamente y se devuelve una guía para obtener una nueva.
 - Columnas de información: 1 código postal, 2 dirección de calle (predeterminado), 3 dirección de parcela (jibun), 4 dirección en inglés, etc. — 27 campos en total.
 - Una matriz en el texto de búsqueda o api_key devuelve #VALUE! (una matriz en api_key se rechaza antes de guardarse, lo que evita almacenar una clave incorrecta); para varios elementos, copie la fórmula fila por fila.
