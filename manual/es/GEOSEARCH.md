@@ -31,7 +31,7 @@ Devuelve una matriz con las coordenadas x,y de los resultados de la búsqueda y 
 
 ## Notas
 
-- La clave API no se distribuye con el complemento. Obténgala en la plataforma abierta de información espacial VWorld (https://www.vworld.kr) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y, si la clave es rechazada, se elimina automáticamente y se devuelve una guía para obtener una nueva.
+- La clave API no se distribuye con el complemento. Obténgala en la plataforma abierta de información espacial VWorld (https://www.vworld.kr ) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y, si la clave es rechazada, se elimina automáticamente y se devuelve una guía para obtener una nueva.
 - La búsqueda de direcciones (tipo_busqueda=1) reintenta automáticamente en el orden dirección de calle → dirección de parcela (jibun).
 - Una matriz en el texto de búsqueda o api_key devuelve #VALUE! (una matriz en api_key se rechaza antes de guardarse, lo que evita almacenar una clave incorrecta); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `GEOSEARCH` en todas las versiones de Excel.

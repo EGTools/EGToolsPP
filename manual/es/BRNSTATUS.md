@@ -29,7 +29,7 @@ Devuelve el texto del tipo de tributación (tax_type) de cada número de registr
 
 ## Notas
 
-- La clave API no se distribuye con el complemento. Obténgala en el Portal de Datos Públicos de Corea, servicio de consulta del estado del registro de empresas de la Agencia Tributaria Nacional (https://www.data.go.kr), e introdúzcala una vez como último argumento, o regístrela en la cinta [EGTools] → [Administrar claves API]; se guarda en la cuenta del usuario y puede omitirse después.
+- La clave API no se distribuye con el complemento. Obténgala en el Portal de Datos Públicos de Corea, servicio de consulta del estado del registro de empresas de la Agencia Tributaria Nacional (https://www.data.go.kr ), e introdúzcala una vez como último argumento, o regístrela en la cinta [EGTools] → [Administrar claves API]; se guarda en la cuenta del usuario y puede omitirse después.
 - La clave de autenticación de data.go.kr es única por cuenta, por lo que se comparte con KOREANHOLIDAYS y con los calendarios y agendas de la cinta. Una clave registrada por separado para el registro de empresas en una versión anterior se traslada automáticamente a la ranura compartida la primera vez que se usa (el usuario no necesita registrarla de nuevo).
 - Si el servicio rechaza la clave (HTTP 401/403, etc.), la clave guardada se elimina automáticamente y se devuelve una guía para obtener una nueva.
 - Los números de registro de empresa almacenados como **celdas numéricas** también se consultan tal cual: los números se convierten en cadenas de enteros sin notación exponencial, y los valores de 9 dígitos que perdieron su cero inicial se restauran a 10 dígitos. Los caracteres no numéricos, como guiones y espacios, se ignoran, y las celdas vacías devuelven cadenas vacías.

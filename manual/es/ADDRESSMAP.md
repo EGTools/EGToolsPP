@@ -30,7 +30,7 @@ Devuelve una cadena vacía ("") si tiene éxito, y la imagen del mapa catastral 
 
 ## Notas
 
-- La clave API no se distribuye con el complemento. Obténgala en la plataforma abierta de información espacial VWorld (https://www.vworld.kr) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y, si la clave es rechazada, se elimina automáticamente y se devuelve una guía para obtener una nueva.
+- La clave API no se distribuye con el complemento. Obténgala en la plataforma abierta de información espacial VWorld (https://www.vworld.kr ) e introdúzcala una vez como último argumento; se guarda en el Registro de Windows y, si la clave es rechazada, se elimina automáticamente y se devuelve una guía para obtener una nueva.
 - Convierte la dirección en coordenadas (calle → parcela) y obtiene un mapa que incluye la capa del catastro continuo.
 - Una matriz en la dirección o api_key devuelve #VALUE! (una matriz en api_key se rechaza antes de guardarse, lo que evita almacenar una clave incorrecta); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `ADDRESSMAP` en todas las versiones de Excel.
