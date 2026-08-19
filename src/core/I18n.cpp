@@ -2,6 +2,7 @@
 #include "resource.h"   // resource ids (resources/ is on the include path)
 
 #include <windows.h>
+#include <xlOil/State.h>
 #include <map>
 #include <mutex>
 #include <string>
@@ -60,9 +61,18 @@ namespace egtools::i18n
 
         LCID officeUILcid()
         {
+            // 실행 중인 Excel의 메이저 버전(2010=14 / 2013=15 / 2016+=16) 키만
+            // 읽는다 — 버전 하드코딩 시 2010/2013에서 표시 언어를 못 읽고, 여러
+            // Office가 공존하면 다른 버전의 설정을 읽는 문제. 값이 없으면(표시
+            // 언어를 "Windows와 일치"로 둔 경우 포함) 0을 돌려 호출부가
+            // GetUserDefaultUILanguage로 폴백한다.
+            const int major = xloil::Environment::excelProcess().version;
+            if (major < 12) return 0;   // 2007 미만은 LanguageResources 레이아웃 상이
+            wchar_t path[96];
+            swprintf_s(path, L"Software\\Microsoft\\Office\\%d.0\\Common\\LanguageResources",
+                       major);
             DWORD val = 0, sz = sizeof(val);
-            if (RegGetValueW(HKEY_CURRENT_USER,
-                    L"Software\\Microsoft\\Office\\16.0\\Common\\LanguageResources",
+            if (RegGetValueW(HKEY_CURRENT_USER, path,
                     L"UILanguage", RRF_RT_REG_DWORD, nullptr, &val, &sz) == ERROR_SUCCESS)
                 return (LCID)val;
             return 0;
