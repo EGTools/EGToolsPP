@@ -38,6 +38,13 @@ Excel 2010~2021 어디서든 동일하게 사용할 수 있습니다. 설치 파
 [한국어](manual/kr/README.md) · [English](manual/en/README.md) · [日本語](manual/ja/README.md) ·
 [Español](manual/es/README.md) · [简体中文](manual/zh-CN/README.md) · [繁體中文](manual/zh-TW/README.md)
 
+## 커뮤니티
+
+- **한국어 커뮤니티 — 네이버 카페**: <https://cafe.naver.com/egtools>
+  사용법 질문, 활용 팁 공유, 버그 제보 등 한국어 소통 공간입니다.
+- **GitHub [Discussions](https://github.com/EGTools/EGToolsPP/discussions)**: 질문·아이디어·피드백 (영어/기타 언어 포함)
+- 버그 신고는 [Issues](https://github.com/EGTools/EGToolsPP/issues)를 이용해 주세요.
+
 ## 설치
 
 관리자 권한이 필요 없습니다. Excel 내장 대화상자로 등록합니다:
