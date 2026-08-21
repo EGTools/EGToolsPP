@@ -1,11 +1,9 @@
 // AddinMain.cpp — EGTools++ XLL entry / registration orchestration.
 //
-// Phase 0 / Step B (S1): minimal static-linked xlOil add-in exposing EG.HELLO,
-// to prove the self-contained static .xll path (build + load in Excel).
-//
 // xlOil registers the XLL entry points (xlAutoOpen/Close, xlAddInManagerInfo)
-// via XLO_DECLARE_ADDIN. Functions are registered statically via XLO_FUNC_*.
-// See plan/04_아키텍처설계.md §3.
+// via XLO_DECLARE_ADDIN. Worksheet functions are registered dynamically in
+// registerFunctions(); diagnostic UDFs are registered statically via
+// XLO_FUNC_* (src/functions/Spike.cpp). See plan/04_아키텍처설계.md §3.
 
 #include <xlOil/xlOil.h>
 #include <xlOil/XllEntryPoint.h>
@@ -57,14 +55,3 @@ struct EGToolsAddin
     }
 };
 XLO_DECLARE_ADDIN(EGToolsAddin);
-
-// EG.HELLO() — connectivity smoke test for Phase 0.
-XLO_FUNC_START( EG_HELLO() )
-{
-    return returnValue(L"EGTools++ OK");
-}
-XLO_FUNC_END(EG_HELLO)
-    .threadsafe()
-    .name(L"EG.HELLO")
-    .category(L"EGTools")
-    .help(L"Returns a greeting — EGTools++ connectivity test.");
