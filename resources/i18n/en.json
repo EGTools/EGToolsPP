@@ -14,6 +14,7 @@
   "ribbon.about.license": "License",
   "ribbon.about.base": "Based on",
   "ribbon.about.newver": "New version %s available — get it from the distribution page",
+  "ribbon.update.title": "New version available",
   "ribbon.egpp.grpMerge.label": "Merge/Unmerge Cells",
   "ribbon.egpp.grpPicture.label": "Image/Picture",
   "ribbon.egpp.grpTools.label": "Utilities",

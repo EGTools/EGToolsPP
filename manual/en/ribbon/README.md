@@ -102,6 +102,10 @@ management and add-in information (default = About EGTools++).
 | [Manage API Keys](api-keys.md) | Register/remove public-API keys (juso · data.go.kr · vworld — the data.go.kr key is shared by holidays, calendars and business-registration lookups) |
 | About EGTools++ | Shows version, distribution page and base libraries; notifies with a link when a newer GitHub Release is available |
 
+The new-version check also runs automatically once when the ribbon loads after
+Excel starts; if a newer release exists, a notification dialog with a link to
+the distribution page is shown (once per session).
+
 ## Cell Right-Click Menu
 
 Besides the ribbon, items are also added to the cell context menu.

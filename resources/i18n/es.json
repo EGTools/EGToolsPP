@@ -14,6 +14,7 @@
   "ribbon.about.license": "Licencia",
   "ribbon.about.base": "Basado en",
   "ribbon.about.newver": "Nueva versión %s disponible — descargar de la página de distribución",
+  "ribbon.update.title": "Nueva versión disponible",
   "ribbon.egpp.grpMerge.label": "Combinar/Separar celdas",
   "ribbon.egpp.grpPicture.label": "Imagen",
   "ribbon.egpp.grpTools.label": "Herramientas",

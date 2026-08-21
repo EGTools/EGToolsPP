@@ -98,6 +98,11 @@ Botón dividido que reúne la conversión en bloque de nombres de función en la
 | [Administrar claves API](api-keys.md) | Registra/elimina claves de API públicas (búsqueda de direcciones · data.go.kr · vworld — la clave de data.go.kr se comparte entre festivos, calendarios y registro de empresas) |
 | Acerca de EGTools++ | Muestra la versión, la página de distribución y las bibliotecas base; si hay una nueva versión en GitHub Release, avisa y ofrece el enlace a la página de distribución |
 
+La comprobación de nueva versión también se ejecuta automáticamente una vez al
+cargarse la cinta tras iniciar Excel; si existe una versión más reciente, se
+muestra un diálogo de aviso con el enlace a la página de distribución (una vez
+por sesión).
+
 ## Menú contextual de celda
 
 Además de la cinta, también se añaden elementos al menú contextual de las celdas. Detalles: [Menú contextual de celda](context-menu.md)

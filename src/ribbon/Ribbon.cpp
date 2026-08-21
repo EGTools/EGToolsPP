@@ -804,6 +804,88 @@ namespace egtools::ribbon
             MessageBoxW(owner, text.c_str(), aboutTitle.c_str(), MB_OK | MB_ICONINFORMATION);
         }
 
+        // ── 시작 시 새 버전 알림 ────────────────────────────────────────────
+        // 리본 연결 성공 후 1회: 워커 스레드에서 GitHub 릴리즈를 확인하고, 새
+        // 버전이 있으면 메인 스레드 큐로 넘겨 알림 대화상자를 띄운다. About의
+        // TaskDialog 구성(하이퍼링크 → 기본 브라우저)을 그대로 재사용한다.
+        std::atomic<bool> g_updateChecked{ false };   // 프로세스당 1회
+
+        void showUpdateNotice(const std::wstring& tag)
+        {
+            using egtools::i18n::t;
+            const std::wstring dlgTitle = t(L"ribbon.update.title");
+            wchar_t line[256];
+            swprintf_s(line, t(L"ribbon.about.newver").c_str(), tag.c_str());
+            const HWND owner = (HWND)xloil::Environment::excelProcess().hWnd;
+
+            using TDI = HRESULT(WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*);
+            HMODULE hCom = GetModuleHandleW(L"comctl32.dll");
+            if (!hCom) hCom = LoadLibraryW(L"comctl32.dll");
+            const TDI taskDialog = hCom ? (TDI)GetProcAddress(hCom, "TaskDialogIndirect")
+                                        : nullptr;
+            if (taskDialog)
+            {
+                std::wstring content = L"<a href=\"";
+                content += kReleasesUrl;
+                content += L"\">github.com/EGTools/EGToolsPP/releases/latest</a>";
+
+                TASKDIALOGCONFIG cfg{};
+                cfg.cbSize = sizeof(cfg);
+                cfg.hwndParent = owner;
+                cfg.dwFlags = TDF_ENABLE_HYPERLINKS | TDF_ALLOW_DIALOG_CANCELLATION |
+                              TDF_SIZE_TO_CONTENT;
+                cfg.dwCommonButtons = TDCBF_OK_BUTTON;
+                cfg.pszWindowTitle = dlgTitle.c_str();
+                cfg.pszMainIcon = TD_INFORMATION_ICON;
+                cfg.pszMainInstruction = line;
+                cfg.pszContent = content.c_str();
+                cfg.pfCallback = aboutDlgProc;
+                taskDialog(&cfg, nullptr, nullptr, nullptr);
+                return;
+            }
+
+            // 폴백: 링크 없는 일반 메시지 상자.
+            std::wstring text = line;
+            text += L"\n\n";
+            text += kReleasesUrl;
+            MessageBoxW(owner, text.c_str(), dlgTitle.c_str(), MB_OK | MB_ICONINFORMATION);
+        }
+
+        // 워커 스레드 본체. 인수는 이 .xll의 모듈 핸들(참조 +1 상태로 전달) —
+        // 스레드 실행 중 모듈 언로드를 막고, 종료 시 참조를 돌려주며 나간다.
+        DWORD WINAPI updateCheckProc(void* module)
+        {
+            Sleep(1500);   // Excel 기동 UI가 안정된 뒤 조회
+            std::wstring tag;
+            if (newVersionAvailable(tag) && !g_shutdown)
+            {
+                // UI(i18n 조회·TaskDialog)는 Excel 메인 스레드에서.
+                xloil::detail::runExcelThreadImpl(
+                    [tag]() -> bool
+                    {
+                        if (!g_shutdown && g_addin)
+                            showUpdateNotice(tag);
+                        return true;
+                    },
+                    ExcelRunQueue::WINDOW | ExcelRunQueue::ENQUEUE,
+                    /*waitBeforeCall*/ 0, /*waitBetweenRetries*/ 1000);
+            }
+            FreeLibraryAndExitThread((HMODULE)module, 0);
+        }
+
+        void startUpdateCheck()
+        {
+            if (g_updateChecked.exchange(true))
+                return;                       // 이미 이 세션에서 확인함
+            HMODULE self = nullptr;
+            if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                                    (LPCWSTR)&startUpdateCheck, &self))
+                return;
+            const HANDLE h = CreateThread(nullptr, 0, updateCheckProc, self, 0, nullptr);
+            if (h) CloseHandle(h);
+            else   FreeLibrary(self);         // 스레드 생성 실패 → 참조 반납
+        }
+
         // Maps customUI callback names to C++ callbacks. Office invokes them as
         // name(control[, args…]); command callbacks ignore the args, resource
         // callbacks (GetLabel 등) write their answer into pvarResult.
@@ -926,6 +1008,7 @@ namespace egtools::ribbon
                         const std::wstring xml = ribbonXml();
                         addin->connect(xml.c_str(), callbackFor);
                         g_addin = std::move(addin);
+                        startUpdateCheck();
                         return true;
                     }
                 }

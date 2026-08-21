@@ -14,6 +14,7 @@
   "ribbon.about.license": "授權",
   "ribbon.about.base": "基於",
   "ribbon.about.newver": "新版本 %s 已發佈 — 前往發佈頁取得",
+  "ribbon.update.title": "新版本通知",
   "ribbon.egpp.grpMerge.label": "合併/取消合併儲存格",
   "ribbon.egpp.grpPicture.label": "圖片",
   "ribbon.egpp.grpTools.label": "工具",

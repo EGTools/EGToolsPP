@@ -14,6 +14,7 @@
   "ribbon.about.license": "ライセンス",
   "ribbon.about.base": "ベース",
   "ribbon.about.newver": "新バージョン %s 公開 — 配布元から入手",
+  "ribbon.update.title": "新バージョンのお知らせ",
   "ribbon.egpp.grpMerge.label": "セル結合/分割",
   "ribbon.egpp.grpPicture.label": "画像/写真",
   "ribbon.egpp.grpTools.label": "ツール",

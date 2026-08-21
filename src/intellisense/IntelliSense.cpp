@@ -20,6 +20,7 @@
 #include <commctrl.h>   // LVM_* — read the autocomplete popup's ListView in-process
 #include <string>
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 
 #include <xloil/ExcelThread.h>   // runExcelThread: marshal Excel C API to main thread
@@ -48,6 +49,7 @@ namespace egtools::intellisense
 
         HANDLE        g_thread = nullptr;
         DWORD         g_threadId = 0;
+        std::atomic<bool> g_shutdown{ false };  // cancels a still-pending deferred install
         HWINEVENTHOOK g_hook = nullptr;
         HWINEVENTHOOK g_hookPopup = nullptr;   // CREATE..SELECTION (popup list)
         bool          g_excelFg = true;        // Excel(우리 프로세스)이 포그라운드인가
@@ -434,11 +436,25 @@ namespace egtools::intellisense
     {
         if (g_thread) return;
         if (!g_logInit) { InitializeCriticalSection(&g_logLock); g_logInit = true; }
-        g_thread = CreateThread(nullptr, 0, threadProc, nullptr, 0, &g_threadId);
+        g_shutdown = false;
+        // [F8] hardening — do NOT set the process-wide WinEvent hooks in xlAutoOpen.
+        // install() runs during Excel's boot add-in-loading loop; a hook thread live
+        // there fires winEventProc → runExcelThread (main-thread marshal) while a
+        // co-loaded ribbon XLL runs its own fragile boot xlfRegister, and THIS add-in
+        // is the potential aggressor in that race (plan/06 [F8]). IntelliSense has no
+        // job before a workbook window exists, so defer the hook thread to the WINDOW
+        // queue: it only runs once a workbook is up, i.e. after the boot loop. The
+        // guards make a load→unload before the queue fires a clean no-op.
+        xloil::runExcelThread([]()
+        {
+            if (g_shutdown || g_thread) return;   // uninstalled first, or already up
+            g_thread = CreateThread(nullptr, 0, threadProc, nullptr, 0, &g_threadId);
+        }, xloil::ExcelRunQueue::WINDOW | xloil::ExcelRunQueue::ENQUEUE);
     }
 
     void uninstall()
     {
+        g_shutdown = true;   // cancel a deferred install that has not fired yet
         if (!g_thread) return;
         PostThreadMessageW(g_threadId, WM_QUIT, 0, 0);
         WaitForSingleObject(g_thread, 2000);

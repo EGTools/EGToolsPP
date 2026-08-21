@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 1.0
+  VERSION 1.1
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX)
 
