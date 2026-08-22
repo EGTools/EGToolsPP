@@ -73,15 +73,18 @@ namespace egtools::core
                 { L"WRAPROWS",  { 2024, true } }, { L"WRAPCOLS",   { 2024, true } },
                 // 2024 scalar-text (no dynamic-array output) — decided by year.
                 { L"ARRAYTOTEXT", { 2024, false } }, { L"VALUETOTEXT", { 2024, false } },
-                // REGEX (365, 2024) — REGEXEXTRACT can spill (DA), others scalar.
-                { L"REGEXTEST",   { 2024, false } }, { L"REGEXREPLACE", { 2024, false } },
-                { L"REGEXEXTRACT",{ 2024, true } },
-                // GROUPBY/PIVOTBY (365) — text-aggregator variant, spills.
-                { L"GROUPBY",     { 2024, true } }, { L"PIVOTBY",      { 2024, true } },
-                // IMPORTTEXT/IMPORTCSV (365, 2026 롤아웃 — Beta부터) — post-DA로 취급:
-                // DA 호스트(2024+)에선 EG. 접두(향후 네이티브와 공존), 구버전은 드롭인.
+                // ---- Microsoft 365 ONLY (NOT in perpetual Excel 2024/LTSC) ----
+                // year = 365: rank(365) sorts above every dated edition, so only a
+                // ClickToRun 365 host passes; Excel 2024 gets the bare drop-in name.
+                // REGEX — REGEXEXTRACT can spill (DA), others scalar.
+                { L"REGEXTEST",   { 365, false } }, { L"REGEXREPLACE", { 365, false } },
+                { L"REGEXEXTRACT",{ 365, true } },
+                // GROUPBY/PIVOTBY — text-aggregator variant, spills.
+                { L"GROUPBY",     { 365, true } }, { L"PIVOTBY",      { 365, true } },
+                // IMPORTTEXT/IMPORTCSV (365, 2026 롤아웃 — Beta부터):
+                // 365 호스트에선 EG. 접두(향후 네이티브와 공존), 2024 영구판 이하는 드롭인.
                 // staged=true: 프리뷰 채널 한정 — 대부분의 365에 아직 네이티브 없음.
-                { L"IMPORTTEXT",  { 2024, true, true } }, { L"IMPORTCSV", { 2024, true, true } },
+                { L"IMPORTTEXT",  { 365, true, true } }, { L"IMPORTCSV", { 365, true, true } },
                 // Pre-dynamic-array — decided by edition year.
                 { L"IFS",       { 2019, false } }, { L"SWITCH",    { 2019, false } },
                 { L"MAXIFS",    { 2019, false } }, { L"MINIFS",    { 2019, false } },
@@ -102,14 +105,14 @@ namespace egtools::core
                 { L"BITAND",    { 2013, false } }, { L"BITOR",     { 2013, false } },
                 { L"BITXOR",    { 2013, false } }, { L"BITLSHIFT", { 2013, false } },
                 { L"BITRSHIFT", { 2013, false } },
-                // PERCENTOF (365/2024) — scalar.
-                { L"PERCENTOF", { 2024, false } },
+                // PERCENTOF (365 only) — scalar.
+                { L"PERCENTOF", { 365, false } },
                 // LET (2021) — year gate: 2016 → bare drop-in, 365/2021 → EG.LET.
                 { L"LET", { 2021, false } },
                 // IMAGE (365/2024) — 2016 → bare IMAGE, 365 → EG.IMAGE.
                 { L"IMAGE", { 2024, false } },
-                // TRIMRANGE (365/2024) — value-based edge trim (native is ref-based).
-                { L"TRIMRANGE", { 2024, true } },
+                // TRIMRANGE (365 only) — value-based edge trim (native is ref-based).
+                { L"TRIMRANGE", { 365, true } },
             };
             return t;
         }
