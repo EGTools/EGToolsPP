@@ -9,11 +9,13 @@
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
 #include "../core/Apply.h"
+#include "RegexMatchMode.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ArrayBuilder.h>
 #include <xlOil/ExcelArray.h>
 
+#include <stdexcept>
 #include <vector>
 
 using namespace xloil;
@@ -24,7 +26,7 @@ namespace egtools::functions
     {
         // XLOOKUP(lookup_value, lookup_array, return_array,
         //         [if_not_found], [match_mode], [search_mode])
-        // match_mode 0/-1/1; search_mode 1/-1.
+        // match_mode 0/-1/1/3(정규식); search_mode 1/-1.
         ExcelObj* xlookup(
             const ExcelObj& lookup, const ExcelObj& lookupArr, const ExcelObj& returnArr,
             const ExcelObj& ifNotFound, const ExcelObj& matchMode, const ExcelObj& searchMode)
@@ -44,6 +46,8 @@ namespace egtools::functions
 
                 const int mm = matchMode.isMissing()  ? 0 : matchMode.get<int>(0);
                 const int sm = searchMode.isMissing() ? 1 : searchMode.get<int>(1);
+                if (mm == 3 && (sm == 2 || sm == -2))   // 정규식과 이진 검색은 배타(네이티브)
+                    return returnValue(CellError::Value);
 
                 auto elem = [&](size_t i) -> const ExcelObj& {
                     return vertical ? la.at((ExcelArray::row_t)i, 0)
@@ -52,6 +56,24 @@ namespace egtools::functions
 
                 // Index of `key` in the lookup vector, or -1 (honours mm/sm).
                 auto find = [&](const ExcelObj& key) -> long long {
+                    if (mm == 3)
+                    {
+                        // match_mode 3: key는 정규식 패턴 — 텍스트가 아니면 #VALUE!.
+                        if (key.type() != ExcelType::Str)
+                            throw std::invalid_argument("regex pattern must be text");
+                        const auto re = regexForLookup(key.toString());
+                        if (sm == -1)
+                        {
+                            for (long long i = (long long)N - 1; i >= 0; --i)
+                                if (regexCellMatch(elem((size_t)i), re)) return i;
+                        }
+                        else
+                        {
+                            for (size_t i = 0; i < N; ++i)
+                                if (regexCellMatch(elem(i), re)) return (long long)i;
+                        }
+                        return -1;
+                    }
                     long long found = -1;
                     long long approx = -1;   // best approximate index for mm = -1/1
                     auto consider = [&](size_t i) -> bool {
@@ -140,7 +162,13 @@ namespace egtools::functions
                             vals.emplace_back(lv.at(i, j));   // 오류 키 전파
                             continue;
                         }
-                        const long long idx = find(lv.at(i, j));
+                        long long idx;
+                        try { idx = find(lv.at(i, j)); }
+                        catch (...)   // mm=3: 원소가 텍스트 아님/패턴 오류 → 원소별 #VALUE!
+                        {
+                            vals.emplace_back(CellError::Value);
+                            continue;
+                        }
                         if (idx < 0)
                             vals.emplace_back(egtools::core::demote(notFoundCell()));
                         else if (vertical

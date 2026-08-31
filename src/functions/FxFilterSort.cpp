@@ -4,6 +4,7 @@
 #include "../core/Registry.h"
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
+#include "RegexMatchMode.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -25,6 +26,7 @@ namespace egtools::functions
         }
 
         // --- XMATCH(lookup, lookup_array, [match_mode], [search_mode]) -------
+        // match_mode 0/-1/1/3(정규식); search_mode 1/-1.
         ExcelObj* xmatch(const ExcelObj& lookup, const ExcelObj& arr,
                          const ExcelObj& matchMode, const ExcelObj& searchMode)
         {
@@ -41,6 +43,27 @@ namespace egtools::functions
                     return vertical ? la.at((ExcelArray::row_t)i, 0)
                                     : la.at(0, (ExcelArray::col_t)i);
                 };
+                if (mm == 3)
+                {
+                    // match_mode 3: lookup은 정규식 패턴 — 텍스트가 아니거나
+                    // 이진 검색(sm=±2)과 조합이면 #VALUE!(네이티브 정합).
+                    if (sm == 2 || sm == -2 || lookup.type() != ExcelType::Str)
+                        return returnValue(CellError::Value);
+                    const auto re = regexForLookup(lookup.toString());
+                    if (sm == -1)
+                    {
+                        for (long long i = (long long)N - 1; i >= 0; --i)
+                            if (regexCellMatch(elem((size_t)i), re))
+                                return returnValue(ExcelObj((double)(i + 1)));
+                    }
+                    else
+                    {
+                        for (size_t i = 0; i < N; ++i)
+                            if (regexCellMatch(elem(i), re))
+                                return returnValue(ExcelObj((double)(i + 1)));
+                    }
+                    return returnValue(CellError::NA);
+                }
                 long long found = -1, approx = -1;
                 auto consider = [&](size_t i) -> bool {
                     int c = ExcelObj::compare(elem(i), lookup);

@@ -26,6 +26,7 @@
 #include "../core/LateCom.h"
 #include "../core/Aggregate.h"
 #include "ImageInsert.h"
+#include "RegexMatchMode.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/Caller.h>
@@ -407,7 +408,7 @@ namespace egtools::functions
                     {
                         try
                         {
-                            std::wregex re(findA.toString());
+                            const auto re = regexForLookup(findA.toString());
                             hit = std::regex_search(v.toString(), re);
                         }
                         catch (...) { return returnValue(CellError::Value); }
