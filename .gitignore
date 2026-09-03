@@ -1,6 +1,7 @@
 # Build output
 /build/
 /out/
+/_site/
 /dist/*.xll
 /dist/*.pdb
 

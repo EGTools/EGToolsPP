@@ -1,0 +1,41 @@
+# manual/ 변경이 main에 푸시되면 다국어 매뉴얼 사이트를 GitHub Pages로 배포한다.
+# 빌드 로직은 tools/build_docs.py 단일 출처 (로컬 검증도 같은 스크립트).
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "manual/**"
+      - "tools/build_docs.py"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # MkDocs 2.0 대격변(플러그인/테마 비호환) 회피 — 로컬 검증 버전과 동일 계열로 핀
+      - run: pip install "mkdocs-material==9.7.*"
+      - run: python tools/build_docs.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
