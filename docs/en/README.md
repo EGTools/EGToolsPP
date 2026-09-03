@@ -1,5 +1,9 @@
 # EGTools++ Function Manual (English)
 
+**EGTools++** is a single-file `.xll` add-in that brings modern Microsoft 365 functions to legacy Excel (2010 and later; Windows only, no installer or admin rights). It provides XLOOKUP, FILTER, TEXTSPLIT, GROUPBY, REGEX functions and more, identically on every version — registered under the original name as a drop-in where the host lacks the native function, or with an `EG.` prefix where it exists. A ribbon of practical utilities (visible-cells copy, mail merge, calendar builder) is included.
+
+Download: [GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · Source & support: [GitHub repository](https://github.com/EGTools/EGToolsPP)
+
 Per-function reference. Clicking a function name in the IntelliSense tooltip opens the matching page.
 
 ## MS Excel compatibility functions (69)

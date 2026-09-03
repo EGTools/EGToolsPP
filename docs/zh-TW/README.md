@@ -1,5 +1,9 @@
 # EGTools++ 函數手冊（繁體中文）
 
+**EGTools++** 是單一檔案的 `.xll` 增益集,讓舊版 Excel(2010 及以上)也能使用 Microsoft 365 的新版函數(僅限 Windows,無需安裝程式或系統管理員權限)。它在任何版本上都以相同方式提供 XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正規表示式等函數:主機沒有原生函數時按原名註冊(直接替換),已有原生函數時以 `EG.` 前綴註冊。另附實用功能區(可見儲存格複製、合併列印、行事曆產生等)。
+
+下載:[GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · 原始碼與回報:[GitHub 儲存庫](https://github.com/EGTools/EGToolsPP)
+
 各函數的詳細說明。在 IntelliSense 工具提示中按一下函數名稱，即可開啟對應頁面。
 
 ## MS Excel 相容函數 (69)

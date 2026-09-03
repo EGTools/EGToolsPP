@@ -1,5 +1,9 @@
 # EGTools++ 函数手册（简体中文）
 
+**EGTools++** 是一个单文件 `.xll` 加载项,让旧版 Excel(2010 及以上)也能使用 Microsoft 365 的新版函数(仅限 Windows,无需安装程序或管理员权限)。它在任何版本上都以相同方式提供 XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正则表达式等函数:主机没有原生函数时按原名注册(直接替换),已有原生函数时以 `EG.` 前缀注册。还附带实用功能区(可见单元格复制、邮件合并、日历生成等)。
+
+下载:[GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · 源码与反馈:[GitHub 仓库](https://github.com/EGTools/EGToolsPP)
+
 各函数的详细说明。在 IntelliSense 工具提示中单击函数名即可跳转到对应页面。
 
 ## MS Excel 兼容函数 (69)

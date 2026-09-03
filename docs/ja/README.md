@@ -1,5 +1,9 @@
 # EGTools++ 関数マニュアル (日本語)
 
+**EGTools++** は、旧バージョンの Excel(2010 以降)で Microsoft 365 の最新関数を使えるようにする単一ファイルの `.xll` アドインです(Windows 専用、インストーラー・管理者権限不要)。XLOOKUP・FILTER・TEXTSPLIT・GROUPBY・正規表現関数などをどのバージョンでも同じように提供し、ホストにネイティブ関数がなければ元の名前のまま(ドロップイン)、あれば `EG.` 接頭辞付きで登録されます。可視セルのコピー、差し込みメール、カレンダー作成などの実務ユーティリティ リボンも含まれます。
+
+ダウンロード: [GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · ソース・お問い合わせ: [GitHub リポジトリ](https://github.com/EGTools/EGToolsPP)
+
 関数ごとの詳細説明です。IntelliSense ツールチップで関数名をクリックすると該当ページに移動します。
 
 ## MS Excel 互換関数 (69)

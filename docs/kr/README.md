@@ -1,5 +1,9 @@
 # EGTools++ 함수 매뉴얼 (한국어)
 
+**EGTools++**는 구형 Excel(2010 이상)에서 Microsoft 365의 최신 함수를 쓰게 해 주는 단일 `.xll` 추가기능입니다(Windows 전용, 설치 프로그램·관리자 권한 불필요). XLOOKUP·FILTER·TEXTSPLIT·GROUPBY·정규식 함수 등을 어느 버전에서든 동일하게 제공하며, 호스트에 네이티브 함수가 있으면 `EG.` 접두사로, 없으면 원래 이름 그대로 등록되어 드롭인(drop-in)으로 동작합니다. 보이는 셀 복사, 메일머지, 달력 생성 같은 실무 유틸리티 리본도 포함합니다.
+
+다운로드: [GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · 소스·문의: [GitHub 저장소](https://github.com/EGTools/EGToolsPP)
+
 함수별 상세 설명입니다. IntelliSense 툴팁에서 함수명을 클릭하면 해당 페이지로 이동합니다.
 
 ## MS Excel 호환 함수 (69)
