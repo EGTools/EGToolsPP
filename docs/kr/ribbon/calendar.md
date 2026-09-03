@@ -65,7 +65,7 @@
 ## 공휴일 안내
 
 - 공휴일의 바탕은 **내장 계산**입니다 — 양·음력 공휴일과 노동절,
-  **대체공휴일 규칙**(시행 연도별) 포함. [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)
+  **대체공휴일 규칙**(시행 연도별) 포함. [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)
   함수와 같은 계산을 공유합니다.
 - 여기에 **기본적으로 공휴일 API를 병합합니다**. 저장된 data.go.kr 키
   ([EGTools → API 키 관리](api-keys.md))로 특일정보를 조회해
@@ -82,5 +82,5 @@
   다시 실행하면 임시공휴일이 반영됩니다.
 - 조회 결과는 연도별로 캐시되므로 같은 연도의 달력을 여러 번 만들어도
   조회는 한 번만 일어납니다(실패는 캐시하지 않아 키를 고치면 즉시 반영).
-- 음력 표기는 내장 음력표로 계산하며([TOLUNAR](../functions/korea/TOLUNAR.md) 함수와 동일),
+- 음력 표기는 내장 음력표로 계산하며([TOLUNAR](../functions/eg-korea/TOLUNAR.md) 함수와 동일),
   지원 범위를 벗어나는 날짜에는 표시되지 않습니다.

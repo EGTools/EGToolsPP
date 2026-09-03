@@ -8,9 +8,9 @@
 
 | 服务 | 用途 | 相关功能 |
 |---|---|---|
-| juso | 道路名地址搜索 | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | 节假日·营业登记状态 | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [日历/日程表](calendar.md#节假日说明) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | 地图/坐标 | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | 道路名地址搜索 | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | 节假日·营业登记状态 | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [日历/日程表](calendar.md#节假日说明) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | 地图/坐标 | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - 选择服务后，密钥是否已注册**仅以掩码（●●●●●●）** 显示。
   已保存密钥的原文不会再次显示。
@@ -26,9 +26,9 @@
 申请使用的所有服务共用该密钥。因此 EGTools++ 也不按服务细分，
 统一以 `data.go.kr` 一栏管理。
 
-- 这一个密钥由 [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)（特日信息）、
+- 这一个密钥由 [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)（特日信息）、
   [日历/日程表](calendar.md#节假日说明)的临时节假日合并、
-  [BRNSTATUS](../functions/korea/BRNSTATUS.md)（国税厅营业登记状态）**共同使用**。
+  [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md)（国税厅营业登记状态）**共同使用**。
 - 旧版本中**为营业登记单独注册的密钥**会在首次使用时
   **自动迁移**到统一栏位 — 用户无需重新注册或整理。
 - 门户显示的编码（Encoding）/解码（Decoding）密钥粘贴哪个都可以。

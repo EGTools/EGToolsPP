@@ -43,18 +43,29 @@ assert not _clash, f"top-level folder clashes with function name(s): {_clash}"
 
 
 def nav_yaml(lang_dir: str) -> str:
-    """categories.json 순서대로 현지화된 nav 섹션을 만든다 (마지막은 리본)."""
+    """2단 nav: 대분류(Excel 호환/Google/EGTools 전용) → 소그룹(버전/기능) → 페이지.
+    대분류 제목은 <lang>-strings.json(secExcel/secGoogle/secEg), 소그룹은 categories.json labels."""
+    strings = json.loads(
+        (DOCS / "_content" / f"{lang_dir}-strings.json").read_text(encoding="utf-8")
+    )
+    sec_title = {"excel": strings["secExcel"], "google": strings["secGoogle"], "eg": strings["secEg"]}
     labels = CATS["labels"][lang_dir]
     by_cat = {}
     for fn, cat in CATS["functions"].items():
         by_cat.setdefault(cat, []).append(fn)
     lines = ["nav:", "  - README.md"]
-    for slug in CATS["order"]:
-        fns = sorted(by_cat.get(slug, []))
-        if not fns:
-            continue
-        lines.append(f'  - "{labels[slug]}":')
-        lines.extend(f'    - "functions/{slug}/{fn}.md"' for fn in fns)
+    for sec in CATS["sections"]:
+        lines.append(f'  - "{sec_title[sec["key"]]}":')
+        single = len(sec["slugs"]) == 1
+        for slug in sec["slugs"]:
+            fns = sorted(by_cat.get(slug, []))
+            if not fns:
+                continue
+            if single:  # 단일 소그룹(Google)은 페이지를 대분류 바로 아래에
+                lines.extend(f'    - "functions/{slug}/{fn}.md"' for fn in fns)
+            else:
+                lines.append(f'    - "{labels[slug]}":')
+                lines.extend(f'      - "functions/{slug}/{fn}.md"' for fn in fns)
     ribbon_pages = sorted(
         p.name for p in (DOCS / lang_dir / "ribbon").glob("*.md") if p.name != "README.md"
     )

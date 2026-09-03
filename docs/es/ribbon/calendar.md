@@ -80,7 +80,7 @@ El nombre de la hoja es `MMdd` (si está duplicado, `MMdd_1`, …).
 - La base de los festivos es el **cálculo integrado**: incluye los festivos de calendario
   solar y lunar, el Día del Trabajo y las **reglas de festivos sustitutivos** (según el
   año de entrada en vigor). Comparte el mismo cálculo que la función
-  [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md).
+  [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md).
 - A esto se **suma de forma predeterminada la API de festivos**. Con la clave de
   data.go.kr guardada ([EGTools → Administrar claves API](api-keys.md)) se consulta la
   información de días especiales y se reflejan en el calendario elementos que el cálculo
@@ -99,4 +99,4 @@ El nombre de la hoja es `MMdd` (si está duplicado, `MMdd_1`, …).
   calendarios del mismo año solo genera una consulta (los fallos no se almacenan en
   caché, así que al corregir la clave el cambio se aplica de inmediato).
 - La anotación lunar se calcula con la tabla lunar integrada (igual que la función
-  [TOLUNAR](../functions/korea/TOLUNAR.md)) y no se muestra en las fechas fuera del rango admitido.
+  [TOLUNAR](../functions/eg-korea/TOLUNAR.md)) y no se muestra en las fechas fuera del rango admitido.

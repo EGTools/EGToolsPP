@@ -8,9 +8,9 @@
 
 | サービス | 用途 | 関連機能 |
 |---|---|---|
-| juso | 道路名住所の検索 | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | 祝日・事業者登録状態 | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [カレンダー/予定表](calendar.md#祝日の案内) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | 地図/座標 | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | 道路名住所の検索 | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | 祝日・事業者登録状態 | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [カレンダー/予定表](calendar.md#祝日の案内) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | 地図/座標 | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - サービスを選択すると、キーの登録状況は**マスク（●●●●●●）のみ**で表示されます。
   保存されたキーの原文は再表示されません。
@@ -26,9 +26,9 @@
 すべてのサービスでそのキーを共通に使います。そのため EGTools++ もサービスごとに分けず、
 `data.go.kr` の 1 枠で管理します。
 
-- この 1 つのキーを [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)（祝日等の特日情報）、
+- この 1 つのキーを [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)（祝日等の特日情報）、
   [カレンダー/予定表](calendar.md#祝日の案内)の臨時祝日の反映、
-  [BRNSTATUS](../functions/korea/BRNSTATUS.md)（国税庁の事業者登録状態）が**すべて共有**します。
+  [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md)（国税庁の事業者登録状態）が**すべて共有**します。
 - 旧バージョンで**事業者登録用に別途登録しておいたキー**は、最初の使用時に
   統合された枠へ**自動的に移行**されます — ユーザーが登録し直したり整理したりする
   必要はありません。

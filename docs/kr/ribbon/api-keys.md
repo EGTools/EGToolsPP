@@ -8,9 +8,9 @@
 
 | 서비스 | 용도 | 관련 기능 |
 |---|---|---|
-| juso | 도로명주소 검색 | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | 공휴일·사업자등록 상태 | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [달력/일정표](calendar.md#공휴일-안내) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | 지도/좌표 | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | 도로명주소 검색 | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | 공휴일·사업자등록 상태 | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [달력/일정표](calendar.md#공휴일-안내) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | 지도/좌표 | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - 서비스를 선택하면 키 등록 여부가 **마스킹(●●●●●●)으로만** 표시됩니다.
   저장된 키 원문은 다시 보여주지 않습니다.
@@ -26,9 +26,9 @@
 모든 서비스에 그 키를 함께 씁니다. 그래서 EGTools++도 서비스별로 나누지 않고
 `data.go.kr` 한 칸으로 관리합니다.
 
-- 이 한 개의 키를 [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)(특일정보),
+- 이 한 개의 키를 [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)(특일정보),
   [달력/일정표](calendar.md#공휴일-안내)의 임시공휴일 병합,
-  [BRNSTATUS](../functions/korea/BRNSTATUS.md)(국세청 사업자등록 상태)가 **모두 공유**합니다.
+  [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md)(국세청 사업자등록 상태)가 **모두 공유**합니다.
 - 예전 버전에서 **사업자등록용으로 따로 등록해 둔 키**는 처음 사용할 때
   통합된 칸으로 **자동 이관**됩니다 — 사용자가 다시 등록하거나 정리할 필요가
   없습니다.

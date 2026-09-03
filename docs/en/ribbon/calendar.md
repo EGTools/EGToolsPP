@@ -78,7 +78,7 @@ named `MMdd` (`MMdd_1` … on duplicates).
 - The basis for holidays is the **built-in calculation** — solar and lunar
   holidays, Labor Day and the **substitute-holiday rules** (per their effective
   years). The calculation is shared with the
-  [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) function.
+  [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) function.
 - On top of that, the **holiday API is merged in by default**: the stored
   data.go.kr key ([EGTools → Manage API Keys](api-keys.md)) is used to query the
   holiday-information service so that **temporary holidays and election days**
@@ -98,5 +98,5 @@ named `MMdd` (`MMdd_1` … on duplicates).
   year queries the service only once (failures are not cached, so fixing the key
   takes effect immediately).
 - Lunar dates use the built-in lunar table (same as the
-  [TOLUNAR](../functions/korea/TOLUNAR.md) function); dates outside its range show no lunar
+  [TOLUNAR](../functions/eg-korea/TOLUNAR.md) function); dates outside its range show no lunar
   mark.

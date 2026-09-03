@@ -1598,16 +1598,16 @@
             "Una matriz en api_key devuelve #VALUE! antes de guardar nada (evita almacenar una clave incorrecta)."
         ]
     },
-    "MONTHBHYWEEK": {
+    "MONTHBYWEEK": {
         "ret": "Devuelve el mes (1~12, número escalar) al que pertenece la semana de la fecha. Si la fecha no se puede interpretar o el día de inicio o el día de referencia están fuera del rango 1~7, devuelve un error #VALUE!.",
         "examples": [
             [
-                "=MONTHBHYWEEK(DATE(2026,2,1))",
+                "=MONTHBYWEEK(DATE(2026,2,1))",
                 "1",
                 "La semana del domingo 1 de febrero pertenece a enero"
             ],
             [
-                "=MONTHBHYWEEK(DATE(2026,2,2))",
+                "=MONTHBYWEEK(DATE(2026,2,2))",
                 "2",
                 "La semana del 2 de febrero pertenece a febrero"
             ]
@@ -1724,7 +1724,7 @@
             "Los números de día de la semana van de 1=domingo a 7=sábado; los valores predeterminados son inicio en lunes y jueves como día de referencia.",
             "El mes y el número de semana a los que pertenece una semana se calculan según el mes del día de referencia de esa semana.",
             "Si la fecha es una matriz, la función se aplica elemento a elemento y se derrama una matriz de la misma forma (un elemento de error devuelve ese error).",
-            "Función relacionada: MONTHBHYWEEK"
+            "Función relacionada: MONTHBYWEEK"
         ]
     },
     "GROUPBY": {

@@ -64,7 +64,7 @@
 ## 节假日说明
 
 - 节假日的基础是**内置计算** — 包含公历·农历节假日和劳动节，
-  以及**替代公休日规则**（按施行年度）。与 [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)
+  以及**替代公休日规则**（按施行年度）。与 [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)
   函数共享相同的计算。
 - 在此基础上**默认合并节假日 API**。用已保存的 data.go.kr 密钥
   （[EGTools → 管理 API 密钥](api-keys.md)）查询特日信息，
@@ -81,5 +81,5 @@
   即可反映临时节假日。
 - 查询结果按年度缓存，同一年度的日历创建多次也只查询一次
   （失败不缓存，修正密钥后立即生效）。
-- 农历标注用内置农历表计算（与 [TOLUNAR](../functions/korea/TOLUNAR.md) 函数相同），
+- 农历标注用内置农历表计算（与 [TOLUNAR](../functions/eg-korea/TOLUNAR.md) 函数相同），
   超出支持范围的日期不显示。

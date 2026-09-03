@@ -346,7 +346,7 @@
     "KOREANHOLIDAYS": { "desc": "傳回韓國國定假日清單(含替代假日規則)。", "args": [ { "name": "年份", "help": "年份(預設: 今年)" }, { "name": "含名稱", "help": "TRUE 包含名稱(預設)" }, { "name": "勞動節", "help": "TRUE 包含勞動節(預設)" }, { "name": "api_key", "help": "用於查詢臨時節假日的 data.go.kr 金鑰。輸入一次即儲存，之後可省略。指定 0 則不呼叫 API，僅用內建計算" } ] },
     "NETWORKHOUR": { "desc": "扣除休息時間計算淨工作時數。", "args": [ { "name": "開始時間", "help": "工作開始時間" }, { "name": "結束時間", "help": "工作結束時間(相同形狀)" }, { "name": "休息時間", "help": "休息區間: 第1欄開始，第2欄結束" } ] },
     "WEEKNUMOFMONTH": { "desc": "依週起始日與歸屬日計算月內週數。", "args": [ { "name": "日期", "help": "基準日期" }, { "name": "週起始日", "help": "1=日~7=六(預設 2=一)" }, { "name": "歸屬日", "help": "決定所屬月的星期(預設 5=四)" } ] },
-    "MONTHBHYWEEK": { "desc": "依週起始日與歸屬日傳回日期所在週歸屬的月份。", "args": [ { "name": "日期", "help": "基準日期" }, { "name": "週起始日", "help": "1=日~7=六(預設 2=一)" }, { "name": "歸屬日", "help": "決定所屬月的星期(預設 5=四)" } ] },
+    "MONTHBYWEEK": { "desc": "依週起始日與歸屬日傳回日期所在週歸屬的月份。", "args": [ { "name": "日期", "help": "基準日期" }, { "name": "週起始日", "help": "1=日~7=六(預設 2=一)" }, { "name": "歸屬日", "help": "決定所屬月的星期(預設 5=四)" } ] },
     "TODATETIME": { "desc": "將含韓文·漢字(年月日時分秒)的文字轉換為日期時間值。", "args": [ { "name": "文字", "help": "含日期/時間的文字" } ] },
     "JSONFILTER": { "desc": "將 JSON 文字解析為(路徑, 值)兩欄表。", "args": [ { "name": "JSON文字", "help": "要解析的 JSON 文字" }, { "name": "鍵路徑", "help": "篩選路徑，如 \"data.items[0].name\"(預設: 全部)" } ] },
     "BARCODE": { "desc": "將文字編碼為條碼並以圖片插入呼叫儲存格。", "args": [ { "name": "文字", "help": "要編碼的字串" }, { "name": "類型", "help": "QRCODE(預設), CODE128, DATAMATRIX, EAN13/8, ITF, PDF417, AZTEC, CODE39/93, UPC-A/E, CODABAR, GS1-128/DM/QR" }, { "name": "選項", "help": "數字=邊界(2D)，TRUE=下方顯示文字(1D)" } ] },

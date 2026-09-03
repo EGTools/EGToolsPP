@@ -8,9 +8,9 @@
 
 | 服務 | 用途 | 相關功能 |
 |---|---|---|
-| juso | 道路名地址搜尋 | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | 節假日、營業登記狀態 | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [行事曆/日程表](calendar.md#節假日說明) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | 地圖/座標 | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | 道路名地址搜尋 | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | 節假日、營業登記狀態 | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [行事曆/日程表](calendar.md#節假日說明) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | 地圖/座標 | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - 選擇服務後，金鑰的註冊狀態**只以遮罩（●●●●●●）** 顯示。
   已儲存的金鑰原文不會再次顯示。
@@ -26,9 +26,9 @@
 使用的服務都共用這把金鑰。因此 EGTools++ 也不按服務區分，統一以一個
 `data.go.kr` 欄位管理。
 
-- 這一把金鑰由 [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)（特定日資訊）、
+- 這一把金鑰由 [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)（特定日資訊）、
   [行事曆/日程表](calendar.md#節假日說明)的臨時節假日合併、
-  [BRNSTATUS](../functions/korea/BRNSTATUS.md)（國稅廳營業登記狀態）**共同使用**。
+  [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md)（國稅廳營業登記狀態）**共同使用**。
 - 舊版本中**另外為營業登記註冊的金鑰**會在首次使用時
   **自動移轉**到整合後的欄位 — 使用者不需重新註冊或
   整理。

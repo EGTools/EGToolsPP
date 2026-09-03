@@ -1598,16 +1598,16 @@
             "An array api_key returns #VALUE! before anything is saved (prevents storing a bad key)."
         ]
     },
-    "MONTHBHYWEEK": {
+    "MONTHBYWEEK": {
         "ret": "Returns the month (1-12, scalar number) the date's week belongs to. An unparseable date or a weekday argument outside 1-7 returns a #VALUE! error.",
         "examples": [
             [
-                "=MONTHBHYWEEK(DATE(2026,2,1))",
+                "=MONTHBYWEEK(DATE(2026,2,1))",
                 "1",
                 "Sun Feb 1's week belongs to January"
             ],
             [
-                "=MONTHBHYWEEK(DATE(2026,2,2))",
+                "=MONTHBYWEEK(DATE(2026,2,2))",
                 "2",
                 "Feb 2's week belongs to February"
             ]
@@ -1724,7 +1724,7 @@
             "Weekday numbers are 1=Sun to 7=Sat; defaults are Monday start and Thursday owner.",
             "The owning month and week are decided by the week's owner weekday.",
             "If the date is an array, the function is applied element-wise and spills an array of the same shape (an error element returns that error).",
-            "Related function: MONTHBHYWEEK"
+            "Related function: MONTHBYWEEK"
         ]
     },
     "GROUPBY": {

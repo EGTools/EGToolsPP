@@ -3,7 +3,7 @@
 //     KoreanLunisolarCalendar에서 생성한 KoreanLunarTable.h 사용.
 //   KOREANHOLIDAYS    — 대한민국 공휴일 목록(대체공휴일 규칙 포함, 내장 계산).
 //   NETWORKHOUR       — 휴식시간을 반영한 순 근무시간.
-//   WEEKNUMOFMONTH / MONTHBHYWEEK — 시작·기준 요일에 따른 월 주차/주차 기준 월.
+//   WEEKNUMOFMONTH / MONTHBYWEEK — 시작·기준 요일에 따른 월 주차/주차 기준 월.
 //   TODATETIME        — 한글·한자 날짜/시간 문자열 → 날짜·시간 값.
 // KOREANHOLIDAYS는 [api_key] 인수(또는 저장 키)가 있으면 공공데이터포털 특일정보
 // API를 조회해 임시공휴일·선거일 등 내장 계산에 없는 항목을 병합한다(plan/23
@@ -503,7 +503,7 @@ namespace egtools::functions
                 (ExcelArrayBuilder::row_t)nR, (ExcelArrayBuilder::col_t)nC, vals));
         }
 
-        // ---- WEEKNUMOFMONTH / MONTHBHYWEEK ---------------------------------
+        // ---- WEEKNUMOFMONTH / MONTHBYWEEK ---------------------------------
 
         // 기준(소유) 요일이 속한 날짜의 직렬값 계산. 실패 시 INT_MIN.
         bool weekOwnerSerial(const ExcelObj& dateObj, const ExcelObj& sowObj,
@@ -685,7 +685,7 @@ namespace egtools::functions
                     [&](const ExcelObj& e) { return weekNumOfMonthOne(e, sow, oow); });
             });
 
-        egtools::core::registerFn(L"MONTHBHYWEEK",
+        egtools::core::registerFn(L"MONTHBYWEEK",
             [](const ExcelObj& d, const ExcelObj& sow, const ExcelObj& oow) -> ExcelObj*
             {
                 return egtools::core::mapUnary(d,

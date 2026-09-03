@@ -9,9 +9,9 @@ The list contains **three** services.
 
 | Service | Purpose | Related features |
 |---|---|---|
-| juso | Korean road-address search | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | Public holidays and business-registration status | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [Calendar](calendar.md#holidays) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | Maps / coordinates | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | Korean road-address search | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | Public holidays and business-registration status | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [Calendar](calendar.md#holidays) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | Maps / coordinates | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - Selecting a service shows only **whether a key is registered, masked (●●●●●●)**.
   The stored key is never displayed again.
@@ -29,9 +29,9 @@ The Korean open-data portal (data.go.kr) issues **a single key per account** and
 the same key is used for every service you have applied for. EGTools++ therefore
 keeps one `data.go.kr` slot instead of one slot per service.
 
-- That single key is **shared** by [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)
+- That single key is **shared** by [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)
   (holiday information), the temporary-holiday merge in
-  [Calendar](calendar.md#holidays), and [BRNSTATUS](../functions/korea/BRNSTATUS.md)
+  [Calendar](calendar.md#holidays), and [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md)
   (NTS business-registration status).
 - A key registered **separately for business-registration lookups** by an older
   version is **migrated automatically** to the shared slot on first use — nothing

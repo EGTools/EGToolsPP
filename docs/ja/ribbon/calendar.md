@@ -65,7 +65,7 @@
 ## 祝日の案内
 
 - 祝日のベースは**内蔵計算**です — 太陽暦・太陰暦(旧暦)の祝日や勤労者の日、
-  施行年度別の**振替休日規則**を含みます。[KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)
+  施行年度別の**振替休日規則**を含みます。[KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)
   関数と同じ計算を共有します。
 - これに加えて、**既定で祝日 API をマージします**。保存された data.go.kr キー
   ([EGTools → API キー管理](api-keys.md))で特日情報を照会し、
@@ -82,5 +82,5 @@
   再度実行すると臨時祝日が反映されます。
 - 照会結果は年度ごとにキャッシュされるため、同じ年のカレンダーを何度作成しても
   照会は一度だけ行われます(失敗はキャッシュしないため、キーを修正すれば即座に反映されます)。
-- 旧暦表記は内蔵の旧暦表で計算し([TOLUNAR](../functions/korea/TOLUNAR.md) 関数と同一)、
+- 旧暦表記は内蔵の旧暦表で計算し([TOLUNAR](../functions/eg-korea/TOLUNAR.md) 関数と同一)、
   対応範囲外の日付には表示されません。

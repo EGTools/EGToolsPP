@@ -9,9 +9,9 @@ La lista contiene **3** servicios.
 
 | Servicio | Uso | Funciones relacionadas |
 |---|---|---|
-| juso | Búsqueda de direcciones (Corea) | [SEARCHADDRESS](../functions/korea/SEARCHADDRESS.md) |
-| data.go.kr | Festivos y estado del registro de empresas | [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md) · [Calendario/Agenda](calendar.md#acerca-de-los-festivos) · [BRNSTATUS](../functions/korea/BRNSTATUS.md) |
-| vworld | Mapas/coordenadas | [GEOSEARCH](../functions/korea/GEOSEARCH.md) · [GEOCODER](../functions/korea/GEOCODER.md) · [GEOADDRESS](../functions/korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/korea/ADDRESSMAP.md) |
+| juso | Búsqueda de direcciones (Corea) | [SEARCHADDRESS](../functions/eg-korea/SEARCHADDRESS.md) |
+| data.go.kr | Festivos y estado del registro de empresas | [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md) · [Calendario/Agenda](calendar.md#acerca-de-los-festivos) · [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) |
+| vworld | Mapas/coordenadas | [GEOSEARCH](../functions/eg-korea/GEOSEARCH.md) · [GEOCODER](../functions/eg-korea/GEOCODER.md) · [GEOADDRESS](../functions/eg-korea/GEOADDRESS.md) · [ADDRESSMAP](../functions/eg-korea/ADDRESSMAP.md) |
 
 - Al seleccionar un servicio, el estado de registro de la clave se muestra **solo
   enmascarado (●●●●●●)**. La clave guardada nunca se vuelve a mostrar en claro.
@@ -30,10 +30,10 @@ autenticación por cuenta**, que se comparte entre todos los servicios solicitad
 Por eso EGTools++ tampoco la separa por servicio y la gestiona en una única entrada
 `data.go.kr`.
 
-- Esta única clave la **comparten** [KOREANHOLIDAYS](../functions/korea/KOREANHOLIDAYS.md)
+- Esta única clave la **comparten** [KOREANHOLIDAYS](../functions/eg-korea/KOREANHOLIDAYS.md)
   (información de días señalados), la incorporación de festivos temporales de
   [Calendario/Agenda](calendar.md#acerca-de-los-festivos) y
-  [BRNSTATUS](../functions/korea/BRNSTATUS.md) (estado del registro de empresas de la agencia
+  [BRNSTATUS](../functions/eg-korea/BRNSTATUS.md) (estado del registro de empresas de la agencia
   tributaria coreana).
 - Una clave que en versiones anteriores se hubiera **registrado por separado para
   el registro de empresas** se **migra automáticamente** a la entrada unificada la
