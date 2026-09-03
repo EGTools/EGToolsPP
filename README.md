@@ -34,9 +34,13 @@ Excel 2010~2021 어디서든 동일하게 사용할 수 있습니다. 설치 파
 
 ## 매뉴얼
 
-함수별 사용법·예제와 리본 기능 설명을 언어별로 제공합니다:
-[한국어](manual/kr/README.md) · [English](manual/en/README.md) · [日本語](manual/ja/README.md) ·
-[Español](manual/es/README.md) · [简体中文](manual/zh-CN/README.md) · [繁體中文](manual/zh-TW/README.md)
+함수별 사용법·예제와 리본 기능 설명을 검색 가능한 매뉴얼 사이트로 제공합니다:
+**<https://egtools.github.io/EGToolsPP/>**
+([한국어](https://egtools.github.io/EGToolsPP/kr/) · [English](https://egtools.github.io/EGToolsPP/en/) ·
+[日本語](https://egtools.github.io/EGToolsPP/ja/) · [Español](https://egtools.github.io/EGToolsPP/es/) ·
+[简体中文](https://egtools.github.io/EGToolsPP/zh-CN/) · [繁體中文](https://egtools.github.io/EGToolsPP/zh-TW/))
+
+원본 마크다운은 [manual/](manual/) 폴더에 있습니다.
 
 ## 커뮤니티
 
