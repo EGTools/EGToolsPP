@@ -1,0 +1,70 @@
+# Mail Merge
+
+**Location**: ribbon `EGTools` tab → `Forms` group → `Labels` split-button menu → **Mail Merge**
+
+Clones the **whole form sheet once per data-list row**, substituting `{{fieldname}}`
+placeholders with that row's values, then — depending on the chosen option — saves
+individual files (xlsx/PDF), prints each copy and/or **sends email** (with the
+row's file attached). The SMTP server used for sending is registered in
+[SMTP Settings](smtp-settings.md) (the password is never stored).
+
+## How it runs
+
+1. **Enter the option** — a number 0–7 (default 1). It is a **bit combination** of
+   1 (save files), 2 (print) and 4 (send mail).
+   `0` = clone form sheets only (the clones are kept) / `1` = save files /
+   `2` = print / `3` = save + print / `4` = send mail / `5` = save + send /
+   `6` = print + send / `7` = save + print + send.
+2. **Printer setup** — if printing is included (2, 3, 6 or 7), the printer setup
+   dialog is shown first. Cancelling it aborts the whole run.
+3. **Designate the form sheet** — pick any cell of the form sheet in the range
+   input box. The **entire sheet** containing the picked range is used as the form.
+4. **Designate the data range** — pick a cell in the data list. The selection is
+   expanded to its contiguous region (CurrentRegion); the **first row holds the
+   field names** and data starts on the second row.
+5. **Mail preparation** (options including sending, 4–7) — the recipient column
+   and the email template sheet are checked, then if
+   [SMTP Settings](smtp-settings.md) are empty the settings dialog opens
+   automatically. Finally you are asked for the **SMTP account password**
+   (never stored; cancelling aborts the run).
+6. For each data row the form sheet is cloned at the end of the workbook, every
+   `{{fieldname}}` is substituted, and printing/saving/sending runs per the
+   option. "Items completed: N" is shown at the end — plus "Emails sent: N" if
+   sending was selected.
+
+## Rules
+
+| Item | Rule |
+|---|---|
+| Placeholders | `{{fieldname}}` is matched against the list header row **ignoring case and surrounding spaces**. A cell may hold several placeholders combined with other text. If a field name is not in the list, an error naming that field is shown and the run aborts |
+| Sheet/file names | The **first-column value** names the cloned sheet and the saved file. Rows with an empty first column are skipped; forbidden characters become `_`. If the sheet name already exists, an `_1`, `_2` … suffix is appended |
+| Output location | Files are saved into an `Output\` subfolder of the workbook's folder. The **workbook must have been saved**; otherwise a notice is shown and the run aborts (this also applies to mail sending, which builds attachment files) |
+| PDF output | If the **first column's header is `PDF`** (case-insensitive), files are saved as PDF instead of xlsx |
+| Open password | If the list has a `PassWord` (or Korean `암호`) column, that row's value becomes the xlsx **file-open password** (empty = no password; not applied to PDF) |
+| Clone cleanup | With any option other than 0, each cloned sheet is deleted after printing/saving/sending. With option 0 the sheets remain in the workbook |
+
+## Sending email (options 4, 5, 6, 7)
+
+When sending is included, these additional rules apply.
+
+| Item | Rule |
+|---|---|
+| Recipient column | The data list **must** contain a column headed `eMail` (or Korean `이메일`, case-insensitive). Without it, a notice is shown and the run aborts. Rows with an **empty recipient cell skip sending only** — cloning, saving and printing still run |
+| Email template sheet | The workbook **must** contain a sheet named `Email` (or Korean `이메일`). Enter **column 1 = key, column 2 = value**. Keys: `Subject` (**required**), `Body`, `CC`, `BCC` (Korean `제목`/`본문`/`참조`/`숨은참조` also accepted) |
+| Subject/body substitution | `{{fieldname}}` substitution is applied to the subject and body too, so each row gets a **personalised message**. Field names not found in the list are left as-is |
+| Attachment | The row's saved file (xlsx or PDF, open-password supported) is **attached** to the email. If saving (bit 1) was not selected, the attachment file is deleted after sending |
+| Sender/server | The sender name, email, server, port and SSL from [SMTP Settings](smtp-settings.md) are used. If the settings are empty the settings dialog opens automatically; if still incomplete, the run aborts |
+| Password | The SMTP account password is **asked on every run** and never stored anywhere |
+| Failures | If sending fails for one row, the run **continues with the next row**. The completion summary lists failed rows as "name - error description" |
+
+## Notes
+
+- Substituted cells are written as **text values** (not formulas).
+- Saving copies the cloned sheet into a new single-sheet workbook, saves it and
+  closes it, so each output file contains just that one sheet.
+- The sending engine supports **implicit SSL only (usually port 465)**;
+  587 STARTTLS is not supported. See [SMTP Settings](smtp-settings.md) for
+  details on this limitation.
+- Difference from [Make Labels](forms.md#make-labels): labels **tile the form
+  repeatedly on one sheet**, while mail merge builds an **individual sheet/file
+  per row**.

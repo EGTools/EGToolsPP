@@ -53,7 +53,9 @@ namespace egtools::intellisense
             return L"en";
         }
 
-        // 함수명 → GitHub 매뉴얼 URL. EG./x 접두를 벗겨 bare 이름으로 연결한다.
+        // 함수명 → 매뉴얼 사이트 URL. EG./x 접두를 벗겨 bare 이름으로 연결한다.
+        // 평면 URL(/<lang>/<FN>/)로 열면 사이트의 리다이렉트 스텁이 분류 폴더
+        // (functions/<분류>/)로 연결하므로 여기서는 분류를 몰라도 된다(build_docs.py).
         std::wstring manualUrl(const std::wstring& funcName)
         {
             std::wstring bare = funcName;
@@ -61,8 +63,8 @@ namespace egtools::intellisense
             else if (bare.size() > 1 && bare[0] == L'x' &&
                      iswupper(bare[1]))          // xSORT/xFILTER/xLET (구버전 충돌 회피명)
                 bare = bare.substr(1);
-            return L"https://github.com/EGTools/EGToolsPP/blob/main/manual/" +
-                   manualLang() + L"/" + bare + L".md";
+            return L"https://egtools.github.io/EGToolsPP/" +
+                   manualLang() + L"/" + bare + L"/";
         }
 
         // Build the signature pieces: name, "(", then arg names separated by ", ",

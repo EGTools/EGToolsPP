@@ -40,7 +40,8 @@ Excel 2010~2021 어디서든 동일하게 사용할 수 있습니다. 설치 파
 [日本語](https://egtools.github.io/EGToolsPP/ja/) · [Español](https://egtools.github.io/EGToolsPP/es/) ·
 [简体中文](https://egtools.github.io/EGToolsPP/zh-CN/) · [繁體中文](https://egtools.github.io/EGToolsPP/zh-TW/))
 
-원본 마크다운은 [manual/](manual/) 폴더에 있습니다.
+원본 마크다운은 [docs/](docs/) 폴더에 있습니다
+(구 [manual/](manual/) 폴더는 배포된 구버전의 도움말 링크용으로 당분간 유지됩니다).
 
 ## 커뮤니티
 
@@ -79,7 +80,8 @@ cmake --build --preset x64-release         # 산출물: dist/EGTools++64.xll
 
 ```
 src/            추가기능 소스 (core / functions / intellisense / ribbon)
-manual/         다국어 매뉴얼 (함수·리본 도움말, 6개 언어)
+docs/           다국어 매뉴얼 (함수·리본 도움말, 6개 언어 — Pages 사이트 원본)
+manual/         구버전 도움말 링크용 동결 스냅샷 (제거 예정)
 patches/        xlOil 정적 링크·호환성 패치
 cmake/          빌드 스크립트 모듈
 tools/          개발 빌드 도구
