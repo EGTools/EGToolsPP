@@ -212,6 +212,12 @@ def main() -> int:
             write_redirects(lang_dir)
 
     (SITE / "index.html").write_text(landing_page(), encoding="utf-8")
+    # docs/_root/* 는 사이트 루트에 그대로 복사 (Search Console 확인 파일 등)
+    root_extra = DOCS / "_root"
+    if root_extra.is_dir():
+        for f in root_extra.iterdir():
+            if f.is_file():
+                shutil.copy(f, SITE / f.name)
     print(f"done -> {SITE}")
     return 0
 
