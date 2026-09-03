@@ -2,6 +2,8 @@
 
 **Category**: MS Excel compatibility function · **Native since**: Excel 2021
 
+> ⚠️ On some legacy hosts it registers as `xFILTER` due to a keyword conflict.
+
 Filters an array, keeping rows/columns where include is TRUE.
 
 ## Syntax
@@ -36,4 +38,4 @@ Returns an array keeping only the rows or columns whose include value is truthy;
 - With no matches and if_empty omitted, #N/A is returned instead of #CALC!.
 - If include contains an error value, the whole result is that error.
 - Related functions: SORT, UNIQUE.
-- Supported: Excel 2010+. Registered as `FILTER` (drop-in) on hosts without the native function, and as `EG.FILTER` on modern Excel that has it. On some legacy hosts it registers as `xFILTER` due to a keyword conflict.
+- Supported: Excel 2010+. Registered as `FILTER` (drop-in) on hosts without the native function, and as `EG.FILTER` on modern Excel that has it.

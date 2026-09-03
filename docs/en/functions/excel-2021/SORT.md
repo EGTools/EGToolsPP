@@ -2,6 +2,8 @@
 
 **Category**: MS Excel compatibility function · **Native since**: Excel 2021
 
+> ⚠️ On some legacy hosts it registers as `xSORT` due to a keyword conflict.
+
 Sorts an array by a row/column.
 
 ## Syntax
@@ -38,4 +40,4 @@ Returns a same-size array sorted by the given column (or row); on dynamic-array 
 - Equal keys keep their original order (stable sort).
 - Arrays in sort_index and sort_order specify a multi-column priority sort (e.g. {1,2} with {1,-1} = column 1 ascending, then column 2 descending); an array sort_order alone returns #VALUE!.
 - Related functions: SORTBY, UNIQUE.
-- Supported: Excel 2010+. Registered as `SORT` (drop-in) on hosts without the native function, and as `EG.SORT` on modern Excel that has it. On some legacy hosts it registers as `xSORT` due to a keyword conflict.
+- Supported: Excel 2010+. Registered as `SORT` (drop-in) on hosts without the native function, and as `EG.SORT` on modern Excel that has it.

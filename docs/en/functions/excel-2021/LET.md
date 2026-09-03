@@ -2,6 +2,8 @@
 
 **Category**: MS Excel compatibility function · **Native since**: Excel 2021
 
+> ⚠️ On some legacy hosts it registers as `xLET` due to a keyword conflict.
+
 Assigns names to values and uses them in a final calculation.
 
 ## Syntax
@@ -35,4 +37,4 @@ Returns the result of evaluating the final calculation with each name substitute
 - Unlike native LET, no names are bound: this macro-sheet function parses the calling cell's formula text, substitutes names with their values and evaluates via Application.Evaluate.
 - The names "R" and "C" are reserved by Excel's R1C1 parser and cannot be used.
 - When evaluation fails, the substituted formula string is returned for debugging.
-- Supported: Excel 2010+. Registered as `LET` (drop-in) on hosts without the native function, and as `EG.LET` on modern Excel that has it. On some legacy hosts it registers as `xLET` due to a keyword conflict.
+- Supported: Excel 2010+. Registered as `LET` (drop-in) on hosts without the native function, and as `EG.LET` on modern Excel that has it.

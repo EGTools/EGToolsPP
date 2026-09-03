@@ -2,6 +2,8 @@
 
 **Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2021
 
+> ⚠️ En algunas versiones antiguas se registra como `xLET` por un conflicto de palabra reservada.
+
 Asigna nombres a valores y los usa en un cálculo final.
 
 ## Sintaxis
@@ -35,4 +37,4 @@ Devuelve el resultado de evaluar el cálculo final con cada nombre sustituido po
 - A diferencia de la función nativa, no vincula nombres: es una función de tipo hoja de macros que sustituye los nombres por sus valores en el texto de la fórmula de la celda que llama y la evalúa con Application.Evaluate.
 - Los nombres "R" y "C" están reservados por el analizador R1C1 de Excel y no se pueden usar.
 - Si la evaluación falla, devuelve tal cual la cadena de la fórmula sustituida para facilitar la depuración.
-- Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `LET` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.LET`. En algunas versiones antiguas se registra como `xLET` por un conflicto de palabra reservada.
+- Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `LET` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.LET`.

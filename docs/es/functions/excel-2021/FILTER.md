@@ -2,6 +2,8 @@
 
 **Categoría**: función de compatibilidad con MS Excel · **Nativa desde**: Excel 2021
 
+> ⚠️ En algunas versiones antiguas se registra como `xFILTER` por un conflicto de palabra reservada.
+
 Filtra una matriz conservando filas/columnas donde incluir es VERDADERO.
 
 ## Sintaxis
@@ -36,4 +38,4 @@ Devuelve una matriz que conserva solo las filas o columnas cuya condición es ve
 - Si no hay resultados y se omite if_empty, devuelve #N/A en lugar de #CALC!.
 - Si include contiene un valor de error, todo el resultado es ese error.
 - Funciones relacionadas: SORT, UNIQUE.
-- Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `FILTER` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.FILTER`. En algunas versiones antiguas se registra como `xFILTER` por un conflicto de palabra reservada.
+- Compatibilidad: Excel 2010+. En versiones antiguas sin la función nativa se registra como `FILTER` (sustitución directa); en Excel moderno que ya la incluye se registra como `EG.FILTER`.
