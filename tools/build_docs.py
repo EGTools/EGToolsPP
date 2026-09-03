@@ -34,6 +34,16 @@ LANGS = [
     ("zh-TW", "zh-TW", "繁體中文", "EGTools++ 手冊"),
 ]
 
+# 검색 결과 스니펫용 meta description (언어별, 함수 개수는 변동하므로 명시하지 않음)
+DESCRIPTIONS = {
+    "kr": "구형 Excel(2010+)에서 최신 Excel 함수를 쓰게 해 주는 EGTools++ 추가기능의 함수·리본 도움말 — XLOOKUP, FILTER, TEXTSPLIT, GROUPBY, 정규식 함수 등.",
+    "en": "Function and ribbon help for EGTools++, the add-in that brings modern Excel functions — XLOOKUP, FILTER, TEXTSPLIT, GROUPBY, REGEX and more — to legacy Excel 2010+.",
+    "ja": "旧バージョンの Excel(2010+)で最新の Excel 関数を使える EGTools++ アドインの関数・リボン ヘルプ — XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正規表現関数など。",
+    "es": "Ayuda de funciones y cinta de EGTools++, el complemento que lleva las funciones modernas de Excel — XLOOKUP, FILTER, TEXTSPLIT, GROUPBY, REGEX y más — a Excel 2010+.",
+    "zh-CN": "EGTools++ 加载项的函数与功能区帮助 — 让旧版 Excel(2010+)使用 XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正则表达式等新版函数。",
+    "zh-TW": "EGTools++ 增益集的函數與功能區說明 — 讓舊版 Excel(2010+)使用 XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正規表示式等新版函數。",
+}
+
 CATS = json.loads((DOCS / "_content" / "categories.json").read_text(encoding="utf-8"))
 
 # 평면 리다이렉트 폴더(/<lang>/<FN>/)와 최상위 섹션 폴더가 Windows 대소문자
@@ -86,6 +96,7 @@ def yaml_config(lang_dir: str, mat_lang: str, site_name: str) -> str:
     # toc slugify를 pymdownx.slugs로 바꿔 GitHub식 유니코드 앵커(#보이는-셀만-복사)를 유지한다.
     return f"""\
 site_name: {site_name}
+site_description: {DESCRIPTIONS[lang_dir]}
 site_url: {SITE_URL}/{lang_dir}/
 repo_url: https://github.com/EGTools/EGToolsPP
 repo_name: EGTools/EGToolsPP
