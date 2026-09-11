@@ -20,6 +20,7 @@
 // posts to Excel's main thread where COM is usable after connectCom().
 
 #include "../core/Registry.h"
+#include "../core/ShapeGrid.h"   // 셀 사각형을 도형 좌표계로(Range.Top 누적 오차 보정)
 
 #include <xlOil/xlOil.h>
 #include <xlOil/Caller.h>
@@ -251,7 +252,15 @@ namespace egtools::functions
                     IDispatch* pic = picV.pdispVal;
                     Releaser pr{ pic };
                     putBStr(pic, L"Name", imageName);
+                    // Placement 변경은 앵커를 다시 계산해 크기를 ~0.15pt 흔드므로
+                    // 위치/크기 맞춤보다 먼저 둔다.
                     putLong(pic, L"Placement", kXlMoveAndSize);
+                    // AddPicture의 L/T/W/H는 Range 좌표계라 아래 행일수록 위로
+                    // 밀린다 — 도형 좌표계로 다시 맞춘다(ShapeGrid.h).
+                    {
+                        egtools::latecom::ShapeGrid grid;
+                        egtools::latecom::fitShapeToRange(grid, pic, geom, 0.3);
+                    }
                     if (mode == 0)
                         putLong(pic, L"LockAspectRatio", kMsoTrue);   // keep ratio within cell
                 }

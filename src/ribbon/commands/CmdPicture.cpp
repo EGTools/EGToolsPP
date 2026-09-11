@@ -5,12 +5,12 @@
 #include "Commands.h"
 #include "CmdCommon.h"
 #include "Dialogs.h"
+#include "../../core/ShapeGrid.h"   // ShapeGrid / fitShapeToRange
 
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
-#include <map>
 #include <set>
 #include <vector>
 
@@ -45,9 +45,9 @@ namespace egtools::commands
             return false;
         }
 
-        // 셰이프 하나를 좌상단 셀(병합 영역)에 맞춘다. 회전 90/270 보정 포함
-        // (VB C03_Picture.vb:304-321과 동일 수식).
-        void fitShape(IDispatch* shape, double off)
+        // 셰이프 하나를 좌상단 셀(병합 영역)에 맞춘다. 좌표는 Range 값이 아닌
+        // 도형 좌표계(ShapeGrid.h 참조 — Range.Top 누적 오차로 위로 밀리던 버그).
+        void fitShape(ShapeGrid& grid, IDispatch* shape, double off)
         {
             const long type = getLong(shape, L"Type", 0);
             if (type != msoPicture && type != msoLinkedPicture) return;
@@ -58,28 +58,7 @@ namespace egtools::commands
             IDispatch* ma = getObject(tlc, L"MergeArea");
             if (!ma) return;
             Releaser rMa{ ma };
-
-            const double maW = getDouble(ma, L"Width");
-            const double maH = getDouble(ma, L"Height");
-            const double maT = getDouble(ma, L"Top");
-            const double maL = getDouble(ma, L"Left");
-            const double rot = getDouble(shape, L"Rotation");
-
-            putLong(shape, L"LockAspectRatio", 0);
-            if (rot == 0.0 || rot == 180.0)
-            {
-                putDouble(shape, L"Width", maW - off * 2);
-                putDouble(shape, L"Height", maH - off * 2);
-                putDouble(shape, L"Top", maT + off);
-                putDouble(shape, L"Left", maL + off);
-            }
-            else    // 90/270도: 가로세로 교환 + 중심 보정
-            {
-                putDouble(shape, L"Width", maH - off * 2);
-                putDouble(shape, L"Height", maW - off * 2);
-                putDouble(shape, L"Top", maT + off + (maH - maW) / 2);
-                putDouble(shape, L"Left", maL + off - (maH - maW) / 2);
-            }
+            fitShapeToRange(grid, shape, ma, off);
         }
     }
 
@@ -131,6 +110,8 @@ namespace egtools::commands
             if (ok && r.vt == VT_DISPATCH && r.pdispVal)
             {
                 IDispatch* pic = r.pdispVal;
+                ShapeGrid grid;
+                fitShapeToRange(grid, pic, sel, 0.2);   // Range→도형 좌표계 보정
                 putLong(pic, L"LockAspectRatio", 0);
                 const size_t slash = file.find_last_of(L"\\/");
                 putBStr(pic, L"Name",
@@ -164,13 +145,14 @@ namespace egtools::commands
             auto& app = xloil::thisApp();
             xloil::PauseExcel pause(app);
 
+            ShapeGrid grid;
             const long n = getLong(shapes, L"Count", 0);
             for (long i = 1; i <= n; ++i)
             {
                 IDispatch* shape = getObjectIdx(shapes, L"Item", i);
                 if (!shape) continue;
                 Releaser rs{ shape };
-                fitShape(shape, off);
+                fitShape(grid, shape, off);
             }
         }
         catch (...) {}
@@ -200,6 +182,7 @@ namespace egtools::commands
             auto& app = xloil::thisApp();
             xloil::PauseExcel pause(app);
 
+            ShapeGrid grid;
             const long n = getLong(shapes, L"Count", 0);
             for (long i = 1; i <= n; ++i)
             {
@@ -209,7 +192,7 @@ namespace egtools::commands
                 const long type = getLong(shape, L"Type", 0);
                 if (type != msoPicture && type != msoLinkedPicture) continue;
                 statusBar(ad, getBStr(shape, L"Name") + L" is processing...");
-                fitShape(shape, off);
+                fitShape(grid, shape, off);
             }
             statusBarClear(ad);
             msgInfo(t(L"cmd.pic.fitAllDone"));
@@ -329,6 +312,7 @@ namespace egtools::commands
             Releaser rAll{ all };
 
             const double off = 0.3;
+            ShapeGrid grid;
             auto tryInsert = [&](long r, long c, const std::wstring& cellText)
             {
                 // Dir(path\값.*) 첫 일치 파일(VB 동일)
@@ -359,6 +343,7 @@ namespace egtools::commands
                                             w - off * 2, hgt - off * 2);
                 if (!pic) return;
                 Releaser rPic{ pic };
+                fitShapeToRange(grid, pic, ma ? ma : cell, off);   // 도형 좌표계 보정
                 putLong(pic, L"LockAspectRatio", 0);
                 putBStr(pic, L"Name", stem);
                 ++inserted;
@@ -563,6 +548,7 @@ namespace egtools::commands
                 IDispatch* shapes = getObject(parentSh, L"Shapes");
                 if (!shapes) break;
                 Releaser rShp{ shapes };
+                ShapeGrid grid;
 
                 for (long r = 1; r <= rows; ++r)
                     for (long c = 1; c <= cols; ++c)
@@ -590,6 +576,7 @@ namespace egtools::commands
                         if (pic)
                         {
                             Releaser rPic{ pic };
+                            fitShapeToRange(grid, pic, area, off);   // 도형 좌표계 보정
                             putLong(pic, L"LockAspectRatio", 0);
                             const size_t slash = img.find_last_of(L"\\/");
                             const std::wstring name =
