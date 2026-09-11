@@ -52,12 +52,16 @@ namespace egtools::commands
             const long type = getLong(shape, L"Type", 0);
             if (type != msoPicture && type != msoLinkedPicture) return;
 
+            // 대상 셀은 회전 전 프레임의 좌상단 셀로 판정한다. TopLeftCell은 회전된
+            // 시각적 사각형 기준이라 90° 회전된 가로 그림은 한 행 위 셀이 잡히기 때문.
+            const double rot = getDouble(shape, L"Rotation");
+            if (rot != 0.0) putDouble(shape, L"Rotation", 0.0);
             IDispatch* tlc = getObject(shape, L"TopLeftCell");
-            if (!tlc) return;
+            IDispatch* ma = tlc ? getObject(tlc, L"MergeArea") : nullptr;
+            if (rot != 0.0) putDouble(shape, L"Rotation", rot);
             Releaser rTlc{ tlc };
-            IDispatch* ma = getObject(tlc, L"MergeArea");
-            if (!ma) return;
             Releaser rMa{ ma };
+            if (!ma) return;
             fitShapeToRange(grid, shape, ma, off);
         }
     }

@@ -109,9 +109,19 @@ namespace egtools::latecom
     // 포함(VB C03_Picture.vb:304-321과 동일 수식, 좌표만 도형 좌표계로 치환).
     inline void fitShapeToRange(ShapeGrid& grid, IDispatch* shape, IDispatch* range, double off)
     {
-        double maL, maT, maW, maH;
-        if (!grid.rect(shape, range, maL, maT, maW, maH)) return;
+        // TopLeftCell/BottomRightCell은 회전된 "시각적" 사각형으로 판정되지만
+        // Top/Left/Width/Height는 회전 전 프레임 기준(실측: 90° 회전 시 TLC가
+        // (W-H)/2만큼 어긋남). 경계 탐색과 배치는 회전을 0으로 풀고 하며, 마지막에
+        // 복원한다(회전은 중심 기준이라 프레임을 셀 중심에 맞추면 시각적 사각형이
+        // 셀과 일치).
         const double rot = getDouble(shape, L"Rotation");
+        if (rot != 0.0) putDouble(shape, L"Rotation", 0.0);
+        double maL, maT, maW, maH;
+        if (!grid.rect(shape, range, maL, maT, maW, maH))
+        {
+            if (rot != 0.0) putDouble(shape, L"Rotation", rot);
+            return;
+        }
 
         // Excel은 속성 put마다 앵커(셀+EMU 오프셋)를 다시 계산하며 화면 배율에
         // 따라 put당 ≈0.15pt(125%: 96↔120DPI 픽셀 차)씩 양의 편향이 붙는다(실측).
@@ -134,5 +144,6 @@ namespace egtools::latecom
             putDouble(shape, L"Top", maT + off + (maH - maW) / 2);
             putDouble(shape, L"Left", maL + off - (maH - maW) / 2);
         }
+        if (rot != 0.0) putDouble(shape, L"Rotation", rot);
     }
 }
