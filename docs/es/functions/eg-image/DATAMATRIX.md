@@ -2,7 +2,7 @@
 
 **Categoría**: función exclusiva de EGTools
 
-Genera una imagen DataMatrix en la celda que llama.
+Genera una imagen DataMatrix en la celda que llama (mantiene la proporción y se centra si la celda es mayor).
 
 ## Sintaxis
 
@@ -31,6 +31,6 @@ Devuelve una cadena vacía ("") si tiene éxito, y la imagen DataMatrix se inser
 ## Notas
 
 - gs1=TRUE se aproxima con separadores GS (0x1D); no es una codificación FNC1 completa. Si se necesita GS1 completo, use CODE128 (GS1-128).
-- La imagen mantiene su proporción cuadrada dentro de la celda que llama.
+- La imagen mantiene la proporción normalizada del símbolo (módulos cuadrados) al ajustarse dentro de la celda que llama y se centra en el espacio sobrante; margin se expresa en módulos (predeterminado 0).
 - Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `DATAMATRIX` en todas las versiones de Excel.

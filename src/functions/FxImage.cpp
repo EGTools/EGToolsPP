@@ -233,6 +233,10 @@ namespace egtools::functions
                 }
 
                 // Shapes.AddPicture(Filename, LinkToFile, SaveWithDocument, L, T, W, H)
+                // mode 0(비율 유지): W/H=-1로 원본 크기로 넣어 원본 비율을 살린 채
+                // fitShapeToRange(keepAspect)가 셀 안에 맞추고 중앙 정렬한다.
+                // 셀 크기로 먼저 늘리면 LockAspectRatio가 찌그러진 비율을 고정한다.
+                const bool keepAspect = (mode == 0);
                 VARIANT a[7];
                 for (auto& v : a) VariantInit(&v);
                 a[0].vt = VT_BSTR; a[0].bstrVal = SysAllocString(path.c_str());
@@ -240,8 +244,8 @@ namespace egtools::functions
                 a[2].vt = VT_I4;   a[2].lVal = kMsoTrue;             // SaveWithDocument (embed)
                 a[3].vt = VT_R4;   a[3].fltVal = (float)(L + 0.3);
                 a[4].vt = VT_R4;   a[4].fltVal = (float)(T + 0.3);
-                a[5].vt = VT_R4;   a[5].fltVal = (float)(W - 0.6);
-                a[6].vt = VT_R4;   a[6].fltVal = (float)(H - 0.6);
+                a[5].vt = VT_R4;   a[5].fltVal = keepAspect ? -1.0f : (float)(W - 0.6);
+                a[6].vt = VT_R4;   a[6].fltVal = keepAspect ? -1.0f : (float)(H - 0.6);
                 VARIANT picV; VariantInit(&picV);
                 bool added = invokeRaw(shapesDisp, L"AddPicture",
                                        DISPATCH_METHOD | DISPATCH_PROPERTYGET, &picV, a, 7);
@@ -259,10 +263,10 @@ namespace egtools::functions
                     // 밀린다 — 도형 좌표계로 다시 맞춘다(ShapeGrid.h).
                     {
                         egtools::latecom::ShapeGrid grid;
-                        egtools::latecom::fitShapeToRange(grid, pic, geom, 0.3);
+                        egtools::latecom::fitShapeToRange(grid, pic, geom, 0.3, keepAspect);
                     }
-                    if (mode == 0)
-                        putLong(pic, L"LockAspectRatio", kMsoTrue);   // keep ratio within cell
+                    if (keepAspect)
+                        putLong(pic, L"LockAspectRatio", kMsoTrue);   // 이후 사용자 크기 조절도 비율 유지
                 }
                 else VariantClear(&picV);
 

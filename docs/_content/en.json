@@ -1855,7 +1855,7 @@
         ],
         "notes": [
             "Unlike native 365 IMAGE it does not produce an in-cell value: it inserts a floating picture shape (EG.Image_Sheet_Cell) over the cell, replacing any same-named shape on recalculation.",
-            "alt_text, height and width are accepted for compatibility but ignored; resize_mode 0 (default) keeps the aspect ratio.",
+            "alt_text, height and width are accepted for compatibility but ignored; resize_mode 0 (default) fits the picture inside the cell keeping its aspect ratio and centers it (other values fill the cell).",
             "On modern Excel where native IMAGE exists, this function is registered as EG.IMAGE.",
             "An array in source returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
@@ -2311,8 +2311,8 @@
         ],
         "notes": [
             "Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).",
-            "The option argument is a margin when numeric (2D types) or TRUE to draw the text below the bars (1D types).",
-            "The image is sized to the calling cell; 2D types keep their aspect ratio.",
+            "The option argument is a margin in module units when numeric (2D types) or TRUE to draw the text below the bars (1D types).",
+            "2D types keep their specified aspect ratio (square modules), fitted inside the calling cell and centered; 1D types fill the cell.",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
     },
@@ -2327,7 +2327,7 @@
         ],
         "notes": [
             "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
-            "The image keeps its square aspect ratio within the calling cell.",
+            "The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
     },
@@ -2342,7 +2342,7 @@
         ],
         "notes": [
             "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
-            "The image keeps its square aspect ratio within the calling cell.",
+            "The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
     },

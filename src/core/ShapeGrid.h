@@ -107,7 +107,14 @@ namespace egtools::latecom
 
     // 셰이프를 range에 여백 off로 맞춘다(LockAspectRatio 해제). 회전 90/270 보정
     // 포함(VB C03_Picture.vb:304-321과 동일 수식, 좌표만 도형 좌표계로 치환).
-    inline void fitShapeToRange(ShapeGrid& grid, IDispatch* shape, IDispatch* range, double off)
+    //
+    // keepAspect=true: 도형의 현재 가로세로 비율을 유지한 채 셀 안에 최대 크기로
+    // 넣고, 남는 방향은 셀 중앙에 둔다(2D 바코드·IMAGE sizing 0). 호출 시점의
+    // Width/Height가 원본 비율이어야 하므로 AddPicture는 Width/Height=-1(원본
+    // 크기)로 삽입해 둘 것 — 셀 크기로 먼저 늘린 뒤 LockAspectRatio를 켜면
+    // 찌그러진 비율이 그대로 고정된다(QR/DataMatrix 모듈이 직사각형이 되던 원인).
+    inline void fitShapeToRange(ShapeGrid& grid, IDispatch* shape, IDispatch* range,
+                                double off, bool keepAspect = false)
     {
         // TopLeftCell/BottomRightCell은 회전된 "시각적" 사각형으로 판정되지만
         // Top/Left/Width/Height는 회전 전 프레임 기준(실측: 90° 회전 시 TLC가
@@ -129,21 +136,34 @@ namespace egtools::latecom
         // 모서리가 셀 경계에 닿아 BottomRightCell이 다음 행/열로 잡히지 않도록
         // 크기에 kDrift 여유를 둔다(0.45pt ≈ 0.6px, 육안 식별 불가).
         constexpr double kDrift = 0.45;
+        const double boxW = std::max(1.0, maW - off * 2 - kDrift);
+        const double boxH = std::max(1.0, maH - off * 2 - kDrift);
+        const bool swap = !(rot == 0.0 || rot == 180.0);   // 90/270도: 시각적 가로세로 교환
+
+        // 시각적(회전 후) 크기 vw×vh를 정한 뒤 프레임(회전 전) 크기로 되돌린다.
+        double vw = boxW, vh = boxH;
+        if (keepAspect)
+        {
+            const double w0 = getDouble(shape, L"Width");
+            const double h0 = getDouble(shape, L"Height");
+            if (w0 > 0.0 && h0 > 0.0)
+            {
+                const double sw = swap ? h0 : w0, sh = swap ? w0 : h0;
+                const double s = std::min(boxW / sw, boxH / sh);
+                vw = std::max(1.0, sw * s);
+                vh = std::max(1.0, sh * s);
+            }
+        }
+        const double fw = swap ? vh : vw, fh = swap ? vw : vh;
+
+        // 회전은 프레임 중심 기준이므로 프레임 중심을 박스 중심에 두면 시각적
+        // 사각형이 셀과 일치한다(채움: 박스와 동일, 비율 유지: 셀 중앙 정렬).
+        // (회전 0·채움일 때 Top=maT+off, Left=maL+off로 기존 수식과 동일.)
         putLong(shape, L"LockAspectRatio", 0);
-        if (rot == 0.0 || rot == 180.0)
-        {
-            putDouble(shape, L"Width", std::max(1.0, maW - off * 2 - kDrift));
-            putDouble(shape, L"Height", std::max(1.0, maH - off * 2 - kDrift));
-            putDouble(shape, L"Top", maT + off);
-            putDouble(shape, L"Left", maL + off);
-        }
-        else    // 90/270도: 가로세로 교환 + 중심 보정
-        {
-            putDouble(shape, L"Width", std::max(1.0, maH - off * 2 - kDrift));
-            putDouble(shape, L"Height", std::max(1.0, maW - off * 2 - kDrift));
-            putDouble(shape, L"Top", maT + off + (maH - maW) / 2);
-            putDouble(shape, L"Left", maL + off - (maH - maW) / 2);
-        }
+        putDouble(shape, L"Width", fw);
+        putDouble(shape, L"Height", fh);
+        putDouble(shape, L"Top", maT + off + (boxH - fh) / 2);
+        putDouble(shape, L"Left", maL + off + (boxW - fw) / 2);
         if (rot != 0.0) putDouble(shape, L"Rotation", rot);
     }
 }

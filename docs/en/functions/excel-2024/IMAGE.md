@@ -33,7 +33,7 @@ Always returns an empty string ("") as a scalar; after calculation it inserts a 
 ## Notes
 
 - Unlike native 365 IMAGE it does not produce an in-cell value: it inserts a floating picture shape (EG.Image_Sheet_Cell) over the cell, replacing any same-named shape on recalculation.
-- alt_text, height and width are accepted for compatibility but ignored; resize_mode 0 (default) keeps the aspect ratio.
+- alt_text, height and width are accepted for compatibility but ignored; resize_mode 0 (default) fits the picture inside the cell keeping its aspect ratio and centers it (other values fill the cell).
 - On modern Excel where native IMAGE exists, this function is registered as EG.IMAGE.
 - An array in source returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Registered as `IMAGE` (drop-in) on hosts without the native function, and as `EG.IMAGE` on modern Excel that has it.

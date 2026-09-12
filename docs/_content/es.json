@@ -1855,7 +1855,7 @@
         ],
         "notes": [
             "A diferencia de la función nativa de 365, el resultado no es un valor dentro de la celda: inserta una forma de imagen flotante (EG.Image_hoja_celda) sobre la celda y, al recalcular, reemplaza la forma existente con el mismo nombre.",
-            "Los argumentos alt_text, height y width se aceptan por compatibilidad pero se ignoran; con resize_mode 0 (predeterminado) se mantiene la relación de aspecto.",
+            "Los argumentos alt_text, height y width se aceptan por compatibilidad pero se ignoran; con resize_mode 0 (predeterminado) la imagen se ajusta dentro de la celda manteniendo la relación de aspecto y se centra (los demás valores llenan la celda).",
             "En las versiones modernas de Excel que incluyen la función IMAGE nativa, esta función se registra como EG.IMAGE.",
             "Una matriz en source devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila."
         ]
@@ -2311,8 +2311,8 @@
         ],
         "notes": [
             "Tipos admitidos: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (predeterminado), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (también se aceptan códigos numéricos).",
-            "El argumento de opción se interpreta como margen si es numérico (formatos 2D) y, si es TRUE, como mostrar el texto bajo las barras (formatos 1D).",
-            "El tamaño de la imagen se ajusta a la celda que llama; los formatos 2D mantienen su relación de aspecto.",
+            "El argumento de opción se interpreta como margen en módulos si es numérico (formatos 2D) y, si es TRUE, como mostrar el texto bajo las barras (formatos 1D).",
+            "Los formatos 2D mantienen su proporción normalizada (módulos cuadrados), se ajustan dentro de la celda que llama y se centran; los formatos 1D llenan la celda.",
             "Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila."
         ]
     },
@@ -2327,7 +2327,7 @@
         ],
         "notes": [
             "gs1=TRUE se aproxima con separadores GS (0x1D); no es una codificación FNC1 completa. Si se necesita GS1 completo, use CODE128 (GS1-128).",
-            "La imagen mantiene su proporción cuadrada dentro de la celda que llama.",
+            "La imagen mantiene la proporción normalizada del símbolo (módulos cuadrados) al ajustarse dentro de la celda que llama y se centra en el espacio sobrante; margin se expresa en módulos (predeterminado 0).",
             "Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila."
         ]
     },
@@ -2342,7 +2342,7 @@
         ],
         "notes": [
             "gs1=TRUE se aproxima con separadores GS (0x1D); no es una codificación FNC1 completa. Si se necesita GS1 completo, use CODE128 (GS1-128).",
-            "La imagen mantiene su proporción cuadrada dentro de la celda que llama.",
+            "La imagen mantiene la proporción normalizada del símbolo (módulos cuadrados) al ajustarse dentro de la celda que llama y se centra en el espacio sobrante; margin se expresa en módulos (predeterminado 0).",
             "Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila."
         ]
     },

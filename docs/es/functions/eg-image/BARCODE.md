@@ -2,7 +2,7 @@
 
 **Categoría**: función exclusiva de EGTools
 
-Codifica texto como código de barras e inserta la imagen en la celda que llama.
+Codifica texto como código de barras e inserta la imagen en la celda que llama (los tipos 2D mantienen la proporción y se centran si la celda es mayor).
 
 ## Sintaxis
 
@@ -32,7 +32,7 @@ Devuelve una cadena vacía ("") si tiene éxito, y la imagen del código de barr
 ## Notas
 
 - Tipos admitidos: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (predeterminado), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (también se aceptan códigos numéricos).
-- El argumento de opción se interpreta como margen si es numérico (formatos 2D) y, si es TRUE, como mostrar el texto bajo las barras (formatos 1D).
-- El tamaño de la imagen se ajusta a la celda que llama; los formatos 2D mantienen su relación de aspecto.
+- El argumento de opción se interpreta como margen en módulos si es numérico (formatos 2D) y, si es TRUE, como mostrar el texto bajo las barras (formatos 1D).
+- Los formatos 2D mantienen su proporción normalizada (módulos cuadrados), se ajustan dentro de la celda que llama y se centran; los formatos 1D llenan la celda.
 - Una matriz en el texto devuelve #VALUE! (una imagen por celda); para varios elementos, copie la fórmula fila por fila.
 - Compatibilidad: Excel 2010+. Se registra siempre como `BARCODE` en todas las versiones de Excel.

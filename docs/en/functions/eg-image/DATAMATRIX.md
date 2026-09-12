@@ -2,7 +2,7 @@
 
 **Category**: EGTools-only function
 
-Encodes text as a DataMatrix image in the calling cell.
+Encodes text as a DataMatrix image in the calling cell (aspect ratio kept, centered when the cell is larger).
 
 ## Syntax
 
@@ -31,6 +31,6 @@ Returns an empty string ("") on success; the DataMatrix picture is inserted sepa
 ## Notes
 
 - gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.
-- The image keeps its square aspect ratio within the calling cell.
+- The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).
 - An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `DATAMATRIX` on every Excel version.

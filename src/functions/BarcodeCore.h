@@ -8,6 +8,7 @@
 #include <ZXing/MultiFormatWriter.h>
 #include <ZXing/CharacterSet.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdint>
 #include <map>
@@ -185,14 +186,35 @@ namespace egtools::barcode
     }
 
     // BitMatrix (get(x,y): true = black module) → pixel buffer (0 black / 1 white).
-    inline std::vector<uint8_t> matrixToPixels(const ZXing::BitMatrix& m)
+    // scale: 각 비트를 scale×scale 픽셀 블록으로 확대(정수배 → 모듈 정사각 유지).
+    inline std::vector<uint8_t> matrixToPixels(const ZXing::BitMatrix& m, int scale = 1)
     {
-        const int w = m.width(), h = m.height();
+        if (scale < 1) scale = 1;
+        const int w = m.width() * scale, h = m.height() * scale;
         std::vector<uint8_t> px((size_t)w * h, 1);
         for (int y = 0; y < h; ++y)
             for (int x = 0; x < w; ++x)
-                if (m.get(x, y)) px[(size_t)y * w + x] = 0;
+                if (m.get(x / scale, y / scale)) px[(size_t)y * w + x] = 0;
         return px;
+    }
+
+    // 2D 심볼(QR/DataMatrix/Aztec/PDF417)을 규격 비율 그대로 렌더링한다.
+    // zxing에 요청 크기 0×0을 주면 모듈 1px + 여백(모듈 단위)만으로 이루어진
+    // 최소 비트맵이 나오므로(요청 크기가 있으면 그 크기까지 흰 패딩을 채워 넣어
+    // 심볼 비율이 그림 비율에 드러나지 않음), 이를 긴 변이 targetPx 이상이 되는
+    // 정수배로 확대한다. 결과 그림의 가로세로 비율 = 심볼 고유 비율
+    // (QR/DM 정사각·직사각 DM·PDF417 행높이 4X), 모듈은 항상 정사각.
+    inline std::optional<ZXing::BitMatrix> encode2D(
+        const std::wstring& text, ZXing::BarcodeFormat fmt, int margin,
+        int targetPx, int& scaleOut)
+    {
+        auto m = encodeMatrix(text, fmt, 0, 0, margin);
+        scaleOut = 1;
+        if (!m) return m;
+        const int longest = (std::max)(m->width(), m->height());
+        if (longest > 0 && targetPx > longest)
+            scaleOut = (targetPx + longest - 1) / longest;
+        return m;
     }
 
     // Encode straight to a BMP file. Returns false on any failure.

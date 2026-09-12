@@ -133,13 +133,16 @@ namespace egtools::functions
                                   bool is2D, int margin, bool showText,
                                   const std::wstring& showTextStr, int bandH)
         {
-            const int W = is2D ? 512 : 800;
-            const int H = is2D ? 512 : 200;
-
-            auto m = bc::encodeMatrix(text, fmt, W, H, margin);
+            // 2D: 규격 비율 렌더(모듈 정사각, 그림 비율 = 심볼 비율) → 셀 안 비율
+            //     유지 맞춤 + 중앙 정렬(mode 0). 512×512 요청은 심볼 주위를 흰
+            //     패딩으로 채워 그림이 항상 정사각이 되므로 쓰지 않는다(encode2D).
+            // 1D: 바 높이는 규격상 자유(절단 허용)라 800×200으로 그려 셀을 채운다(mode 1).
+            int scale = 1;
+            auto m = is2D ? bc::encode2D(text, fmt, margin, 512, scale)
+                          : bc::encodeMatrix(text, fmt, 800, 200, margin);
             if (!m) return returnValue(CellError::Value);
-            int mw = m->width(), mh = m->height();
-            auto px = bc::matrixToPixels(*m);
+            int mw = m->width() * scale, mh = m->height() * scale;
+            auto px = bc::matrixToPixels(*m, scale);
             if (showText && !appendTextBand(px, mw, mh, showTextStr, bandH))
                 return returnValue(CellError::Value);
 

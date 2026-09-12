@@ -2,7 +2,7 @@
 
 **Category**: EGTools-only function
 
-Encodes text as a barcode and inserts the image into the calling cell.
+Encodes text as a barcode and inserts the image into the calling cell (2D types keep their aspect ratio and are centered when the cell is larger).
 
 ## Syntax
 
@@ -32,7 +32,7 @@ Returns an empty string ("") on success; the barcode picture is inserted separat
 ## Notes
 
 - Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).
-- The option argument is a margin when numeric (2D types) or TRUE to draw the text below the bars (1D types).
-- The image is sized to the calling cell; 2D types keep their aspect ratio.
+- The option argument is a margin in module units when numeric (2D types) or TRUE to draw the text below the bars (1D types).
+- 2D types keep their specified aspect ratio (square modules), fitted inside the calling cell and centered; 1D types fill the cell.
 - An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `BARCODE` on every Excel version.
