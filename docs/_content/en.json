@@ -2311,6 +2311,8 @@
         ],
         "notes": [
             "Supported types: CODE128, CODE39/93, EAN13/8, UPC-A/E, ITF, CODABAR, PDF417, QRCODE (default), DATAMATRIX, AZTEC, GS1-128/GS1DATAMATRIX/GS1QRCODE (numeric codes also accepted).",
+            "Generation uses zint; reading (READBARCODE) uses zxing-cpp. GS1-128/GS1DATAMATRIX/GS1QRCODE encode parenthesized AI text such as \"(01)04012345678901(10)LOT42\" to specification (FNC1 first, separators after variable-length AIs; symbology identifiers ]C1/]d2/]Q3); square-bracket [AI]value notation and a raw scanner stream such as `]C10104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]C1 identifier is ignored if present) produce the same symbol. AI format/length/check-digit violations, unknown AIs and non-ASCII characters return #VALUE!.",
+            "EAN13/EAN8/UPC-A/UPC-E accept data without the check digit (12/7/11/6–7 digits) and append it, or verify it when included (a wrong one returns #VALUE!); ITF is padded with a leading 0 when the digit count is odd.",
             "The option argument is a margin in module units when numeric (2D types) or TRUE to draw the text below the bars (1D types).",
             "2D types keep their specified aspect ratio (square modules), fitted inside the calling cell and centered; 1D types fill the cell.",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
@@ -2326,7 +2328,8 @@
             ]
         ],
         "notes": [
-            "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
+            "gs1=TRUE encodes parenthesized AI text such as \"(01)04012345678901(10)LOT42\" as GS1 QR Code (symbology identifier ]Q3) — FNC1 is placed in the first position and separators follow variable-length AIs as the specification requires. Square-bracket notation such as \"[01]04012345678901[10]LOT42\" and a raw scanner stream such as `]Q30104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]Q3 identifier is ignored if present) produce the same symbol; unknown AIs return #VALUE!.",
+            "GS1 data is validated for AI format, length and check digits (e.g. the (01) GTIN check digit); violations return #VALUE!, and only printable ASCII is allowed (Korean etc. returns #VALUE!). Plain text is encoded as UTF-8, with an ECI inserted automatically for non-Latin-1 characters (supported by most readers).",
             "The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
@@ -2341,7 +2344,8 @@
             ]
         ],
         "notes": [
-            "gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.",
+            "gs1=TRUE encodes parenthesized AI text such as \"(01)04012345678901(10)LOT42\" as GS1 DataMatrix (symbology identifier ]d2) — FNC1 is placed in the first position and separators follow variable-length AIs as the specification requires. Square-bracket notation such as \"[01]04012345678901[10]LOT42\" and a raw scanner stream such as `]d20104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]d2 identifier is ignored if present) produce the same symbol; unknown AIs return #VALUE!.",
+            "GS1 data is validated for AI format, length and check digits (e.g. the (01) GTIN check digit); violations return #VALUE!, and only printable ASCII is allowed (Korean etc. returns #VALUE!). Plain text is encoded as UTF-8, with an ECI inserted automatically for non-Latin-1 characters (supported by most readers).",
             "The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
         ]
@@ -2361,7 +2365,7 @@
             ]
         ],
         "notes": [
-            "gs1=TRUE encodes (AI)value text as fully FNC1-compliant GS1-128 (symbology identifier ]C1).",
+            "gs1=TRUE encodes parenthesized AI text such as \"(01)04012345678901(10)LOT42\" as GS1-128 (symbology identifier ]C1) — FNC1 first and separators after variable-length AIs as specified. Square-bracket notation such as \"[01]04012345678901[10]LOT42\" and a raw scanner stream such as `]C10104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]C1 identifier is ignored if present) produce the same symbol; AI format/length/check-digit violations, unknown AIs or non-ASCII characters return #VALUE!.",
             "The image fills the calling cell (1D format).",
             "text_size is a relative value that scales the text band height.",
             "An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row."
@@ -2383,7 +2387,7 @@
         ],
         "notes": [
             "Reads WIC-supported formats (PNG/JPG/BMP/GIF) from a local file path or an http(s) URL.",
-            "result_type: 1 text (default), 2 code text (control characters shown as <GS> etc.), 3 format, 4 symbology id, 5 raw hex.",
+            "result_type: 1 text (default), 2 code text (control characters shown as `<GS>` etc.), 3 format, 4 symbology id, 5 raw hex.",
             "Tries rotated/low-quality images too (TryHarder/TryRotate) but decodes only one barcode.",
             "An array in source returns #VALUE! — for multiple items, copy the formula down row by row."
         ]
@@ -2403,7 +2407,7 @@
             ]
         ],
         "notes": [
-            "Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators.",
+            "Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators (the literal text `<GS>` is recognized as a separator too).",
             "Uses the fixed-length and variable-length GS1 AI tables to split a stream."
         ]
     },

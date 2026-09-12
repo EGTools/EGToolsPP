@@ -30,6 +30,6 @@ Splits GS1 text into a spilled N-by-2 array of (AI) and value (one joined (AI)va
 
 ## Notes
 
-- Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators.
+- Accepts both the bracketed (AI)value form and a raw decoded stream with GS separators (the literal text `<GS>` is recognized as a separator too).
 - Uses the fixed-length and variable-length GS1 AI tables to split a stream.
 - Supported: Excel 2010+. Always registered as `READGS1` on every Excel version.

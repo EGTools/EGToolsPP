@@ -16,7 +16,7 @@ Encodes text as a Code 128 barcode image in the calling cell.
 |---|---|---|
 | text | Required | the text to encode |
 | show_text | Optional | TRUE = draw the text under the bars |
-| gs1 | Optional | TRUE = GS1-128 with FNC1 |
+| gs1 | Optional | TRUE = GS1-128 (FNC1): (AI)value or [AI]value notation, or a raw GS-separated stream |
 | text_size | Optional | relative label size |
 
 ## Returns
@@ -32,7 +32,7 @@ Returns an empty string ("") on success; the Code 128 barcode picture is inserte
 
 ## Notes
 
-- gs1=TRUE encodes (AI)value text as fully FNC1-compliant GS1-128 (symbology identifier ]C1).
+- gs1=TRUE encodes parenthesized AI text such as "(01)04012345678901(10)LOT42" as GS1-128 (symbology identifier ]C1) — FNC1 first and separators after variable-length AIs as specified. Square-bracket notation such as "[01]04012345678901[10]LOT42" and a raw scanner stream such as `]C10104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]C1 identifier is ignored if present) produce the same symbol; AI format/length/check-digit violations, unknown AIs or non-ASCII characters return #VALUE!.
 - The image fills the calling cell (1D format).
 - text_size is a relative value that scales the text band height.
 - An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.

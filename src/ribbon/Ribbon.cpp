@@ -1,4 +1,4 @@
-// Ribbon.cpp — EGTools++ Ribbon (COM add-in) via xlOil.
+﻿// Ribbon.cpp — EGTools++ Ribbon (COM add-in) via xlOil.
 //
 // xlOil's makeComAddin()/connect() registers a COM add-in and serves the given
 // customUI XML through IRibbonExtensibility — this works from a static XLL and
@@ -755,7 +755,7 @@ namespace egtools::ribbon
                 content += t(L"ribbon.about.license");
                 content += L": Apache License 2.0\n";
                 content += t(L"ribbon.about.base");
-                content += L": xlOil 0.22.1 (Apache-2.0)";
+                content += L":\n  xlOil 0.22.1 (Apache-2.0)\n  zint 2.16.0 (BSD-3-Clause)\n  zxing-cpp 2.3.0 (Apache-2.0)";
                 if (hasNew)
                 {
                     wchar_t line[256];
@@ -793,7 +793,7 @@ namespace egtools::ribbon
             text += t(L"ribbon.about.license");
             text += L": Apache License 2.0\n";
             text += t(L"ribbon.about.base");
-            text += L": xlOil 0.22.1 (Apache-2.0)";
+            text += L":\n  xlOil 0.22.1 (Apache-2.0)\n  zint 2.16.0 (BSD-3-Clause)\n  zxing-cpp 2.3.0 (Apache-2.0)";
             if (hasNew)
             {
                 wchar_t line[256];

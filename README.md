@@ -72,6 +72,7 @@ cmake --build --preset x64-release         # 산출물: dist/EGTools++64.xll
 ```
 
 - 정적 링크(`/MT`)라 VC++ 재배포 패키지가 필요 없습니다.
+- `cmake --preset`(구성) 단계에서 바코드 생성 라이브러리 zint(2.16.0)를 `external/zint`로 자동 클론합니다(git·네트워크 필요, 최초 1회).
 - `tools/build_xloil.ps1`은 개발 빌드 전용 스크립트로, 의존 소스를 받아 빌드하는 특성상
   일부 백신이 오탐할 수 있습니다(개발 PC에서만 예외 등록 권장). 배포 `.xll`과는 무관합니다.
 
@@ -91,4 +92,6 @@ resources/      리소스·아이콘·다국어 카탈로그·엔트리포인트
 - **EGTools++는 [Apache License 2.0](LICENSE)으로 배포됩니다.**
 - 베이스 프레임워크: [xlOil](https://gitlab.com/stevecu/xloil) (Apache-2.0) — 정적 링크 및
   구버전 호환 패치 적용(`patches/` 참조)
+- 바코드 생성: [zint](https://github.com/zint/zint) 2.16.0 (BSD-3-Clause) — CMake 구성 시 `external/zint`로 자동 클론, 정적 링크
+- 바코드 판독: [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp) 2.3.0 (Apache-2.0) — vcpkg 정적
 - 실행 파일 압축: UPX

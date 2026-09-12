@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 1.3
+  VERSION 1.4
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
-  LANGUAGES CXX)
+  LANGUAGES CXX C)
 
 # --- Standard ---------------------------------------------------------------
 # C++17 to match xlOil (its headers/libs are built as stdcpp17). Revisit C++20
@@ -176,12 +176,49 @@ target_link_libraries(EGToolsPP PRIVATE nlohmann_json::nlohmann_json)
 find_package(ZXing CONFIG REQUIRED)
 target_link_libraries(EGToolsPP PRIVATE ZXing::ZXing)
 
+# Barcode generation — zint (BSD-3-Clause), built from external/zint (pinned tag,
+# auto-cloned at configure time; external/ is gitignored like xlOil). zxing-cpp
+# stays for decoding only: its DataMatrix writer has no FNC1 codeword and its QR
+# FNC1 mode is unreachable through MultiFormatWriter, so GS1 2D symbols could
+# not be made spec-compliant (2026-09-12, see BarcodeCore.h).
+set(EG_ZINT_TAG 2.16.0)
+set(EG_ZINT_DIR ${CMAKE_SOURCE_DIR}/external/zint)
+if(NOT EXISTS ${EG_ZINT_DIR}/backend/zint.h)
+  message(STATUS "Cloning zint ${EG_ZINT_TAG} into external/zint")
+  execute_process(COMMAND git clone -q --depth 1 --branch ${EG_ZINT_TAG}
+                          https://github.com/zint/zint.git ${EG_ZINT_DIR}
+                  RESULT_VARIABLE EG_ZINT_RC)
+  if(NOT EG_ZINT_RC EQUAL 0)
+    message(FATAL_ERROR "zint clone failed (git/network) — see CMakeLists.txt")
+  endif()
+endif()
+# Same source list as external/zint/backend/CMakeLists.txt (zint_*_SRCS, PNG
+# off). library.c references every symbology and output module, so all are
+# compiled; unused functions are dropped at link time (/Gy + /OPT:REF).
+set(EG_ZINT_SRCS
+  common.c eci.c filemem.c general_field.c gs1.c large.c library.c reedsol.c
+  2of5.c 2of5inter.c 2of5inter_based.c bc412.c channel.c codabar.c code.c code11.c
+  code128.c code128_based.c dxfilmedge.c medical.c plessey.c rss.c telepen.c upcean.c
+  auspost.c imail.c mailmark.c postal.c
+  aztec.c codablock.c code1.c code16k.c code49.c composite.c dmatrix.c dotcode.c
+  gridmtx.c hanxin.c maxicode.c pdf417.c qr.c ultra.c
+  bmp.c emf.c gif.c output.c pcx.c ps.c raster.c svg.c tif.c vector.c)
+list(TRANSFORM EG_ZINT_SRCS PREPEND ${EG_ZINT_DIR}/backend/)
+add_library(eg_zint STATIC ${EG_ZINT_SRCS})
+target_include_directories(eg_zint PUBLIC ${EG_ZINT_DIR}/backend)
+target_compile_definitions(eg_zint PRIVATE
+  ZINT_NO_PNG _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
+set_property(TARGET eg_zint PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+target_compile_options(eg_zint PRIVATE /utf-8 $<$<CONFIG:Release>:/O1 /Gy /Gw>)   # zint sources are BOM-less UTF-8 (C4819 on cp949)
+target_link_libraries(EGToolsPP PRIVATE eg_zint)
+
 # Console self-test that round-trips the barcode core without Excel
 # (encodes sample BMPs which tests/ then decodes via READBARCODE).
 # Not part of ALL and never shipped.
 add_executable(eg_barcode_selftest EXCLUDE_FROM_ALL tools/barcode_selftest.cpp)
 target_include_directories(eg_barcode_selftest PRIVATE src)
-target_link_libraries(eg_barcode_selftest PRIVATE ZXing::ZXing)
+target_link_libraries(eg_barcode_selftest PRIVATE eg_zint)
 set_property(TARGET eg_barcode_selftest PROPERTY
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

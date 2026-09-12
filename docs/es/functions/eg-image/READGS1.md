@@ -30,6 +30,6 @@ Descompone el texto GS1 en una matriz de N×2 con (AI) y valor, y se derrama (co
 
 ## Notas
 
-- Se puede introducir tanto el formato con paréntesis (AI)valor como el flujo sin procesar leído de un código de barras (con separadores GS).
+- Se puede introducir tanto el formato con paréntesis (AI)valor como el flujo sin procesar leído de un código de barras (con separadores GS; también se reconoce el texto literal `<GS>`).
 - Usa las tablas de AI GS1 de longitud fija y longitud variable para descomponer el flujo.
 - Compatibilidad: Excel 2010+. Se registra siempre como `READGS1` en todas las versiones de Excel.

@@ -16,7 +16,7 @@ Encodes text as a QR code image in the calling cell (aspect ratio kept, centered
 |---|---|---|
 | text | Required | the text to encode |
 | margin | Optional | quiet-zone modules (default 0) |
-| gs1 | Optional | TRUE = treat text as GS1 (AI)value pairs |
+| gs1 | Optional | TRUE = encode as GS1 (FNC1): (AI)value or [AI]value notation, or a raw GS-separated stream |
 
 ## Returns
 
@@ -30,7 +30,8 @@ Returns an empty string ("") on success; the QR code picture is inserted separat
 
 ## Notes
 
-- gs1=TRUE approximates GS1 with GS (0x1D) separators — not full FNC1 encoding; use CODE128 (GS1-128) for full compliance.
+- gs1=TRUE encodes parenthesized AI text such as "(01)04012345678901(10)LOT42" as GS1 QR Code (symbology identifier ]Q3) — FNC1 is placed in the first position and separators follow variable-length AIs as the specification requires. Square-bracket notation such as "[01]04012345678901[10]LOT42" and a raw scanner stream such as `]Q30104012345678901<GS>10LOT42` (`<GS>` = separator 0x1D — typing the literal text `<GS>` is recognized too; a leading ]Q3 identifier is ignored if present) produce the same symbol; unknown AIs return #VALUE!.
+- GS1 data is validated for AI format, length and check digits (e.g. the (01) GTIN check digit); violations return #VALUE!, and only printable ASCII is allowed (Korean etc. returns #VALUE!). Plain text is encoded as UTF-8, with an ECI inserted automatically for non-Latin-1 characters (supported by most readers).
 - The picture keeps the symbol's specified aspect ratio (square modules) while being fitted inside the calling cell, and is centered in the leftover space; margin is in module units (default 0).
 - An array in the text returns #VALUE! (one picture per cell) — for multiple items, copy the formula down row by row.
 - Supported: Excel 2010+. Always registered as `QRCODE` on every Excel version.

@@ -1,5 +1,5 @@
-﻿// FxBarcode.cpp — barcode functions (plan/22 B2), ported from VB FX5_Barcode
-// with zxing-cpp replacing ZXing.NET.
+﻿// FxBarcode.cpp — barcode functions (plan/22 B2), ported from VB FX5_Barcode.
+// 생성은 zint(BarcodeCore.h), 판독은 zxing-cpp(READBARCODE).
 //
 //   BARCODE(text, [type], [option])          — multi-format encode → picture in cell
 //   QRCODE(text, [margin], [gs1])            — QR encode → picture
@@ -10,9 +10,9 @@
 //
 // Encoding writes a temporary 24-bpp BMP and reuses the IMAGE insertion path
 // (ImageInsert.h): deferred main-thread Shapes.AddPicture sized to the calling
-// cell, temp file deleted after embedding. GS1: Code128 uses the writer's FNC1
-// escape (U+00F1, full compliance); QR/DataMatrix fall back to ASCII 29 group
-// separators (readers commonly accept; documented in the manual).
+// cell, temp file deleted after embedding. GS1(gs1=TRUE / GS1-* 종류)은 괄호
+// AI 표기를 zint GS1 모드로 넘겨 FNC1 첫 자리 + 구분자를 규격대로 인코딩한다
+// (GS1-128 ]C1, GS1 DataMatrix ]d2, GS1 QR ]Q3); AI 형식·길이 위반은 #VALUE!.
 // Decoding loads pixels via WIC (PNG/JPG/BMP/GIF) — no image library needed.
 
 // windows.h FIRST with full GDI: xlOil's WindowsSlim.h pre-includes windows.h
@@ -127,22 +127,22 @@ namespace egtools::functions
             return true;
         }
 
-        // Encode → temp BMP → queue deferred insertion into the calling cell.
+        // Encode(zint) → temp BMP → queue deferred insertion into the calling cell.
         // Returns "" on success (VB parity) or an error ExcelObj*.
-        ExcelObj* encodeAndInsert(const std::wstring& text, ZXing::BarcodeFormat fmt,
-                                  bool is2D, int margin, bool showText,
+        ExcelObj* encodeAndInsert(const std::wstring& text, const bc::TypeInfo& ti,
+                                  int margin, bool showText,
                                   const std::wstring& showTextStr, int bandH)
         {
-            // 2D: 규격 비율 렌더(모듈 정사각, 그림 비율 = 심볼 비율) → 셀 안 비율
-            //     유지 맞춤 + 중앙 정렬(mode 0). 512×512 요청은 심볼 주위를 흰
-            //     패딩으로 채워 그림이 항상 정사각이 되므로 쓰지 않는다(encode2D).
-            // 1D: 바 높이는 규격상 자유(절단 허용)라 800×200으로 그려 셀을 채운다(mode 1).
-            int scale = 1;
-            auto m = is2D ? bc::encode2D(text, fmt, margin, 512, scale)
-                          : bc::encodeMatrix(text, fmt, 800, 200, margin);
-            if (!m) return returnValue(CellError::Value);
-            int mw = m->width() * scale, mh = m->height() * scale;
-            auto px = bc::matrixToPixels(*m, scale);
+            // 2D: 모듈 1px 비트맵(그림 비율 = 심볼 고유 비율, 모듈 정사각·PDF417
+            //     행높이 3X)을 긴 변 ≥512px 정수배로 확대 → 셀 안 비율 유지 + 중앙
+            //     정렬(mode 0).
+            // 1D: 바 높이는 규격상 자유(절단 허용)라 폭 ≥800px·높이 200px로 그려
+            //     셀을 채운다(mode 1).
+            bc::ModuleBitmap mb;
+            if (!bc::encodeModules(text, ti, margin, mb)) return returnValue(CellError::Value);
+            bc::ModuleBitmap img = bc::scaleForPicture(mb, ti.is2D);
+            int mw = img.w, mh = img.h;
+            std::vector<uint8_t> px = std::move(img.px);
             if (showText && !appendTextBand(px, mw, mh, showTextStr, bandH))
                 return returnValue(CellError::Value);
 
@@ -154,28 +154,8 @@ namespace egtools::functions
             if (cell.empty()) { DeleteFileW(path.c_str()); return returnValue(CellError::Ref); }
 
             // mode 0 = keep aspect ratio within the cell (2D); 1 = fill cell (1D).
-            queueInsertPicture(fullAddr, cell, path, is2D ? 0 : 1, /*deleteLocalAfter*/ true);
+            queueInsertPicture(fullAddr, cell, path, ti.is2D ? 0 : 1, /*deleteLocalAfter*/ true);
             return returnValue(ExcelObj(std::wstring_view(L"")));
-        }
-
-        // GS1 text for the target format. Code128 gets full FNC1 compliance via
-        // the writer's U+00F1 escape (leading FNC1 included); QR/DM approximate
-        // with ASCII 29 separators.
-        bool gs1Text(const std::wstring& input, ZXing::BarcodeFormat fmt, std::wstring& out)
-        {
-            std::wstring err;
-            if (fmt == ZXing::BarcodeFormat::Code128)
-            {
-                std::wstring s = bc::gs1ToStream(input, (wchar_t)0x00F1, err);
-                if (s.empty()) return false;
-                out = std::wstring(1, (wchar_t)0x00F1) + s;
-            }
-            else
-            {
-                out = bc::gs1ToStream(input, (wchar_t)0x001D, err);
-                if (out.empty()) return false;
-            }
-            return true;
         }
 
         // ── READBARCODE: WIC pixel load ──────────────────────────────────────
@@ -246,14 +226,12 @@ namespace egtools::functions
         namespace core = egtools::core;
 
         // ── encode family (macro-type: xlfCaller + deferred COM insert) ──────
+        // GS1이면 text는 괄호 AI 표기 그대로 zint GS1 모드로 간다(BarcodeCore.h).
         auto encodeFamily = [](const std::wstring& text, bc::TypeInfo ti,
                                int margin, bool showText, int bandH,
                                const std::wstring& original) -> ExcelObj*
         {
-            std::wstring real = text;
-            if (ti.gs1 && !gs1Text(text, ti.fmt, real)) return returnValue(CellError::Value);
-            return encodeAndInsert(real, ti.fmt, ti.is2D, margin,
-                                   showText && !ti.is2D, original, bandH);
+            return encodeAndInsert(text, ti, margin, showText && !ti.is2D, original, bandH);
         };
 
         // BARCODE(text, [type], [option]) — option: number → margin, TRUE/FALSE → show text.
@@ -286,7 +264,7 @@ namespace egtools::functions
                 if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
-                bc::TypeInfo ti{ ZXing::BarcodeFormat::QRCode, true, gs1A.get<bool>(false) };
+                bc::TypeInfo ti{ BARCODE_QRCODE, true, gs1A.get<bool>(false) };
                 int margin = marginA.get<int>(0); if (margin < 0) margin = 0;
                 return encodeFamily(text, ti, margin, false, 0, text);
             },
@@ -299,7 +277,7 @@ namespace egtools::functions
                 if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
-                bc::TypeInfo ti{ ZXing::BarcodeFormat::DataMatrix, true, gs1A.get<bool>(false) };
+                bc::TypeInfo ti{ BARCODE_DATAMATRIX, true, gs1A.get<bool>(false) };
                 int margin = marginA.get<int>(0); if (margin < 0) margin = 0;
                 return encodeFamily(text, ti, margin, false, 0, text);
             },
@@ -313,7 +291,8 @@ namespace egtools::functions
                 if (textA.isType(ExcelType::Multi)) return returnValue(CellError::Value);
                 const std::wstring text = textA.toString();
                 if (text.empty()) return returnValue(CellError::Value);
-                bc::TypeInfo ti{ ZXing::BarcodeFormat::Code128, false, gs1A.get<bool>(false) };
+                const bool gs1 = gs1A.get<bool>(false);
+                bc::TypeInfo ti{ gs1 ? BARCODE_GS1_128 : BARCODE_CODE128, false, gs1 };
                 const bool showText = showA.get<bool>(false);
                 int bandH = sizeA.get<int>(0);
                 bandH = bandH > 0 ? bandH * 5 : 60;      // VB font-size knob, scaled to 800px art
@@ -449,38 +428,10 @@ namespace egtools::functions
                 else
                 {
                     // decoded stream: [FNC1] AI value … with GS separators
-                    size_t i = 0;
-                    while (i < src.size() && src[i] < 32) ++i;
-                    std::wstring ai, val;
-                    bool inValue = false;
-                    int expected = 0;
-                    auto flush = [&]() {
-                        if (!ai.empty()) parts.emplace_back(ai, val);
-                        ai.clear(); val.clear(); inValue = false; expected = 0;
-                    };
-                    for (; i < src.size(); ++i)
-                    {
-                        const wchar_t ch = src[i];
-                        if (ch < 32) { flush(); continue; }
-                        if (inValue)
-                        {
-                            val.push_back(ch);
-                            if ((int)val.size() == expected) flush();
-                        }
-                        else
-                        {
-                            ai.push_back(ch);
-                            auto fit = bc::fixedLenAIs().find(ai);
-                            if (fit != bc::fixedLenAIs().end()) { expected = fit->second; inValue = true; }
-                            else
-                            {
-                                auto vit = bc::varLenAIs().find(ai);
-                                if (vit != bc::varLenAIs().end()) { expected = vit->second; inValue = true; }
-                                else if (ai.size() >= 4) return returnValue(CellError::Num);
-                            }
-                        }
-                    }
-                    flush();
+                    // (BarcodeCore.h parseGs1Stream — GS1 인코딩 입력 정규화와 공용).
+                    // 표에 없는 AI → #NUM!, 아무것도 못 자르면 #N/A.
+                    if (!bc::parseGs1Stream(src, parts))
+                        return returnValue(parts.empty() && src.size() < 4 ? CellError::NA : CellError::Num);
                 }
                 if (parts.empty()) return returnValue(CellError::NA);
 
