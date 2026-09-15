@@ -204,6 +204,23 @@ def landing_page() -> str:
 """
 
 
+def sitemap_index() -> str:
+    """언어별 MkDocs sitemap을 묶는 루트 sitemap index — Search Console에 한 번만 제출."""
+    entries = "\n".join(
+        f"  <sitemap><loc>{SITE_URL}/{d}/sitemap.xml</loc></sitemap>" for d, _, _, _ in LANGS
+    )
+    return f"""\
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{entries}
+</sitemapindex>
+"""
+
+
+def robots_txt() -> str:
+    return f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n"
+
+
 def main() -> int:
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -224,6 +241,8 @@ def main() -> int:
             write_redirects(lang_dir)
 
     (SITE / "index.html").write_text(landing_page(), encoding="utf-8")
+    (SITE / "sitemap.xml").write_text(sitemap_index(), encoding="utf-8")
+    (SITE / "robots.txt").write_text(robots_txt(), encoding="utf-8")
     # docs/_root/* 는 사이트 루트에 그대로 복사 (Search Console 확인 파일 등)
     root_extra = DOCS / "_root"
     if root_extra.is_dir():
