@@ -35,10 +35,10 @@ Excel 2010~2021 어디서든 동일하게 사용할 수 있습니다. 설치 파
 ## 매뉴얼
 
 함수별 사용법·예제와 리본 기능 설명을 검색 가능한 매뉴얼 사이트로 제공합니다:
-**<https://egtools.github.io/EGToolsPP/>**
-([한국어](https://egtools.github.io/EGToolsPP/kr/) · [English](https://egtools.github.io/EGToolsPP/en/) ·
-[日本語](https://egtools.github.io/EGToolsPP/ja/) · [Español](https://egtools.github.io/EGToolsPP/es/) ·
-[简体中文](https://egtools.github.io/EGToolsPP/zh-CN/) · [繁體中文](https://egtools.github.io/EGToolsPP/zh-TW/))
+**<https://manual.egtools.kr/>**
+([한국어](https://manual.egtools.kr/kr/) · [English](https://manual.egtools.kr/en/) ·
+[日本語](https://manual.egtools.kr/ja/) · [Español](https://manual.egtools.kr/es/) ·
+[简体中文](https://manual.egtools.kr/zh-CN/) · [繁體中文](https://manual.egtools.kr/zh-TW/))
 
 원본 마크다운은 [docs/](docs/) 폴더에 있습니다.
 

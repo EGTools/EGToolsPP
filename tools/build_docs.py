@@ -21,8 +21,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 SITE = ROOT / "_site"
-BASE_PATH = "/EGToolsPP"  # GitHub project-pages base path
-SITE_URL = "https://egtools.github.io" + BASE_PATH
+# 커스텀 도메인(manual.egtools.kr) 루트에 서빙 — 구 egtools.github.io/EGToolsPP/ 는 GitHub가 301 연결
+BASE_PATH = ""
+SITE_URL = "https://manual.egtools.kr" + BASE_PATH
 
 # (docs 폴더명, Material theme.language, 전환기 표기, site_name)
 LANGS = [

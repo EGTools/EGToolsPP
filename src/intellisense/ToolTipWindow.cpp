@@ -63,7 +63,7 @@ namespace egtools::intellisense
             else if (bare.size() > 1 && bare[0] == L'x' &&
                      iswupper(bare[1]))          // xSORT/xFILTER/xLET (구버전 충돌 회피명)
                 bare = bare.substr(1);
-            return L"https://egtools.github.io/EGToolsPP/" +
+            return L"https://manual.egtools.kr/" +
                    manualLang() + L"/" + bare + L"/";
         }
 
