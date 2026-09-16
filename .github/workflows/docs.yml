@@ -8,6 +8,7 @@ on:
     paths:
       - "docs/**"
       - "tools/build_docs.py"
+      - "tools/docs_seo.py"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 

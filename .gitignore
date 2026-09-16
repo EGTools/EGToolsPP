@@ -2,6 +2,7 @@
 /build/
 /out/
 /_site/
+/_landing/
 /dist/*.xll
 /dist/*.pdb
 
@@ -49,3 +50,5 @@ Desktop.ini
 
 # 테스트 스크립트/샘플/업무 데이터 — 저장소 이력에서 제외(2026-09-11 사용자 지시, 배포 스냅샷에서도 원래 제외)
 /tests/
+# MkDocs 훅(tools/docs_seo.py) 로드 시 생기는 바이트코드 캐시
+__pycache__/

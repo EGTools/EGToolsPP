@@ -45,12 +45,87 @@ DESCRIPTIONS = {
     "zh-TW": "EGTools++ 增益集的函數與功能區說明 — 讓舊版 Excel(2010+)使用 XLOOKUP、FILTER、TEXTSPLIT、GROUPBY、正規表示式等新版函數。",
 }
 
+# 페이지별 SEO 메타(tools/docs_seo.py 훅이 소비) — 언어별 문구의 단일 출처.
+#   hreflang: 페이지 단위 rel=alternate 코드, locale: og:locale,
+#   fnTitle : 함수 페이지 <title> 패턴(h1 은 함수명 그대로 유지),
+#   homeTitle: 언어별 홈 <title>(site_name 만으로는 검색 질의를 못 담는다),
+#   tail    : description 끝에 붙는 한 문장(길이가 남을 때만).
+SEO = {
+    "kr": {
+        "hreflang": "ko", "locale": "ko_KR", "fnTitle": "{FN} 함수",
+        "homeTitle": "EGTools++ 매뉴얼 — 구형 Excel에서 쓰는 최신 함수",
+        "tail": "EGTools++ 추가기능으로 Excel 2010 이상에서 사용할 수 있습니다.",
+    },
+    "en": {
+        "hreflang": "en", "locale": "en_US", "fnTitle": "{FN} function",
+        "homeTitle": "EGTools++ Manual — modern Excel functions for legacy Excel",
+        "tail": "Available in Excel 2010 and later with the EGTools++ add-in.",
+    },
+    "ja": {
+        "hreflang": "ja", "locale": "ja_JP", "fnTitle": "{FN} 関数",
+        "homeTitle": "EGTools++ マニュアル — 旧バージョンの Excel で使える最新関数",
+        "tail": "EGTools++ アドインで Excel 2010 以降でも使えます。",
+    },
+    "es": {
+        "hreflang": "es", "locale": "es_ES", "fnTitle": "función {FN}",
+        "homeTitle": "Manual de EGTools++ — funciones modernas para Excel antiguo",
+        "tail": "Disponible en Excel 2010 y posteriores con el complemento EGTools++.",
+    },
+    "zh-CN": {
+        "hreflang": "zh-Hans", "locale": "zh_CN", "fnTitle": "{FN} 函数",
+        "homeTitle": "EGTools++ 手册 — 让旧版 Excel 使用新版函数",
+        "tail": "通过 EGTools++ 加载项，可在 Excel 2010 及更高版本中使用。",
+    },
+    "zh-TW": {
+        "hreflang": "zh-Hant", "locale": "zh_TW", "fnTitle": "{FN} 函數",
+        "homeTitle": "EGTools++ 手冊 — 讓舊版 Excel 使用新版函數",
+        "tail": "透過 EGTools++ 增益集，可在 Excel 2010 及更新版本中使用。",
+    },
+}
+# 모든 페이지에 공통으로 붙는 keywords — 브랜드어(EGTools/EGTools++)를 맨 앞에 둬서
+# "EGTools" 질의로도 어느 페이지든 잡히게 한다. 함수 페이지는 앞에 함수명/EG.함수명이 붙는다.
+KEYWORDS = {
+    "kr": "EGTools, EGTools++, 엑셀 추가기능, Excel 추가 기능, xll, 엑셀 함수, Excel 2010, 동적 배열",
+    "en": "EGTools, EGTools++, Excel add-in, xll, Excel functions, Excel 2010, dynamic arrays",
+    "ja": "EGTools, EGTools++, Excel アドイン, xll, Excel 関数, Excel 2010, 動的配列",
+    "es": "EGTools, EGTools++, complemento de Excel, xll, funciones de Excel, Excel 2010, matrices dinámicas",
+    "zh-CN": "EGTools, EGTools++, Excel 加载项, xll, Excel 函数, Excel 2010, 动态数组",
+    "zh-TW": "EGTools, EGTools++, Excel 增益集, xll, Excel 函數, Excel 2010, 動態陣列",
+}
+
+# 언어를 못 맞춘 검색 사용자에게 보여줄 hreflang="x-default" 대상
+DEFAULT_LANG = "en"
+HOOK = ROOT / "tools" / "docs_seo.py"
+
+
 CATS = json.loads((DOCS / "_content" / "categories.json").read_text(encoding="utf-8"))
 
 # 평면 리다이렉트 폴더(/<lang>/<FN>/)와 최상위 섹션 폴더가 Windows 대소문자
 # 비구분에서 충돌하면 안 된다 (functions/ 도입 전 IMAGE vs image 사례, 2026-09-03).
 _clash = [fn for fn in CATS["functions"] if fn.lower() in {"functions", "ribbon"}]
 assert not _clash, f"top-level folder clashes with function name(s): {_clash}"
+
+
+def seo_block(lang_dir: str) -> str:
+    """mkdocs extra.seo — 훅이 쓰는 값만 담는다. 문자열은 JSON 으로 인용(YAML 호환)."""
+    e = SEO[lang_dir]
+    lines = [
+        f"    root: {json.dumps(SITE_URL)}",
+        f"    dir: {json.dumps(lang_dir)}",
+        f"    lang: {json.dumps(e['hreflang'])}",
+        f"    locale: {json.dumps(e['locale'])}",
+        f"    default: {json.dumps(DEFAULT_LANG)}",
+        f"    fnTitle: {json.dumps(e['fnTitle'], ensure_ascii=False)}",
+        f"    homeTitle: {json.dumps(e['homeTitle'], ensure_ascii=False)}",
+        f"    tail: {json.dumps(e['tail'], ensure_ascii=False)}",
+        f"    keywords: {json.dumps(KEYWORDS[lang_dir], ensure_ascii=False)}",
+        "    langs:",
+    ]
+    lines += [
+        f"      - {{dir: {json.dumps(d)}, hreflang: {json.dumps(SEO[d]['hreflang'])}}}"
+        for d, _, _, _ in LANGS
+    ]
+    return "\n".join(lines)
 
 
 def nav_yaml(lang_dir: str) -> str:
@@ -129,7 +204,12 @@ markdown_extensions:
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
+hooks:
+  - {HOOK.as_posix()}
 extra:
+  homepage: https://egtools.kr/
+  seo:
+{seo_block(lang_dir)}
   alternate:
 {alternates}
 {nav_yaml(lang_dir)}
@@ -166,6 +246,11 @@ def landing_page() -> str:
         f'      <li><a href="{BASE_PATH}/{d}/">{label}</a></li>'
         for d, _, label, _ in LANGS
     )
+    # 언어 선택 루트는 자체가 x-default — 각 언어판을 hreflang 으로 짝지어 준다.
+    alts = "\n".join(
+        f'<link rel="alternate" href="{SITE_URL}/{d}/" hreflang="{SEO[d]["hreflang"]}">'
+        for d, _, _, _ in LANGS
+    )
     # navigator.language → docs 폴더 매핑 (기본 en)
     return f"""\
 <!doctype html>
@@ -173,7 +258,12 @@ def landing_page() -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EGTools++ Manual</title>
+<title>{SEO["en"]["homeTitle"]}</title>
+<meta name="description" content="{DESCRIPTIONS["en"]}">
+<meta name="keywords" content="{KEYWORDS["en"]}">
+<link rel="canonical" href="{SITE_URL}/">
+{alts}
+<link rel="alternate" href="{SITE_URL}/" hreflang="x-default">
 <style>
   body {{ font-family: system-ui, sans-serif; max-width: 32rem; margin: 15vh auto; padding: 0 1rem; }}
   h1 {{ font-size: 1.4rem; }}

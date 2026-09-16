@@ -13,6 +13,8 @@ Excel 2010~2021 어디서든 동일하게 사용할 수 있습니다. 설치 파
 
 최신 버전은 [Releases](https://github.com/EGTools/EGToolsPP/releases)에서 받을 수 있습니다.
 
+제품 홈: **<https://egtools.kr/>** · 매뉴얼: **<https://manual.egtools.kr/>**
+
 ## 주요 기능
 
 - **함수 128개** — 최신 Excel 호환 69개: 조회(`XLOOKUP`/`XMATCH`), 동적배열(`FILTER`/`SORT`/`UNIQUE`/`SEQUENCE`),
