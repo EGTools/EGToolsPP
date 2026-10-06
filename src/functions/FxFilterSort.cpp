@@ -25,17 +25,27 @@ namespace egtools::functions
                 && v.get<double>(0.0) != 0.0;
         }
 
+        // 정렬 키 비교(<0이면 x가 앞). 빈 칸은 정렬 순서와 무관하게 항상 맨 뒤
+        // (네이티브 SORT/SORTBY 실측 — 범위를 trim하지 않으므로 끝 빈 칸이 흔하다).
+        int sortCmp(const ExcelObj& x, const ExcelObj& y, int order)
+        {
+            const bool bx = x.isType(ExcelType::Nil), by = y.isType(ExcelType::Nil);
+            if (bx || by) return bx == by ? 0 : (bx ? 1 : -1);
+            const int c = ExcelObj::compare(x, y);
+            return order < 0 ? -c : c;
+        }
+
         // --- XMATCH(lookup, lookup_array, [match_mode], [search_mode]) -------
         // match_mode 0/-1/1/3(정규식); search_mode 1/-1.
-        ExcelObj* xmatch(const ExcelObj& lookup, const ExcelObj& arr,
+        ExcelObj xmatch(const ExcelObj& lookup, const ExcelObj& arr,
                          const ExcelObj& matchMode, const ExcelObj& searchMode)
         {
             try
             {
-                ExcelArray la(arr);
+                ExcelArray la(arr, /*trim*/ false);
                 const bool vertical = (la.nCols() == 1);
                 const size_t N = vertical ? la.nRows() : la.nCols();
-                if (N == 0) return returnValue(CellError::NA);
+                if (N == 0) return ExcelObj(CellError::NA);
                 const int mm = matchMode.isMissing() ? 0 : matchMode.get<int>(0);
                 const int sm = searchMode.isMissing() ? 1 : searchMode.get<int>(1);
 
@@ -48,21 +58,21 @@ namespace egtools::functions
                     // match_mode 3: lookup은 정규식 패턴 — 텍스트가 아니거나
                     // 이진 검색(sm=±2)과 조합이면 #VALUE!(네이티브 정합).
                     if (sm == 2 || sm == -2 || lookup.type() != ExcelType::Str)
-                        return returnValue(CellError::Value);
+                        return ExcelObj(CellError::Value);
                     const auto re = regexForLookup(lookup.toString());
                     if (sm == -1)
                     {
                         for (long long i = (long long)N - 1; i >= 0; --i)
                             if (regexCellMatch(elem((size_t)i), re))
-                                return returnValue(ExcelObj((double)(i + 1)));
+                                return ExcelObj((double)(i + 1));
                     }
                     else
                     {
                         for (size_t i = 0; i < N; ++i)
                             if (regexCellMatch(elem(i), re))
-                                return returnValue(ExcelObj((double)(i + 1)));
+                                return ExcelObj((double)(i + 1));
                     }
-                    return returnValue(CellError::NA);
+                    return ExcelObj(CellError::NA);
                 }
                 long long found = -1, approx = -1;
                 auto consider = [&](size_t i) -> bool {
@@ -75,10 +85,10 @@ namespace egtools::functions
                 if (sm == -1) for (long long i = (long long)N - 1; i >= 0; --i) { if (consider((size_t)i)) break; }
                 else          for (size_t i = 0; i < N; ++i) { if (consider(i)) break; }
                 if (found < 0 && (mm == -1 || mm == 1)) found = approx;
-                if (found < 0) return returnValue(CellError::NA);
-                return returnValue(ExcelObj((double)(found + 1)));
+                if (found < 0) return ExcelObj(CellError::NA);
+                return ExcelObj((double)(found + 1));
             }
-            catch (...) { return returnValue(CellError::Value); }
+            catch (...) { return ExcelObj(CellError::Value); }
         }
 
         // --- FILTER(array, include, [if_empty]) -----------------------------
@@ -86,7 +96,7 @@ namespace egtools::functions
         {
             try
             {
-                ExcelArray a(array), inc(include);
+                ExcelArray a(array, /*trim*/ false), inc(include, /*trim*/ false);
                 const ExcelArray::row_t R = a.nRows();
                 const ExcelArray::col_t C = a.nCols();
 
@@ -134,7 +144,7 @@ namespace egtools::functions
         {
             try
             {
-                ExcelArray a(array);
+                ExcelArray a(array, /*trim*/ false);
                 const ExcelArray::row_t R = a.nRows();
                 const ExcelArray::col_t C = a.nCols();
                 const bool byCol = byColA.isMissing() ? false : (byColA.get<double>(0.0) != 0.0);
@@ -171,8 +181,8 @@ namespace egtools::functions
                     std::stable_sort(ord.begin(), ord.end(), [&](auto r1, auto r2) {
                         for (size_t k = 0; k < idxs.size(); ++k)
                         {
-                            int c = ExcelObj::compare(a.at(r1, idxs[k] - 1), a.at(r2, idxs[k] - 1));
-                            if (c != 0) return orders[k] < 0 ? c > 0 : c < 0;
+                            int c = sortCmp(a.at(r1, idxs[k] - 1), a.at(r2, idxs[k] - 1), orders[k]);
+                            if (c != 0) return c < 0;
                         }
                         return false;
                     });
@@ -189,8 +199,8 @@ namespace egtools::functions
                     std::stable_sort(ord.begin(), ord.end(), [&](auto c1, auto c2) {
                         for (size_t k = 0; k < idxs.size(); ++k)
                         {
-                            int c = ExcelObj::compare(a.at(idxs[k] - 1, c1), a.at(idxs[k] - 1, c2));
-                            if (c != 0) return orders[k] < 0 ? c > 0 : c < 0;
+                            int c = sortCmp(a.at(idxs[k] - 1, c1), a.at(idxs[k] - 1, c2), orders[k]);
+                            if (c != 0) return c < 0;
                         }
                         return false;
                     });
@@ -210,7 +220,7 @@ namespace egtools::functions
             try
             {
                 if (n < 2) return returnValue(CellError::Value);
-                ExcelArray a(*args[0]);
+                ExcelArray a(*args[0], /*trim*/ false);
                 const ExcelArray::row_t R = a.nRows();
                 const ExcelArray::col_t C = a.nCols();
                 struct Key { ExcelArray arr; int order; };
@@ -221,7 +231,7 @@ namespace egtools::functions
                     if (b.isMissing()) continue;
                     int order = 1;
                     if (i + 1 < n && !args[i + 1]->isMissing()) order = args[i + 1]->get<int>(1);
-                    ExcelArray ba(b);
+                    ExcelArray ba(b, /*trim*/ false);
                     if (ba.nRows() == R) keys.push_back({ ba, order });
                 }
                 if (keys.empty()) return returnValue(CellError::Value);
@@ -231,8 +241,8 @@ namespace egtools::functions
                 std::stable_sort(ord.begin(), ord.end(), [&](auto r1, auto r2) {
                     for (auto& k : keys)
                     {
-                        int c = ExcelObj::compare(k.arr.at(r1, 0), k.arr.at(r2, 0));
-                        if (c != 0) return k.order < 0 ? c > 0 : c < 0;
+                        int c = sortCmp(k.arr.at(r1, 0), k.arr.at(r2, 0), k.order);
+                        if (c != 0) return c < 0;
                     }
                     return false;
                 });
@@ -248,7 +258,7 @@ namespace egtools::functions
         {
             try
             {
-                ExcelArray a(array);
+                ExcelArray a(array, /*trim*/ false);
                 const ExcelArray::row_t R = a.nRows();
                 const ExcelArray::col_t C = a.nCols();
                 const bool byCol = byColA.isMissing() ? false : (byColA.get<double>(0.0) != 0.0);
@@ -302,7 +312,22 @@ namespace egtools::functions
     {
         egtools::core::registerFn(L"XMATCH",
             [](const ExcelObj& l, const ExcelObj& a, const ExcelObj& mm, const ExcelObj& sm) -> ExcelObj*
-            { return xmatch(l, a, mm, sm); });
+            {
+                if (!l.isType(ExcelType::Multi)) return returnValue(xmatch(l, a, mm, sm));
+                // 배열 lookup_value: 원소별 검색, 결과는 lookup_value 모양(네이티브).
+                // 원소가 오류면 그 오류.
+                ExcelArray lv(l, /*trim*/ false);
+                std::vector<ExcelObj> vals;
+                vals.reserve(lv.size());
+                for (ExcelArray::row_t i = 0; i < lv.nRows(); ++i)
+                    for (ExcelArray::col_t j = 0; j < lv.nCols(); ++j)
+                    {
+                        const ExcelObj& e = lv.at(i, j);
+                        if (e.type() == ExcelType::Err) { vals.emplace_back(e); continue; }
+                        vals.emplace_back(xmatch(e, a, mm, sm));
+                    }
+                return egtools::core::output(egtools::core::makeArray(lv.nRows(), lv.nCols(), vals));
+            });
         egtools::core::registerFn(L"FILTER",
             [](const ExcelObj& a, const ExcelObj& inc, const ExcelObj& ie) -> ExcelObj*
             { return filterFn(a, inc, ie); });

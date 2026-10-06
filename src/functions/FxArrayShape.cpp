@@ -5,9 +5,11 @@
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
 #include "../core/Apply.h"
+#include "../core/Ref3D.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
+#include <string>
 #include <vector>
 #include <algorithm>
 
@@ -25,7 +27,7 @@ namespace egtools::functions
             if (o.isMissing()) return g;
             if (o.isType(ExcelType::Multi))
             {
-                ExcelArray a(o);
+                ExcelArray a(o, /*trim*/ false);   // 범위 모양 유지(끝 빈 행/열 포함 — 네이티브 정합)
                 for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
                 {
                     std::vector<ExcelObj> row;
@@ -75,6 +77,45 @@ namespace egtools::functions
             if (idx < 0 && (size_t)(-idx) <= n) { out = n - (size_t)(-idx); return true; }
             return false;
         }
+
+        // 3D 참조 인수(Sheet1:Sheet3!A1:B2)는 시트별 Grid, 아니면 인수 하나의 Grid.
+        // (core/Ref3D — 함수는 macro 등록 필요)
+        std::vector<Grid> argGrids(egtools::core::Ref3D& r3, size_t i, const ExcelObj& a)
+        {
+            std::vector<Grid> out;
+            for (auto& v : r3.sheets(i, a))
+            {
+                Grid g = readGrid(v);
+                if (g.empty()) return { readGrid(a) };
+                out.push_back(std::move(g));
+            }
+            if (out.empty()) out.push_back(readGrid(a));
+            return out;
+        }
+
+        // Argument grids of VSTACK/HSTACK; a 3D reference argument is the
+        // sheets' ranges stacked in workbook order (vertical: rows, else columns).
+        std::vector<Grid> stackInputs(const wchar_t* bareName, const FuncInfo& info,
+                                      const ExcelObj** args, bool vertical)
+        {
+            const size_t n = egtools::core::passedArgs(args, info.numArgs());
+            egtools::core::Ref3D r3(bareName, n);
+            std::vector<Grid> grids;
+            for (size_t i = 0; i < n; ++i)
+            {
+                Grid g;
+                for (auto& sg : argGrids(r3, i, *args[i]))
+                {
+                    if (vertical || g.empty())
+                        for (auto& row : sg) g.push_back(std::move(row));
+                    else
+                        for (size_t r = 0; r < g.size() && r < sg.size(); ++r)
+                            for (auto& cell : sg[r]) g[r].push_back(std::move(cell));
+                }
+                if (!g.empty()) grids.push_back(std::move(g));
+            }
+            return grids;
+        }
     }
 
     void registerArrayShape()
@@ -83,9 +124,9 @@ namespace egtools::functions
         egtools::core::registerRawFn(L"VSTACK",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
-                std::vector<Grid> grids; size_t w = 0;
-                for (size_t i = 0; i < info.numArgs(); ++i)
-                    { Grid g = readGrid(*args[i]); if (!g.empty()) { w = std::max(w, width(g)); grids.push_back(std::move(g)); } }
+                std::vector<Grid> grids = stackInputs(L"VSTACK", info, args, true);
+                size_t w = 0;
+                for (auto& g : grids) w = std::max(w, width(g));
                 if (grids.empty()) return returnValue(CellError::Value);
                 Grid out;
                 for (auto& g : grids)
@@ -96,15 +137,15 @@ namespace egtools::functions
                         out.push_back(std::move(r));
                     }
                 return emit(out);
-            });
+            }, /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
 
         // HSTACK(array1, …) — stack horizontally; heighten to tallest, pad with #N/A.
         egtools::core::registerRawFn(L"HSTACK",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
-                std::vector<Grid> grids; size_t h = 0;
-                for (size_t i = 0; i < info.numArgs(); ++i)
-                    { Grid g = readGrid(*args[i]); if (!g.empty()) { h = std::max(h, g.size()); grids.push_back(std::move(g)); } }
+                std::vector<Grid> grids = stackInputs(L"HSTACK", info, args, false);
+                size_t h = 0;
+                for (auto& g : grids) h = std::max(h, g.size());
                 if (grids.empty()) return returnValue(CellError::Value);
                 Grid out(h);
                 for (auto& g : grids)
@@ -115,7 +156,7 @@ namespace egtools::functions
                             out[i].emplace_back(i < g.size() ? g[i][j] : ExcelObj(CellError::NA));
                 }
                 return emit(out);
-            });
+            }, /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
 
         // TAKE(array, rows, [cols]) — keep first/last |rows| rows and |cols| cols.
         egtools::core::registerFn(L"TAKE",
@@ -182,12 +223,14 @@ namespace egtools::functions
 
         // TOROW(array, [ignore], [scan_by_col]) — flatten into one row.
         // TOCOL(array, [ignore], [scan_by_col]) — flatten into one column.
-        auto flatten = [](const ExcelObj& array, const ExcelObj& ignoreA, const ExcelObj& byColA,
-                          bool asRow) -> ExcelObj*
+        // 3D 참조 array는 시트마다 따로 읽어(열 우선도 시트별) 시트 순서대로 잇는다(네이티브).
+        auto flatten = [](const wchar_t* bareName, const ExcelObj& array, const ExcelObj& ignoreA,
+                          const ExcelObj& byColA, bool asRow) -> ExcelObj*
         {
-            Grid g = readGrid(array);
-            if (g.empty()) return returnValue(CellError::Value);
-            const size_t R = g.size(), C = width(g);
+            const size_t n = !byColA.isMissing() ? 3 : !ignoreA.isMissing() ? 2 : 1;
+            egtools::core::Ref3D r3(bareName, n);
+            const std::vector<Grid> gs = argGrids(r3, 0, array);
+            for (auto& g : gs) if (g.empty()) return returnValue(CellError::Value);
             // 옵션 배열 → 강등 리프팅.
             return egtools::core::mapLift(
                 [&, asRow](const ExcelObj& ie, const ExcelObj& be) -> ExcelObj
@@ -200,8 +243,12 @@ namespace egtools::functions
                     if ((ignore == 2 || ignore == 3) && isErr(v)) return;
                     vals.emplace_back(v);
                 };
-                if (byCol) for (size_t j = 0; j < C; ++j) for (size_t i = 0; i < R; ++i) consider(g[i][j]);
-                else       for (size_t i = 0; i < R; ++i) for (size_t j = 0; j < C; ++j) consider(g[i][j]);
+                for (auto& g : gs)
+                {
+                    const size_t R = g.size(), C = width(g);
+                    if (byCol) for (size_t j = 0; j < C; ++j) for (size_t i = 0; i < R; ++i) consider(g[i][j]);
+                    else       for (size_t i = 0; i < R; ++i) for (size_t j = 0; j < C; ++j) consider(g[i][j]);
+                }
                 if (vals.empty()) return ExcelObj(CellError::Value);
                 return asRow
                     ? egtools::core::makeArray(1, (ExcelArrayBuilder::col_t)vals.size(), vals)
@@ -210,10 +257,12 @@ namespace egtools::functions
         };
         egtools::core::registerFn(L"TOROW",
             [flatten](const ExcelObj& a, const ExcelObj& ig, const ExcelObj& bc) -> ExcelObj*
-            { return flatten(a, ig, bc, true); });
+            { return flatten(L"TOROW", a, ig, bc, true); },
+            /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
         egtools::core::registerFn(L"TOCOL",
             [flatten](const ExcelObj& a, const ExcelObj& ig, const ExcelObj& bc) -> ExcelObj*
-            { return flatten(a, ig, bc, false); });
+            { return flatten(L"TOCOL", a, ig, bc, false); },
+            /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
 
         // CHOOSEROWS(array, row1, …) — select rows by 1-based (neg = from end) index.
         egtools::core::registerRawFn(L"CHOOSEROWS",
@@ -230,7 +279,7 @@ namespace egtools::functions
                     if (args[k]->isMissing()) continue;
                     if (args[k]->isType(ExcelType::Multi))
                     {
-                        ExcelArray a(*args[k]);
+                        ExcelArray a(*args[k], /*trim*/ false);
                         const size_t n = (size_t)a.nRows() * a.nCols();
                         for (size_t i = 0; i < n; ++i)
                         {
@@ -264,7 +313,7 @@ namespace egtools::functions
                     if (args[k]->isMissing()) continue;
                     if (args[k]->isType(ExcelType::Multi))
                     {
-                        ExcelArray a(*args[k]);
+                        ExcelArray a(*args[k], /*trim*/ false);
                         const size_t n = (size_t)a.nRows() * a.nCols();
                         for (size_t i = 0; i < n; ++i)
                         {

@@ -131,7 +131,7 @@ namespace egtools::functions
             if (!arrObj.isType(ExcelType::Multi))
                 return returnValue(ExcelObj(arrObj));   // 1x1은 그대로
 
-            ExcelArray a(arrObj);
+            ExcelArray a(arrObj, /*trim*/ false);
             const size_t nR = a.nRows(), nC = a.nCols();
             if (nR == 0 || nC == 0) return returnValue(CellError::Value);
 

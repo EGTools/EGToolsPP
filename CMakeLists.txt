@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 1.4
+  VERSION 1.5
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX C)
 
@@ -36,6 +36,7 @@ set(EG_SOURCES
   src/core/Version.cpp
   src/core/Spill.cpp
   src/core/Registry.cpp
+  src/core/Ref3D.cpp
   src/functions/Spike.cpp
   src/functions/FxLookup.cpp
   src/functions/FxLogic.cpp

@@ -490,7 +490,7 @@ namespace egtools::functions
                 std::vector<bool> blank;
                 if (numsA.isType(ExcelType::Multi))
                 {
-                    ExcelArray a(numsA);
+                    ExcelArray a(numsA, /*trim*/ false);
                     for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
                         for (ExcelArray::col_t c = 0; c < a.nCols(); ++c)
                         {
@@ -510,14 +510,19 @@ namespace egtools::functions
                 const std::wstring url =
                     L"https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + key;
 
+                // 빈 칸은 요청하지 않고 결과도 빈 칸 — 범위 모양은 유지(trim 안 함)하되
+                // A:A 같은 끝 빈 칸이 요청 수를 늘리지 않게 한다.
+                std::vector<size_t> ask;
+                for (size_t k = 0; k < nums.size(); ++k) if (!blank[k]) ask.push_back(k);
+
                 std::vector<std::wstring> out(nums.size());
-                for (size_t base = 0; base < nums.size(); base += 100)
+                for (size_t base = 0; base < ask.size(); base += 100)
                 {
-                    const size_t hi = std::min(base + 100, nums.size());
+                    const size_t hi = std::min(base + 100, ask.size());
                     json req;
                     req["b_no"] = json::array();
                     for (size_t k = base; k < hi; ++k)
-                        req["b_no"].push_back(toUtf8Pa(nums[k]));
+                        req["b_no"].push_back(toUtf8Pa(nums[ask[k]]));
 
                     std::string body;
                     DWORD status = 0;
@@ -541,11 +546,10 @@ namespace egtools::functions
                         return returnValue(ExcelObj(std::wstring_view(L"ERROR: " + m)));
                     }
                     const auto& data = j["data"];
-                    for (size_t k = 0; k < data.size() && base + k < nums.size(); ++k)
+                    for (size_t k = 0; k < data.size() && base + k < hi; ++k)
                     {
-                        if (blank[base + k]) { out[base + k] = L""; continue; }
                         const auto& item = data[k];
-                        out[base + k] = item.contains("tax_type") ? jstr(item["tax_type"]) : L"#N/A";
+                        out[ask[base + k]] = item.contains("tax_type") ? jstr(item["tax_type"]) : L"#N/A";
                     }
                 }
 
@@ -554,7 +558,7 @@ namespace egtools::functions
                 // preserve input shape when it was a 2-D array
                 if (numsA.isType(ExcelType::Multi))
                 {
-                    ExcelArray a(numsA);
+                    ExcelArray a(numsA, /*trim*/ false);
                     return core::output(core::makeArray(a.nRows(), a.nCols(), flat));
                 }
                 return returnValue(ExcelObj(std::wstring_view(out[0])));

@@ -343,7 +343,7 @@ namespace egtools::core
             if (result.type() != ExcelType::Multi)
                 return returnValue(std::move(result));
 
-            ExcelArray arr(result);
+            ExcelArray arr(result, /*trim*/ false);
             const int rows = (int)arr.nRows();
             const int cols = (int)arr.nCols();
             if (rows == 0 || cols == 0)

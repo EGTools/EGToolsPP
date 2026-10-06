@@ -405,7 +405,7 @@ namespace egtools::functions
             {
                 if (o.isType(ExcelType::Multi))
                 {
-                    ExcelArray a(o);
+                    ExcelArray a(o, /*trim*/ false);
                     r = a.nRows(); c = a.nCols();
                 }
                 else { r = 1; c = 1; }
@@ -428,7 +428,7 @@ namespace egtools::functions
             {
                 if (o.isType(ExcelType::Multi))
                 {
-                    ExcelArray a(o);
+                    ExcelArray a(o, /*trim*/ false);
                     const size_t rr = (a.nRows() == 1) ? 0 : r;
                     const size_t cc = (a.nCols() == 1) ? 0 : c;
                     return ExcelObj(a.at(rr * a.nCols() + cc));
@@ -443,7 +443,7 @@ namespace egtools::functions
                 std::vector<std::pair<double, double>> raw;
                 if (breakObj.isType(ExcelType::Multi))
                 {
-                    ExcelArray b(breakObj);
+                    ExcelArray b(breakObj, /*trim*/ false);
                     if (b.nCols() < 2) return returnValue(CellError::Value);
                     for (size_t r = 0; r < b.nRows(); ++r)
                     {

@@ -4,6 +4,7 @@
 #include "../core/Apply.h"
 #include "../core/Spill.h"
 #include "../core/ArrayUtil.h"
+#include "../core/Ref3D.h"
 
 #include <xlOil/xlOil.h>
 #include <xlOil/ExcelArray.h>
@@ -38,12 +39,24 @@ namespace egtools::functions
             if (v.isMissing()) return err;
             if (v.isType(ExcelType::Multi))
             {
-                ExcelArray a(v);
+                ExcelArray a(v, /*trim*/ false);
                 const size_t n = (size_t)a.nRows() * a.nCols();
                 for (size_t k = 0; k < n; ++k) { add(a.at(k)); if (err) break; }
             }
             else add(v);
             return err;
+        }
+
+        // collectText + 3D 참조 인수(Sheet1:Sheet3!A1:B2): 시트 순서대로 각 시트의
+        // 범위를 잇는다(네이티브). core/Ref3D — 함수는 macro 등록 필요.
+        std::optional<ExcelObj> collectArg(egtools::core::Ref3D& r3, size_t i,
+            const ExcelObj& v, std::vector<std::wstring>& out, bool skipEmpty)
+        {
+            const auto sheets = r3.sheets(i, v);
+            if (sheets.empty()) return collectText(v, out, skipEmpty);
+            for (auto& sv : sheets)
+                if (auto err = collectText(sv, out, skipEmpty)) return err;
+            return std::nullopt;
         }
 
         std::wstring lower(std::wstring s)
@@ -232,7 +245,7 @@ namespace egtools::functions
                 std::vector<std::wstring> delims;
                 if (args[0] && args[0]->isType(ExcelType::Multi))
                 {
-                    ExcelArray da(*args[0]);
+                    ExcelArray da(*args[0], /*trim*/ false);
                     const size_t n = (size_t)da.nRows() * da.nCols();
                     for (size_t i = 0; i < n; ++i)
                     {
@@ -244,27 +257,31 @@ namespace egtools::functions
                 if (delims.empty())
                     delims.push_back(args[0] ? args[0]->toString() : std::wstring());
                 std::vector<std::wstring> parts;
-                for (size_t i = 2; i < info.numArgs(); ++i)
-                    if (auto err = collectText(*args[i], parts, skip))
+                const size_t n = egtools::core::passedArgs(args, info.numArgs());
+                egtools::core::Ref3D r3(L"TEXTJOIN", n);
+                for (size_t i = 2; i < n; ++i)
+                    if (auto err = collectArg(r3, i, *args[i], parts, skip))
                         return returnValue(std::move(*err));
                 std::wstring out;
                 for (size_t i = 0; i < parts.size(); ++i)
                     { if (i) out += delims[(i - 1) % delims.size()]; out += parts[i]; }
                 return returnValue(ExcelObj(std::wstring_view(out)));
-            });
+            }, /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
 
         // CONCAT(text1, …) — concatenate all text (incl. ranges), variadic.
         egtools::core::registerRawFn(L"CONCAT",
             [](const FuncInfo& info, const ExcelObj** args) -> ExcelObj*
             {
                 std::vector<std::wstring> parts;
-                for (size_t i = 0; i < info.numArgs(); ++i)
-                    if (auto err = collectText(*args[i], parts, false))
+                const size_t n = egtools::core::passedArgs(args, info.numArgs());
+                egtools::core::Ref3D r3(L"CONCAT", n);
+                for (size_t i = 0; i < n; ++i)
+                    if (auto err = collectArg(r3, i, *args[i], parts, false))
                         return returnValue(std::move(*err));   // 오류 전파(네이티브 정합)
                 std::wstring out;
                 for (auto& s : parts) out += s;
                 return returnValue(ExcelObj(std::wstring_view(out)));
-            });
+            }, /*macro: 3D 참조용 xlfCaller/GET.CELL*/ true);
 
         // TEXTBEFORE(text, delimiter, [instance_num], [match_mode], [match_end],
         //            [if_not_found]) — 네이티브와 동일 6인수.
@@ -349,7 +366,7 @@ namespace egtools::functions
                     if (o.isMissing()) return;
                     if (o.isType(ExcelType::Multi))
                     {
-                        ExcelArray a(o);
+                        ExcelArray a(o, /*trim*/ false);
                         const size_t n = (size_t)a.nRows() * a.nCols();
                         for (size_t i = 0; i < n; ++i)
                         {
@@ -428,7 +445,7 @@ namespace egtools::functions
                     std::wstring s = valueToText(array, strict);
                     return returnValue(ExcelObj(std::wstring_view(s)));
                 }
-                ExcelArray a(array);
+                ExcelArray a(array, /*trim*/ false);
                 std::wstring out;
                 if (strict) out = L"{";
                 for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)

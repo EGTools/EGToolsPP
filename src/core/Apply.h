@@ -58,7 +58,7 @@ namespace egtools::core
         {
             if (o.isType(xloil::ExcelType::Multi))
             {
-                _arr.emplace(o);
+                _arr.emplace(o, /*trim*/ false);
                 _rows = _arr->nRows();
                 _cols = _arr->nCols();
             }
@@ -94,7 +94,7 @@ namespace egtools::core
         using namespace xloil;
         if (!v.isType(ExcelType::Multi))
             return std::move(v);
-        ExcelArray a(v);
+        ExcelArray a(v, /*trim*/ false);
         return a.size() == 0 ? ExcelObj(CellError::Value) : ExcelObj(a.at(0, 0));
     }
 
@@ -241,7 +241,7 @@ namespace egtools::core
         using namespace xloil;
         if (arg.isType(ExcelType::Multi))
         {
-            ExcelArray a(arg);
+            ExcelArray a(arg, /*trim*/ false);
             const auto R = a.nRows();
             const auto C = a.nCols();
 

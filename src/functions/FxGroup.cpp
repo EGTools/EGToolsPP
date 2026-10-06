@@ -161,7 +161,7 @@ namespace egtools::functions
                 !in.fn || in.fn->isMissing())
                 return returnValue(CellError::Value);
 
-            ExcelArray rk(*in.rowF), vv(*in.values);
+            ExcelArray rk(*in.rowF, /*trim*/ false), vv(*in.values, /*trim*/ false);
             const size_t Rall = rk.nRows();
             const size_t K = rk.nCols();
             const size_t V = vv.nCols();
@@ -169,7 +169,7 @@ namespace egtools::functions
                 return returnValue(CellError::Value);
 
             const bool hasCols = in.colF && !in.colF->isMissing();
-            ExcelArray ckStore = hasCols ? ExcelArray(*in.colF) : ExcelArray(*in.rowF);
+            ExcelArray ckStore = hasCols ? ExcelArray(*in.colF, /*trim*/ false) : ExcelArray(*in.rowF, /*trim*/ false);
             const size_t Kc = hasCols ? (size_t)ckStore.nCols() : 0;
             if (hasCols && (ckStore.nRows() != Rall || Kc == 0))
                 return returnValue(CellError::Value);
@@ -263,7 +263,7 @@ namespace egtools::functions
             if (in.filter && !in.filter->isMissing())
             {
                 if (!in.filter->isType(ExcelType::Multi)) return returnValue(CellError::Value);
-                ExcelArray fa(*in.filter);
+                ExcelArray fa(*in.filter, /*trim*/ false);
                 const size_t FR = (size_t)fa.nRows() * fa.nCols();
                 // 헤더 포함/미포함 길이 둘 다 허용.
                 const size_t need = Rall - r0;

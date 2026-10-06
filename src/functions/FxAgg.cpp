@@ -110,13 +110,13 @@ namespace egtools::functions
         {
             try
             {
-                ExcelArray vr(vrange);
+                ExcelArray vr(vrange, /*trim*/ false);
                 const size_t N = (size_t)vr.nRows() * vr.nCols();
                 std::vector<ExcelArray> crs;
                 std::vector<const ExcelObj*> cvs;
                 for (int k = 0; k < pairs; ++k)
                 {
-                    ExcelArray ca(*critRange[k]);
+                    ExcelArray ca(*critRange[k], /*trim*/ false);
                     if ((size_t)ca.nRows() * ca.nCols() != N) return ExcelObj(CellError::Value);
                     crs.push_back(ca);
                     cvs.push_back(crit[k]);

@@ -1355,14 +1355,14 @@ namespace egtools::functions
                 const bool isArr = dataObj.isType(ExcelType::Multi);
                 if (isArr)
                 {
-                    ExcelArray arr(dataObj);
+                    ExcelArray arr(dataObj, /*trim*/ false);
                     nR = arr.nRows(); nC = arr.nCols();
                 }
                 if (nR == 0 || nC == 0) return returnValue(CellError::Value);
 
                 auto cellAt = [&](size_t r, size_t c) -> ExcelObj
                 {
-                    if (isArr) { ExcelArray arr(dataObj); return ExcelObj(arr.at(r * nC + c)); }
+                    if (isArr) { ExcelArray arr(dataObj, /*trim*/ false); return ExcelObj(arr.at(r * nC + c)); }
                     return ExcelObj(dataObj);
                 };
 

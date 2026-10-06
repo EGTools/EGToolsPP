@@ -146,13 +146,15 @@ namespace egtools::functions
         }
 
         // 인수를 1D ExcelObj 목록으로 (스칼라→1개, 배열→전체 행우선).
-        std::vector<ExcelObj> to1D(const ExcelObj& v)
+        // trim=true는 값 목록 인수(정렬 키·열 번호·이름)에만 — 끝 빈 칸 무시.
+        // 빈 셀 옵션(ignore_empty)이 있는 함수의 인수는 trim하지 않는다.
+        std::vector<ExcelObj> to1D(const ExcelObj& v, bool trim = false)
         {
             std::vector<ExcelObj> out;
             if (v.isMissing()) return out;
             if (v.isType(ExcelType::Multi))
             {
-                ExcelArray a(v);
+                ExcelArray a(v, trim);
                 const size_t n = (size_t)a.nRows() * a.nCols();
                 for (size_t k = 0; k < n; ++k) out.push_back(ExcelObj(a.at(k)));
             }
@@ -167,7 +169,7 @@ namespace egtools::functions
                           const ExcelObj& namesObj, const ExcelObj& subsetObj)
         {
             if (!dataObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
-            ExcelArray a(dataObj);
+            ExcelArray a(dataObj, /*trim*/ false);
             const int nR = (int)a.nRows(), nC = (int)a.nCols();
             auto cell = [&](int r, int c) -> const ExcelObj& { return a.at((size_t)r * nC + c); };
 
@@ -180,14 +182,14 @@ namespace egtools::functions
             if (fixedCol + fixedRow == 0) return returnValue(CellError::Value);
 
             std::vector<int> sortCol, sortDir;
-            for (const auto& s : to1D(sortObj))
+            for (const auto& s : to1D(sortObj, /*trim*/ true))
             {
                 double d;
                 if (!toDouble(s, d) || (int)d == 0) return returnValue(CellError::Value);
                 sortCol.push_back(abs((int)d));
                 sortDir.push_back((int)d > 0 ? 1 : -1);
             }
-            std::vector<ExcelObj> colNames = to1D(namesObj);
+            std::vector<ExcelObj> colNames = to1D(namesObj, /*trim*/ true);
 
             // Subset: 마지막 고정행의 서로 다른 라벨 수가 값 열 수를 나누면 집합으로.
             int iSet = 0;
@@ -449,7 +451,7 @@ namespace egtools::functions
                           const ExcelObj& padObj, const ExcelObj& ignoreObj)
         {
             if (!arrObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
-            ExcelArray a(arrObj);
+            ExcelArray a(arrObj, /*trim*/ false);
             const int nR = (int)a.nRows(), nC = (int)a.nCols();
             auto cell = [&](int r, int c) -> const ExcelObj& { return a.at((size_t)r * nC + c); };
 
@@ -527,7 +529,7 @@ namespace egtools::functions
                 std::vector<std::vector<ExcelObj>> rows;
                 if (args[i]->isType(ExcelType::Multi))
                 {
-                    ExcelArray a(*args[i]);
+                    ExcelArray a(*args[i], /*trim*/ false);
                     const size_t R = a.nRows(), C = a.nCols();
                     if (byRow)
                         for (size_t r = 0; r < R; ++r)
@@ -664,7 +666,7 @@ namespace egtools::functions
         {
             if (!dataObj.isType(ExcelType::Multi) || !filterObj.isType(ExcelType::Multi))
                 return returnValue(CellError::Value);
-            ExcelArray d(dataObj), flt(filterObj);
+            ExcelArray d(dataObj, /*trim*/ false), flt(filterObj, /*trim*/ false);
             const int dR = (int)d.nRows(), dC = (int)d.nCols();
             const int fR = (int)flt.nRows(), fC = (int)flt.nCols();
             if (dR < 2 || dC == 0 || fR < 2 || fC == 0) return returnValue(CellError::Value);
@@ -729,7 +731,7 @@ namespace egtools::functions
             if (keysObj.isMissing() || dataObj.isMissing() || colsObj.isMissing())
                 return returnValue(CellError::Value);
             if (!dataObj.isType(ExcelType::Multi)) return returnValue(CellError::Value);
-            ExcelArray d(dataObj);
+            ExcelArray d(dataObj, /*trim*/ false);
             const size_t dR = d.nRows(), dC = d.nCols();
             if (dR == 0 || dC == 0) return returnValue(CellError::Value);
             auto dCell = [&](size_t r, size_t c) -> const ExcelObj& { return d.at(r * dC + c); };
@@ -739,14 +741,14 @@ namespace egtools::functions
             {
                 // 세로/가로/2D 검색값 모두 허용(행 우선 평탄화) — 결과는 검색값
                 // 개수만큼 세로 스택. 기존에는 가로 1×N을 거부했다(plan/22 A-P1).
-                ExcelArray k(keysObj);
+                ExcelArray k(keysObj, /*trim*/ false);
                 const size_t n = (size_t)k.nRows() * k.nCols();
                 for (size_t i = 0; i < n; ++i) keys.push_back(ExcelObj(k.at(i)));
             }
             else keys.push_back(ExcelObj(keysObj));
 
             std::vector<int> cols;
-            for (const auto& c : to1D(colsObj))
+            for (const auto& c : to1D(colsObj, /*trim*/ true))
             {
                 double v;
                 if (!toDouble(c, v) || (int)v < 1 || (size_t)(int)v > dC)
@@ -821,7 +823,7 @@ namespace egtools::functions
                 std::vector<std::vector<ExcelObj>> colsHere;
                 if (args[i]->isType(ExcelType::Multi))
                 {
-                    ExcelArray a(*args[i]);
+                    ExcelArray a(*args[i], /*trim*/ false);
                     const size_t R = a.nRows(), C = a.nCols();
                     colsHere.resize(C);
                     for (size_t c = 0; c < C; ++c)

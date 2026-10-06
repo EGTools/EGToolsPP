@@ -36,8 +36,8 @@ namespace egtools::functions
                 if (lookupArr.isMissing() || returnArr.isMissing())
                     return returnValue(CellError::NA);
 
-                ExcelArray la(lookupArr);
-                ExcelArray ra(returnArr);
+                ExcelArray la(lookupArr, /*trim*/ false);
+                ExcelArray ra(returnArr, /*trim*/ false);
 
                 const bool vertical = (la.nCols() == 1);   // N×1 → match rows
                 const size_t N = vertical ? la.nRows() : la.nCols();
@@ -144,7 +144,7 @@ namespace egtools::functions
                 if (!lookup.isType(ExcelType::Multi))
                     return scalarResult(lookup);
 
-                ExcelArray lv(lookup);
+                ExcelArray lv(lookup, /*trim*/ false);
                 if (lv.size() <= 1)
                     return scalarResult(lv.size() == 1 ? lv.at(0, 0) : lookup);
 

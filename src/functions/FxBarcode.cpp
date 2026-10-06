@@ -313,7 +313,7 @@ namespace egtools::functions
                 std::vector<std::vector<ExcelObj>> shape;
                 if (typeA.isType(ExcelType::Multi))
                 {
-                    ExcelArray a(typeA);
+                    ExcelArray a(typeA, /*trim*/ false);
                     for (ExcelArray::row_t r = 0; r < a.nRows(); ++r)
                     {
                         std::vector<ExcelObj> row;

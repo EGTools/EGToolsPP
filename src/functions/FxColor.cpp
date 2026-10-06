@@ -1,9 +1,9 @@
 ﻿// FxColor.cpp — format/visibility reference functions (plan/22 B3), ported from
 // VB FX4_Color + FX1 VISIBLEAGGR/ILOOKUP + FX9 ISVISIBLE.
 //
-//   DISPLAYCOLOR(color_range, [font])              — displayed fill/font color array
-//   COUNTIFCOLOR(search_range, color_cell, [font]) — count cells matching a cell's color
-//   SUMIFCOLOR(search_range, color_cell, [font])   — sum cells matching a cell's color
+//   DISPLAYCOLOR(color_range, [font], [conditional])              — fill/font color array
+//   COUNTIFCOLOR(search_range, color_cell, [font], [conditional]) — count cells matching a cell's color
+//   SUMIFCOLOR(search_range, color_cell, [font], [conditional])   — sum cells matching a cell's color
 //   ISVISIBLE(range)                               — row/column visibility array
 //   VISIBLEAGGR(range, [func])                     — visible cells only, listed or aggregated
 //   ILOOKUP(find, lookup_array, image_range, [if_not_found], [match_mode], [search_mode])
@@ -13,7 +13,9 @@
 // All are MACRO-TYPE with reference arguments (RangeArg) and use late-bound COM
 // (LateCom.h) on Excel's calc main thread. Inherent limits (documented in the
 // manual): changing only a format or hidden state does NOT trigger recalc — F9
-// is needed; DisplayFormat reflects conditional formatting.
+// is needed. Colors are the cell's own format by default; conditional=TRUE
+// reads DisplayFormat (conditional formatting applied, unreliable when the
+// recalc runs while another sheet is active).
 
 // windows.h FIRST with full GDI (BITMAPFILEHEADER for the clipboard DIB save):
 // xlOil's WindowsSlim.h pre-includes windows.h with NOGDI otherwise.
@@ -36,6 +38,7 @@
 #include <xlOil/ExcelTypeLib.h>
 #include <algorithm>
 #include <cwctype>
+#include <optional>
 #include <regex>
 #include <string>
 #include <vector>
@@ -76,16 +79,49 @@ namespace egtools::functions
             return c;
         }
 
-        // DisplayFormat.{Interior|Font}.Color of one cell; -1 on failure.
-        double displayColor(IDispatch* cell, bool font)
+        // Sub-range rows r1..r2 × cols c1..c2 (1-based, inclusive) of a Range,
+        // late-bound. Caller releases.
+        IDispatch* blockAt(IDispatch* range, long r1, long r2, long c1, long c2)
         {
-            IDispatch* df = getObject(cell, L"DisplayFormat");
-            if (!df) return -1.0;
+            IDispatch* tl = cellAt(range, r1, c1);
+            if (!tl) return nullptr;
+            Releaser rt(tl);
+            VARIANT a[2]; VariantInit(&a[0]); VariantInit(&a[1]);
+            a[0].vt = VT_I4; a[0].lVal = r2 - r1 + 1;
+            a[1].vt = VT_I4; a[1].lVal = c2 - c1 + 1;
+            return getObject(tl, L"Resize", a, 2);
+        }
+
+        // {Interior|Font}.Color of one cell; -1 on failure. display=true reads
+        // DisplayFormat (conditional formatting applied) — Excel documents it as
+        // unreliable inside UDFs (wrong/failed reads when the volatile recalc runs
+        // with another sheet active), so the formatted color is the default.
+        double cellColor(IDispatch* cell, bool font, bool display)
+        {
+            IDispatch* src = cell;
+            IDispatch* df = nullptr;
+            if (display)
+            {
+                df = getObject(cell, L"DisplayFormat");
+                if (!df) return -1.0;
+                src = df;
+            }
             Releaser r1(df);
-            IDispatch* part = getObject(df, font ? L"Font" : L"Interior");
+            IDispatch* part = getObject(src, font ? L"Font" : L"Interior");
             if (!part) return -1.0;
             Releaser r2(part);
-            return getDouble(part, L"Color", -1.0);
+            const double c = getDouble(part, L"Color", -1.0);
+            // A multi-cell range of mixed colors reports Color = 0 (same as black)
+            // with ColorIndex = Null — report mixed as -1 so the caller splits.
+            if (c == 0.0)
+            {
+                VARIANT ci; VariantInit(&ci);
+                const bool mixed = invokeRaw(part, L"ColorIndex", DISPATCH_PROPERTYGET, &ci, nullptr, 0) &&
+                                   ci.vt == VT_NULL;
+                VariantClear(&ci);
+                if (mixed) return -1.0;
+            }
+            return c;
         }
 
         bool rowHidden(IDispatch* range, long i)
@@ -164,29 +200,51 @@ namespace egtools::functions
     {
         namespace core = egtools::core;
 
-        // ── DISPLAYCOLOR(color_range, [font]) ────────────────────────────────
+        // ── DISPLAYCOLOR(color_range, [font], [conditional]) ─────────────────
         core::registerFn(L"DISPLAYCOLOR",
-            [](const RangeArg& ref, const ExcelObj& fontA) -> ExcelObj*
+            [](const RangeArg& ref, const ExcelObj& fontA, const ExcelObj& condA) -> ExcelObj*
             {
                 const bool font = fontA.get<bool>(false);
+                const bool cond = condA.get<bool>(false);
                 const auto nR = (long)ref.nRows(), nC = (long)ref.nCols();
                 if ((size_t)nR * nC > kMaxCells) return returnValue(CellError::Value);
                 IDispatch* range = rangeDisp(ref);
                 if (!range) return returnValue(CellError::Value);
                 Releaser rr(range);
 
-                std::vector<ExcelObj> flat;
-                flat.reserve((size_t)nR * nC);
-                for (long i = 1; i <= nR; ++i)
-                    for (long j = 1; j <= nC; ++j)
+                // Block bisection (see COUNTIFCOLOR): a block of one color fills
+                // its part of the output at once; only mixed blocks are split.
+                std::vector<ExcelObj> flat((size_t)nR * nC);
+                auto fill = [&](long r1, long r2, long c1, long c2, const ExcelObj& v)
+                {
+                    for (long i = r1; i <= r2; ++i)
+                        for (long j = c1; j <= c2; ++j)
+                            flat[(size_t)(i - 1) * nC + (j - 1)] = v;
+                };
+                auto solve = [&](auto& self, long r1, long r2, long c1, long c2) -> void
+                {
+                    const bool single = r1 == r2 && c1 == c2;
+                    IDispatch* blk = single ? cellAt(range, r1, c1) : blockAt(range, r1, r2, c1, c2);
+                    double col = -1.0;
+                    if (blk)
                     {
-                        IDispatch* cell = cellAt(range, i, j);
-                        if (!cell) { flat.emplace_back(CellError::Value); continue; }
-                        Releaser rc(cell);
-                        const double col = displayColor(cell, font);
-                        if (col < 0) flat.emplace_back(CellError::Value);
-                        else flat.emplace_back(col);
+                        Releaser rb(blk);
+                        col = cellColor(blk, font, cond);   // -1 = mixed or failed
                     }
+                    if (col >= 0) { fill(r1, r2, c1, c2, ExcelObj(col)); return; }
+                    if (single) { flat[(size_t)(r1 - 1) * nC + (c1 - 1)] = ExcelObj(CellError::Value); return; }
+                    if (r2 - r1 >= c2 - c1)
+                    {
+                        const long m = r1 + (r2 - r1) / 2;
+                        self(self, r1, m, c1, c2); self(self, m + 1, r2, c1, c2);
+                    }
+                    else
+                    {
+                        const long m = c1 + (c2 - c1) / 2;
+                        self(self, r1, r2, c1, m); self(self, r1, r2, m + 1, c2);
+                    }
+                };
+                solve(solve, 1, nR, 1, nC);
                 return core::output(core::makeArray(
                     (ExcelArrayBuilder::row_t)nR, (ExcelArrayBuilder::col_t)nC, flat));
             },
@@ -194,9 +252,10 @@ namespace egtools::functions
 
         // ── COUNTIFCOLOR / SUMIFCOLOR ────────────────────────────────────────
         auto colorAggr = [](const RangeArg& ref, const RangeArg& colorRef,
-                            const ExcelObj& fontA, bool doSum) -> ExcelObj*
+                            const ExcelObj& fontA, const ExcelObj& condA, bool doSum) -> ExcelObj*
         {
             const bool font = fontA.get<bool>(false);
+            const bool cond = condA.get<bool>(false);
             IDispatch* range = rangeDisp(ref);
             if (!range) return returnValue(CellError::Value);
             Releaser rr(range);
@@ -209,7 +268,7 @@ namespace egtools::functions
                 IDispatch* c0 = cellAt(colorRange, 1, 1);
                 if (!c0) return returnValue(CellError::Value);
                 Releaser rc(c0);
-                target = displayColor(c0, font);
+                target = cellColor(c0, font, cond);
                 if (target < 0) return returnValue(CellError::Value);
             }
 
@@ -219,50 +278,128 @@ namespace egtools::functions
             if ((size_t)(i1 - i0 + 1) * (j1 - j0 + 1) > kMaxCells)
                 return returnValue(CellError::Value);
 
-            // values via the fast XLL coerce; colors via COM per cell
+            // A merged area counts once: only its first cell inside the scanned
+            // block (normally the top-left) is visited — Excel copies the fill to
+            // every cell of the area. Range.MergeCells is FALSE when no cell is
+            // merged (TRUE/Null otherwise), which skips the per-cell probe.
+            bool anyMerged = true;
+            {
+                VARIANT m; VariantInit(&m);
+                if (invokeRaw(range, L"MergeCells", DISPATCH_PROPERTYGET, &m, nullptr, 0) &&
+                    m.vt == VT_BOOL && m.boolVal == VARIANT_FALSE)
+                    anyMerged = false;
+                VariantClear(&m);
+            }
+            auto [rwFirst, colFirst, rwLast, colLast] = ref.bounds();   // 0-based
+            (void)rwLast; (void)colLast;
+            const long minRow = (long)rwFirst + i0, minCol = (long)colFirst + j0;   // 1-based sheet
+            auto mergedTail = [&](IDispatch* cell, long i, long j) -> bool
+            {
+                if (!anyMerged || !getBool(cell, L"MergeCells", false)) return false;
+                IDispatch* ma = getObject(cell, L"MergeArea");
+                if (!ma) return false;
+                Releaser rm(ma);
+                const long anchorRow = std::max(getLong(ma, L"Row", 0), minRow);
+                const long anchorCol = std::max(getLong(ma, L"Column", 0), minCol);
+                return (long)rwFirst + i != anchorRow || (long)colFirst + j != anchorCol;
+            };
+
+            // values via the fast XLL coerce; colors via COM
             const ExcelObj values = ref.value();
             ExcelArray varr(values, /*trim*/ false);
             const bool isArr = values.isType(ExcelType::Multi);
 
             double sum = 0.0; long count = 0;
-            for (long i = i0; i <= i1; ++i)
-                for (long j = j0; j <= j1; ++j)
+            std::optional<CellError> err;
+            auto take = [&](long i, long j)
+            {
+                ExcelObj v = isArr
+                    ? ExcelObj(varr.at((ExcelArray::row_t)(i - 1), (ExcelArray::col_t)(j - 1)))
+                    : ExcelObj(values);
+                if (doSum)
                 {
-                    IDispatch* cell = cellAt(range, i, j);
-                    if (!cell) continue;
-                    Releaser rc(cell);
-                    if (displayColor(cell, font) != target) continue;
-
-                    ExcelObj v = isArr
-                        ? ExcelObj(varr.at((ExcelArray::row_t)(i - 1), (ExcelArray::col_t)(j - 1)))
-                        : ExcelObj(values);
-                    if (doSum)
+                    if (v.isType(ExcelType::Err)) { if (!err) err = v.get<CellError>(); return; }
+                    if (v.isType(ExcelType::Num)) sum += v.get<double>(0.0);
+                }
+                else
+                {
+                    if (font)   // VB: font-color match counts only non-empty cells
                     {
-                        if (v.isType(ExcelType::Err)) return returnValue(v.get<CellError>());
-                        if (v.isType(ExcelType::Num)) sum += v.get<double>(0.0);
+                        const auto t = v.type();
+                        if (t == ExcelType::Nil || t == ExcelType::Missing ||
+                            (t == ExcelType::Str && v.stringLength() == 0)) return;
                     }
-                    else
+                    ++count;
+                }
+            };
+
+            // Block bisection instead of a per-cell walk (several COM round trips
+            // per cell made large ranges take seconds, and the function is
+            // volatile). A mixed block reports -1 (see cellColor): a block
+            // of one non-target color is skipped whole, a block of the target
+            // color with no merged cell is taken whole from the value array, and
+            // only mixed blocks are split. Single cells keep the merge rule.
+            auto solve = [&](auto& self, long r1, long r2, long c1, long c2) -> void
+            {
+                if (err) return;
+                if (r1 == r2 && c1 == c2)
+                {
+                    IDispatch* cell = cellAt(range, r1, c1);
+                    if (!cell) return;
+                    Releaser rc(cell);
+                    // color first: the merge probe is the costlier one and a
+                    // merged area's cells all share its color anyway
+                    if (cellColor(cell, font, cond) == target && !mergedTail(cell, r1, c1))
+                        take(r1, c1);
+                    return;
+                }
+                if (IDispatch* blk = blockAt(range, r1, r2, c1, c2))
+                {
+                    Releaser rb(blk);
+                    const double col = cellColor(blk, font, cond);   // -1 = mixed
+                    if (col >= 0 && col != target) return;
+                    if (col == target)
                     {
-                        if (font)   // VB: font-color match counts only non-empty cells
+                        VARIANT m; VariantInit(&m);
+                        const bool noMerge =
+                            !anyMerged ||
+                            (invokeRaw(blk, L"MergeCells", DISPATCH_PROPERTYGET, &m, nullptr, 0) &&
+                             m.vt == VT_BOOL && m.boolVal == VARIANT_FALSE);
+                        VariantClear(&m);
+                        if (noMerge)
                         {
-                            const auto t = v.type();
-                            if (t == ExcelType::Nil || t == ExcelType::Missing ||
-                                (t == ExcelType::Str && v.stringLength() == 0)) continue;
+                            for (long i = r1; i <= r2; ++i)
+                                for (long j = c1; j <= c2; ++j) take(i, j);
+                            return;
                         }
-                        ++count;
                     }
                 }
+                if (r2 - r1 >= c2 - c1)
+                {
+                    const long m = r1 + (r2 - r1) / 2;
+                    self(self, r1, m, c1, c2); self(self, m + 1, r2, c1, c2);
+                }
+                else
+                {
+                    const long m = c1 + (c2 - c1) / 2;
+                    self(self, r1, r2, c1, m); self(self, r1, r2, m + 1, c2);
+                }
+            };
+            solve(solve, i0, i1, j0, j1);
+            if (err) return returnValue(*err);
             return returnValue(doSum ? ExcelObj(sum) : ExcelObj((double)count));
         };
 
         core::registerFn(L"COUNTIFCOLOR",
-            [colorAggr](const RangeArg& ref, const RangeArg& colorRef, const ExcelObj& fontA) -> ExcelObj*
-            { return colorAggr(ref, colorRef, fontA, false); },
+            [colorAggr](const RangeArg& ref, const RangeArg& colorRef,
+                        const ExcelObj& fontA, const ExcelObj& condA) -> ExcelObj*
+            { return colorAggr(ref, colorRef, fontA, condA, false); },
             /*macro*/ true, /*threadsafe*/ false);
 
         core::registerFn(L"SUMIFCOLOR",
-            [colorAggr](const RangeArg& ref, const RangeArg& colorRef, const ExcelObj& fontA) -> ExcelObj*
-            { return colorAggr(ref, colorRef, fontA, true); },
+            [colorAggr](const RangeArg& ref, const RangeArg& colorRef,
+                        const ExcelObj& fontA, const ExcelObj& condA) -> ExcelObj*
+            { return colorAggr(ref, colorRef, fontA, condA, true); },
             /*macro*/ true, /*threadsafe*/ false);
 
         // ── ISVISIBLE(range) ─────────────────────────────────────────────────
@@ -381,7 +518,7 @@ namespace egtools::functions
                     return returnValue(CellError::Value);
                 if (findA.isMissing() || !lookupA.isType(ExcelType::Multi))
                     return returnValue(CellError::Value);
-                ExcelArray lookup(lookupA);
+                ExcelArray lookup(lookupA, /*trim*/ false);
                 const size_t n = (size_t)lookup.nRows() * lookup.nCols();
                 if (n == 0 || n != (size_t)imgRef.nRows() * imgRef.nCols())
                     return returnValue(CellError::Ref);
