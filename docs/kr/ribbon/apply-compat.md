@@ -26,6 +26,8 @@
 | GROUPBY / PIVOTBY | 함수명을 `GROUPBY`/`PIVOTBY`로 바꾸고, 집계자 인수에 따옴표를 추가합니다(`SUM` 또는 `_xleta.SUM` → `"SUM"`; 네이티브 지원 집계자 16종에 한함, LAMBDA 등은 해당 수식을 건드리지 않음). 뒤따르는 선택 인수가 있어도 변환됩니다(인수 순서 네이티브 동일) |
 | `_xlpm.*` (LET/LAMBDA 매개변수) | 최신 Excel이 LET/LAMBDA의 **매개변수 이름**을 저장하는 내부 접두입니다. 구버전에서 `=_xlfn.LET(_xlpm.x, …)`처럼 나타나며, `_xlpm.`이 포함된 수식은 Excel이 다시 쓰기를 거부하므로 접두를 제거합니다(`_xlpm.x` → `x`). 변환 요약에 `_xlpm.*` 항목으로 집계됩니다 |
 | `_xll.*` / `_xludf.*` (추가기능 UDF 저장 접두) | EGTools 함수가 등록되지 않은 환경에서 열었던 통합문서(특히 **정의된 이름**)에 남는 접두를 제거해 등록된 EGTools 함수로 다시 연결합니다(`_xll.xSORT(…)` → `xSORT(…)`). 다른 추가기능의 함수는 건드리지 않습니다. 변환 요약에 `_xll.*` 항목으로 집계됩니다 |
+| `_xlfn._ARRAY` / `_xlfn._ARRAYROW` (셀 내 배열 래퍼) | Microsoft 365 베타가 스필 결과를 셀 하나에 담을 때 저장하는 내부 함수입니다. 네이티브가 없는 호스트에서는 `#NAME?`가 되므로 같은 값을 텍스트 표기로 내는 `ARRAYTOTEXT(…,1)`로 바꿉니다: `_xlfn._ARRAYROW(a)` → `a`, `_xlfn._ARRAYROW(a,b,…)` → `HSTACK(a,b,…)`, `_xlfn._ARRAY(r)` → `ARRAYTOTEXT(r,1)`, `_xlfn._ARRAY(r1,r2,…)` → `ARRAYTOTEXT(VSTACK(r1,r2,…),1)`. 예: `=_xlfn._ARRAY(_xlfn._ARRAYROW(FILTER(A:A,B:B=1)))` → `=ARRAYTOTEXT(FILTER(A:A,B:B=1),1)`. 결과 텍스트는 [목록/배열 셀 → 텍스트](list-to-text.md)의 엄격 표기(`{"a",1;"b",2}`)와 같아 HAS/HASANY/HASALL/FLATTEN이 그대로 읽습니다. 안쪽부터 재귀 처리되며, 중첩된 `_ARRAY`는 바깥 텍스트 안의 인용 텍스트 항목이 됩니다. 변환 요약에 `_ARRAY`/`_ARRAYROW` 항목으로 집계됩니다 |
+| 단계적 롤아웃 함수 (HAS/HASANY/HASALL/FLATTEN, IMPORTTEXT/IMPORTCSV) | 이 Excel에 네이티브가 실제로 없으면(런타임 확인) `_xlfn.HAS` / bare `HAS` → `EG.HAS`처럼 **이 호스트에 등록된 EG. 이름**으로 바꿉니다(Microsoft 365 비베타 채널에서 `#NAME?` 방지). 2024 이하 구버전에서는 기존대로 bare 이름(`HAS`)입니다. EG. 이름으로 변환된 문서를 나중에 구버전에서 다시 변환하면 bare 이름이 됩니다 |
 
 문자열 리터럴 내부나 다른 식별자의 일부는 변경되지 않습니다(식별자 단위 치환).
 
@@ -33,3 +35,5 @@
 
 - 원복하려면 [내장 함수로 복원](restore-native.md)을 실행하거나 백업 파일을 여세요.
 - 변환 대상 함수 목록은 추가기능의 함수 등록 목록과 단일 소스로 관리되어 항상 일치합니다.
+- 베타에서 만든 목록/배열 셀 자체는 이 명령이 다루지 않습니다. 셀의 목록을 참조하는 HAS 등의 수식이
+  `#VALUE!`가 되지 않도록 **먼저 [목록/배열 셀 → 텍스트](list-to-text.md)를 실행한 뒤** 이 명령을 실행하세요.

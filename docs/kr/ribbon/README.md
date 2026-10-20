@@ -97,6 +97,7 @@ EGTools++를 로드하면 리본에 **EGTools++** 탭이 추가됩니다.
 |---|---|
 | [구버전 호환 적용](apply-compat.md) | 모던/네이티브(`_xlfn.*`) 함수 토큰을 EGTools 호환 함수명으로 일괄 변환 |
 | [내장 함수로 복원](restore-native.md) | EGTools 함수명을 네이티브 내장 함수로 일괄 복원 |
+| [목록/배열 셀 → 텍스트](list-to-text.md) | Microsoft 365 베타의 셀 내 목록/배열(구버전에서 `#UNKNOWN!`)을 저장 파일에서 읽어 콤마 구분·`{…}` 배열 텍스트로 변환 |
 | [SMTP 설정](smtp-settings.md) | 메일머지 메일 발송용 SMTP 서버 등록(암호는 저장하지 않음) |
 | [API 키 관리](api-keys.md) | 공공 API 키 등록/삭제(주소검색 · data.go.kr · vworld — data.go.kr 키는 공휴일·달력·사업자등록이 공유) |
 | EGTools++ 정보 | 버전·배포처·기반 라이브러리를 표시하고, GitHub Release에 새 버전이 있으면 알림과 함께 배포처 링크를 제공합니다 |

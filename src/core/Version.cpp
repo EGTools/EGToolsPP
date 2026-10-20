@@ -85,6 +85,10 @@ namespace egtools::core
                 // 365 호스트에선 EG. 접두(향후 네이티브와 공존), 2024 영구판 이하는 드롭인.
                 // staged=true: 프리뷰 채널 한정 — 대부분의 365에 아직 네이티브 없음.
                 { L"IMPORTTEXT",  { 365, true, true } }, { L"IMPORTCSV", { 365, true, true } },
+                // Lists in Cells 호환(plan/27, 2026-10 베타 채널 한정 — staged):
+                // HAS 계열은 스칼라, FLATTEN은 스필. 365 호스트는 EG. 접두.
+                { L"HAS",     { 365, false, true } }, { L"HASANY",  { 365, false, true } },
+                { L"HASALL",  { 365, false, true } }, { L"FLATTEN", { 365, true,  true } },
                 // Pre-dynamic-array — decided by edition year.
                 { L"IFS",       { 2019, false } }, { L"SWITCH",    { 2019, false } },
                 { L"MAXIFS",    { 2019, false } }, { L"MINIFS",    { 2019, false } },
@@ -186,8 +190,9 @@ namespace egtools::core
 
         // Empirically (tests/extract_stored_names.ps1), FILTER and SORT are
         // stored with the worksheet-only marker; every other shadowed function
-        // uses the plain _xlfn. prefix.
-        if (u == L"FILTER" || u == L"SORT")
+        // uses the plain _xlfn. prefix. FLATTEN도 베타 저장 파일에서
+        // _xlfn._xlws.FLATTEN으로 실측(plan/26 §2).
+        if (u == L"FILTER" || u == L"SORT" || u == L"FLATTEN")
             return L"_xlfn._xlws." + u;
         return L"_xlfn." + u;
     }

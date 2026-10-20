@@ -6,7 +6,7 @@
 
 함수별 상세 설명입니다. IntelliSense 툴팁에서 함수명을 클릭하면 해당 페이지로 이동합니다.
 
-## MS Excel 호환 함수 (69)
+## MS Excel 호환 함수 (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365 (2026 신규)
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365 (2026 신규)
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365 (2026 신규)
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365 (2026 신규)
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365 (2026 신규)
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365 (2026 신규)
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@
 
 - [구버전 호환 적용](ribbon/apply-compat.md)
 - [내장 함수로 복원](ribbon/restore-native.md)
+- [목록/배열 셀 → 텍스트](ribbon/list-to-text.md)
 - [SMTP 설정](ribbon/smtp-settings.md)
 - [API 키 관리](ribbon/api-keys.md)
 

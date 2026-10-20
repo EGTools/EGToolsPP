@@ -26,6 +26,8 @@
 | GROUPBY / PIVOTBY | 将函数名改为 `GROUPBY`/`PIVOTBY`，并给聚合器参数加引号（`SUM` 或 `_xleta.SUM` → `"SUM"`；仅限原生支持的 16 种聚合器，LAMBDA 等则不改动该公式）。即使后面跟有可选参数也会转换（参数顺序与原生相同） |
 | `_xlpm.*`（LET/LAMBDA 参数） | 新版 Excel 保存 LET/LAMBDA **参数名**的内部前缀。在旧版中会显示为 `=_xlfn.LET(_xlpm.x, …)`，而含 `_xlpm.` 的公式会被 Excel 拒绝重写，因此去除该前缀（`_xlpm.x` → `x`）。在转换汇总中计入 `_xlpm.*` 项 |
 | `_xll.*` / `_xludf.*`（加载项 UDF 保存前缀） | 去除在未注册 EGTools 函数的环境中打开过的工作簿（尤其是**定义的名称**）中残留的前缀，重新连接到已注册的 EGTools 函数（`_xll.xSORT(…)` → `xSORT(…)`）。不改动其他加载项的函数。在转换汇总中计入 `_xll.*` 项 |
+| `_xlfn._ARRAY` / `_xlfn._ARRAYROW`（单元格内数组包装） | Microsoft 365 测试版把溢出结果装进单个单元格时保存的内部函数。在没有原生函数的主机中会变成 `#NAME?`，因此改写为以文本表示法输出相同值的 `ARRAYTOTEXT(…,1)`：`_xlfn._ARRAYROW(a)` → `a`、`_xlfn._ARRAYROW(a,b,…)` → `HSTACK(a,b,…)`、`_xlfn._ARRAY(r)` → `ARRAYTOTEXT(r,1)`、`_xlfn._ARRAY(r1,r2,…)` → `ARRAYTOTEXT(VSTACK(r1,r2,…),1)`。例：`=_xlfn._ARRAY(_xlfn._ARRAYROW(FILTER(A:A,B:B=1)))` → `=ARRAYTOTEXT(FILTER(A:A,B:B=1),1)`。结果文本与[列表/数组单元格 → 文本](list-to-text.md)的严格表示法（`{"a",1;"b",2}`）相同，HAS/HASANY/HASALL/FLATTEN 可直接读取。由内向外递归处理，嵌套的 `_ARRAY` 会成为外层文本中带引号的文本项。在转换汇总中计入 `_ARRAY`/`_ARRAYROW` 项 |
+| 分阶段推送的函数（HAS/HASANY/HASALL/FLATTEN、IMPORTTEXT/IMPORTCSV） | 若此 Excel 确实没有原生函数（运行时确认），则把 `_xlfn.HAS` / 不带前缀的 `HAS` 改为**此主机上已注册的 EG. 名称**，如 `EG.HAS`（避免在 Microsoft 365 非测试版通道中出现 `#NAME?`）。在 2024 及更早的旧版中仍按原样使用不带前缀的名称（`HAS`）。已改为 EG. 名称的文档之后在旧版中再次转换时会变为不带前缀的名称 |
 
 字符串字面量内部或其他标识符的一部分不会被更改（按标识符为单位替换）。
 
@@ -33,3 +35,5 @@
 
 - 要还原时，请执行[还原为内置函数](restore-native.md)或打开备份文件。
 - 转换对象函数列表与加载项的函数注册列表按单一来源管理，始终保持一致。
+- 在测试版中创建的列表/数组单元格本身不由此命令处理。为避免引用单元格内列表的 HAS 等公式变成
+  `#VALUE!`，请**先执行[列表/数组单元格 → 文本](list-to-text.md)**，再执行此命令。

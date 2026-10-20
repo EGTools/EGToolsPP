@@ -1888,6 +1888,101 @@
             "Alias corto de GOOGLETRANSLATE que comparte la misma implementación. Consulte la documentación de GOOGLETRANSLATE para conocer el comportamiento detallado."
         ]
     },
+    "HAS": {
+        "ret": "Devuelve TRUE/FALSE (escalar); si se indica una matriz en valor, se evalúa elemento a elemento y se derrama. Si el propio argumento matriz es un error, devuelve ese error tal cual; si se omite valor, devuelve #VALUE!.",
+        "examples": [
+            [
+                "=HAS(\"Mon, Tue, Wed\",\"tue\")",
+                "TRUE",
+                "coincidencia del elemento completo, sin distinguir mayúsculas"
+            ],
+            [
+                "=HAS(\"Ann, Bob\",\"An\")",
+                "FALSE",
+                "no hay coincidencia parcial"
+            ],
+            [
+                "=HAS(\"{\"\"a\"\",{\"\"b\"\",\"\"c\"\"}}\",\"c\")",
+                "TRUE",
+                "texto de matriz anidada"
+            ],
+            [
+                "=HAS(\"1, 2\",\"1\")",
+                "FALSE",
+                "el texto \"1\" ≠ el número 1"
+            ]
+        ],
+        "notes": [
+            "matriz acepta texto de lista (Mon, Tue, Wed o la forma de constante matricial como {\"a\",{\"b\",\"c\"}}), un rango o una constante matricial, y se recorre de forma recursiva incluyendo los niveles anidados. Los elementos de una lista separada por comas o dentro de {…} se leen como número si tienen forma numérica, como lógico si son TRUE/FALSE y como error si son nombres de error como #N/A; en cambio, un texto único sin comas ni llaves no se clasifica y queda como un solo elemento de texto (una celda normal con \"1\" es el texto \"1\"). Si el texto no se puede analizar (p. ej. comillas sin cerrar), se trata como un único elemento sin producir error.",
+            "La comparación es del elemento completo sin distinguir mayúsculas en texto (\"Ann\"≠\"Anna\") y numérica en números; el texto \"1\" y el número 1 son distintos. Los elementos de error dentro de la lista nunca coinciden. matriz no se eleva — un rango se toma como una única matriz completa, así que para obtener un resultado por fila use la referencia [@columna] de una tabla o BYROW.",
+            "Las listas en celdas de la beta de Microsoft 365 solo se ven como #UNKNOWN! (#VALUE! en Excel 2016) en Excel antiguo, por lo que conviene convertirlas primero con la cinta [EGTools] › [Celdas de lista/matriz → texto]. Funciones relacionadas: HASANY, HASALL, FLATTEN"
+        ]
+    },
+    "HASANY": {
+        "ret": "Devuelve TRUE/FALSE (escalar). Si el propio argumento matriz o valores es un error, devuelve ese error tal cual; si se omite valores, devuelve #VALUE!. Si valores está vacío, el resultado es FALSE.",
+        "examples": [
+            [
+                "=HASANY(\"a, b, c\",{\"x\",\"c\"})",
+                "TRUE",
+                "TRUE si hay al menos uno"
+            ],
+            [
+                "=HASANY(\"1, 2\",{\"1\"})",
+                "FALSE",
+                "el texto \"1\" de la constante matricial no es el número 1"
+            ]
+        ],
+        "notes": [
+            "valores acepta un rango, una constante matricial o texto de lista; todos los elementos, incluidos los anidados, se aplanan en un único conjunto y cada uno se busca con las mismas reglas que HAS (elemento completo sin distinguir mayúsculas, igualdad numérica). Si se indica texto en valores, se interpreta como texto de lista: se divide por comas y las partes con forma numérica pasan a ser números (\"z, B\" indica varios valores; \"1, 2\" son los números 1 y 2). Para comparar un solo valor como texto, indíquelo como constante matricial {\"1\"}.",
+            "matriz se interpreta exactamente igual que en HAS (texto de lista, rango o constante matricial; un texto único sin comas queda como texto; el texto no analizable es un solo elemento). Convierta primero las listas en celdas con la cinta [EGTools] › [Celdas de lista/matriz → texto].",
+            "Funciones relacionadas: HAS, HASALL, FLATTEN"
+        ]
+    },
+    "HASALL": {
+        "ret": "Devuelve TRUE/FALSE (escalar). Si el propio argumento matriz o valores es un error, devuelve ese error tal cual; si se omite valores, devuelve #VALUE!. Si valores está vacío, el resultado es TRUE.",
+        "examples": [
+            [
+                "=HASALL(\"a, b, c\",{\"a\",\"c\"})",
+                "TRUE",
+                "TRUE si están todos"
+            ],
+            [
+                "=HASALL(\"a, b\",{\"a\",\"z\"})",
+                "FALSE",
+                "FALSE si falta alguno"
+            ]
+        ],
+        "notes": [
+            "valores acepta un rango, una constante matricial o texto de lista; todos los elementos, incluidos los anidados, se aplanan en un único conjunto y cada uno se busca con las mismas reglas que HAS (elemento completo sin distinguir mayúsculas, igualdad numérica). Si se indica texto en valores, se interpreta como texto de lista: se divide por comas y las partes con forma numérica pasan a ser números (\"z, B\" indica varios valores; \"1, 2\" son los números 1 y 2). Para comparar un solo valor como texto, indíquelo como constante matricial {\"1\"}.",
+            "Una celda vacía en el rango de valores cuenta como elemento de texto vacío, por lo que el resultado es FALSE salvo que la lista contenga un elemento vacío. matriz se interpreta exactamente igual que en HAS (texto de lista, rango o constante matricial; un texto único sin comas queda como texto; el texto no analizable es un solo elemento). Convierta primero las listas en celdas con la cinta [EGTools] › [Celdas de lista/matriz → texto].",
+            "Funciones relacionadas: HAS, HASANY, FLATTEN"
+        ]
+    },
+    "FLATTEN": {
+        "ret": "Devuelve la matriz 2-D sin anidamiento, que se derrama en las versiones de Excel con matrices dinámicas. Si el propio argumento matriz es un error, devuelve ese error tal cual; una matriz en valor_relleno, un niveles no numérico o negativo, o un resultado vacío devuelven #VALUE!.",
+        "examples": [
+            [
+                "=FLATTEN(\"a, b, c\")",
+                "{a;b;c}",
+                "lista → una columna"
+            ],
+            [
+                "=FLATTEN(\"{\"\"a\"\",\"\"b\"\";\"\"c\"\"}\")",
+                "{a,b;c,#N/A}",
+                "texto de matriz 2-D, huecos rellenados con #N/A"
+            ],
+            [
+                "=FLATTEN({\"a, b\";\"c\"})",
+                "{a;b;c}",
+                "una columna de celdas de lista se apila verticalmente"
+            ]
+        ],
+        "notes": [
+            "Un nivel = en cada fila de la matriz exterior, los elementos (escalar = 1×1, matriz = su propia forma) se unen en horizontal y las filas se apilan, igualando el ancho con valor_relleno (predeterminado #N/A). Si niveles se omite o es 0, se repite hasta que no quede anidamiento; un N positivo elimina N niveles y los elementos anidados restantes se muestran como texto de lista ({…}). Ejemplo: =FLATTEN(\"{\"\"a\"\",{\"\"b\"\",\"\"c\"\"}}\",,1) → {a,{\"b\",\"c\"}} — solo se elimina el primer anidamiento de esa celda.",
+            "Una lista de una columna da una columna vertical, un rango de columna con varias celdas de lista se apila verticalmente y una sola celda con texto de matriz 2-D conserva esa forma 2-D. Las filas irregulares dentro del propio texto de matriz se rellenan siempre con #N/A, independientemente de valor_relleno; los elementos de error de la lista (#N/A, etc.) se conservan como datos. Un texto único sin comas ni llaves se convierte en un texto 1×1.",
+            "Las listas en celdas de la beta de Microsoft 365 solo se ven como #UNKNOWN! (#VALUE! en Excel 2016) en Excel antiguo, por lo que conviene convertirlas primero con la cinta [EGTools] › [Celdas de lista/matriz → texto]. Funciones relacionadas: HAS, HASANY, HASALL"
+        ]
+    },
     "IMPORTCSV": {
         "ret": "Devuelve el contenido del CSV como una matriz derramada de dos dimensiones; el texto numérico y de fecha (formato yyyy-M-d, etc.) se convierte automáticamente en valores. Si falta la ruta o falla la lectura o descarga del archivo devuelve #VALUE!; si no queda ninguna fila de contenido devuelve #N/A.",
         "examples": [

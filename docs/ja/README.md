@@ -6,7 +6,7 @@
 
 関数ごとの詳細説明です。IntelliSense ツールチップで関数名をクリックすると該当ページに移動します。
 
-## MS Excel 互換関数 (69)
+## MS Excel 互換関数 (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365 (2026 新規)
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365 (2026 新規)
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365 (2026 新規)
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365 (2026 新規)
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365 (2026 新規)
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365 (2026 新規)
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@
 
 - [旧バージョン互換に変換](ribbon/apply-compat.md)
 - [組み込み関数に復元](ribbon/restore-native.md)
+- [リスト/配列セル → テキスト](ribbon/list-to-text.md)
 - [SMTP設定](ribbon/smtp-settings.md)
 - [API キー管理](ribbon/api-keys.md)
 

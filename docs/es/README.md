@@ -6,7 +6,7 @@ Descarga: [GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · C�
 
 Referencia detallada de cada función. Al hacer clic en el nombre de una función en la información de IntelliSense se abre la página correspondiente.
 
-## Funciones de compatibilidad con MS Excel (69)
+## Funciones de compatibilidad con MS Excel (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@ Referencia detallada de cada función. Al hacer clic en el nombre de una funció
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365 (novedad de 2026)
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365 (novedad de 2026)
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365 (novedad de 2026)
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365 (novedad de 2026)
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365 (novedad de 2026)
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365 (novedad de 2026)
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@ Funciones disponibles en la pestaña `EGTools` de la cinta. Consulte la [descrip
 
 - [Aplicar compatibilidad](ribbon/apply-compat.md)
 - [Restaurar funciones nativas](ribbon/restore-native.md)
+- [Celdas de lista/matriz → texto](ribbon/list-to-text.md)
 - [Configuración SMTP](ribbon/smtp-settings.md)
 - [Administrar claves API](ribbon/api-keys.md)
 

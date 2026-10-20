@@ -1888,6 +1888,101 @@
             "Short alias of GOOGLETRANSLATE sharing the same implementation; see GOOGLETRANSLATE for details."
         ]
     },
+    "HAS": {
+        "ret": "Returns TRUE/FALSE (scalar); an array in value is evaluated element-wise and spills. If the array argument itself is an error, that error is returned as is; omitting value returns #VALUE!.",
+        "examples": [
+            [
+                "=HAS(\"Mon, Tue, Wed\",\"tue\")",
+                "TRUE",
+                "whole-item match, case-insensitive"
+            ],
+            [
+                "=HAS(\"Ann, Bob\",\"An\")",
+                "FALSE",
+                "no partial match"
+            ],
+            [
+                "=HAS(\"{\"\"a\"\",{\"\"b\"\",\"\"c\"\"}}\",\"c\")",
+                "TRUE",
+                "nested array text"
+            ],
+            [
+                "=HAS(\"1, 2\",\"1\")",
+                "FALSE",
+                "text \"1\" ≠ number 1"
+            ]
+        ],
+        "notes": [
+            "array accepts list text (Mon, Tue, Wed, or array-constant form such as {\"a\",{\"b\",\"c\"}}), a range or an array constant, and is searched recursively including nested levels. Items of a comma-separated list or inside {…} are read as numbers when they look numeric, as logicals for TRUE/FALSE and as errors for error names such as #N/A, but a single text without commas or braces is not classified and stays one text item (a plain cell holding \"1\" is the text \"1\"). Text that cannot be parsed (e.g. an unclosed quote) is treated as a single item without raising an error.",
+            "Comparison is whole-item and case-insensitive for text (\"Ann\"≠\"Anna\") and numeric for numbers; text \"1\" and number 1 differ. Error items inside the list never match. array is not lifted — a range is taken as one whole array, so for per-row results use a table's [@column] reference or BYROW.",
+            "Lists in Cells from the Microsoft 365 beta show only as #UNKNOWN! (#VALUE! in Excel 2016) in older Excel, so convert them first with ribbon [EGTools] › [List/Array Cells to Text]. Related: HASANY, HASALL, FLATTEN"
+        ]
+    },
+    "HASANY": {
+        "ret": "Returns TRUE/FALSE (scalar). If array or values itself is an error, that error is returned as is; omitting values returns #VALUE!. Empty values gives FALSE.",
+        "examples": [
+            [
+                "=HASANY(\"a, b, c\",{\"x\",\"c\"})",
+                "TRUE",
+                "TRUE if any value is present"
+            ],
+            [
+                "=HASANY(\"1, 2\",{\"1\"})",
+                "FALSE",
+                "text \"1\" in an array constant differs from number 1"
+            ]
+        ],
+        "notes": [
+            "values accepts a range, an array constant or list text; all items including nested ones are flattened into one set, and each is looked up with the same rules as HAS (whole-item case-insensitive match, numeric equality). Text given as values is parsed as list text — split at commas, with numeric-looking parts read as numbers (\"z, B\" specifies several values; \"1, 2\" is the numbers 1 and 2). To compare a single value as text, pass it as the array constant {\"1\"}.",
+            "array is interpreted exactly as in HAS (list text, range or array constant; a single text without commas stays text; unparsable text is one item). Convert Lists in Cells first with ribbon [EGTools] › [List/Array Cells to Text].",
+            "Related: HAS, HASALL, FLATTEN"
+        ]
+    },
+    "HASALL": {
+        "ret": "Returns TRUE/FALSE (scalar). If array or values itself is an error, that error is returned as is; omitting values returns #VALUE!. Empty values gives TRUE.",
+        "examples": [
+            [
+                "=HASALL(\"a, b, c\",{\"a\",\"c\"})",
+                "TRUE",
+                "TRUE when all values are present"
+            ],
+            [
+                "=HASALL(\"a, b\",{\"a\",\"z\"})",
+                "FALSE",
+                "FALSE when any value is missing"
+            ]
+        ],
+        "notes": [
+            "values accepts a range, an array constant or list text; all items including nested ones are flattened into one set, and each is looked up with the same rules as HAS (whole-item case-insensitive match, numeric equality). Text given as values is parsed as list text — split at commas, with numeric-looking parts read as numbers (\"z, B\" specifies several values; \"1, 2\" is the numbers 1 and 2). To compare a single value as text, pass it as the array constant {\"1\"}.",
+            "A blank cell in a values range counts as an empty-text item, so the result is FALSE unless the list contains an empty item. array is interpreted exactly as in HAS (list text, range or array constant; a single text without commas stays text; unparsable text is one item). Convert Lists in Cells first with ribbon [EGTools] › [List/Array Cells to Text].",
+            "Related: HAS, HASANY, FLATTEN"
+        ]
+    },
+    "FLATTEN": {
+        "ret": "Returns the un-nested 2-D array, spilling on dynamic-array hosts. If array itself is an error, that error is returned as is; an array in pad_value, a non-numeric or negative levels, or an empty result returns #VALUE!.",
+        "examples": [
+            [
+                "=FLATTEN(\"a, b, c\")",
+                "{a;b;c}",
+                "list → one column"
+            ],
+            [
+                "=FLATTEN(\"{\"\"a\"\",\"\"b\"\";\"\"c\"\"}\")",
+                "{a,b;c,#N/A}",
+                "2-D array text, shortfall padded with #N/A"
+            ],
+            [
+                "=FLATTEN({\"a, b\";\"c\"})",
+                "{a;b;c}",
+                "a column of list cells stacks vertically"
+            ]
+        ],
+        "notes": [
+            "One level = in each row of the outer array, the elements (scalar = 1×1, array = its own shape) are joined side by side and the rows are stacked, with widths equalised using pad_value (default #N/A). With levels omitted or 0 this repeats until no nesting remains; a positive N removes N levels and any remaining nested item is shown as list text ({…}). Example: =FLATTEN(\"{\"\"a\"\",{\"\"b\"\",\"\"c\"\"}}\",,1) → {a,{\"b\",\"c\"}} — only the first nesting of that cell is removed.",
+            "A one-column list gives one vertical column, a column range of several list cells stacks vertically, and a single cell holding 2-D array text keeps that 2-D shape. Ragged rows inside the array text itself are always padded with #N/A regardless of pad_value; error items in the list (#N/A etc.) are preserved as data. A single text without commas or braces becomes a 1×1 text.",
+            "Lists in Cells from the Microsoft 365 beta show only as #UNKNOWN! (#VALUE! in Excel 2016) in older Excel, so convert them first with ribbon [EGTools] › [List/Array Cells to Text]. Related: HAS, HASANY, HASALL"
+        ]
+    },
     "IMPORTCSV": {
         "ret": "Returns the CSV content as a spilled 2-D array; numeric and date (yyyy-M-d style) text is auto-converted to values. A missing path or a file-read/download failure gives #VALUE!; if no rows remain the result is #N/A.",
         "examples": [

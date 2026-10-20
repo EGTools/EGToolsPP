@@ -98,6 +98,7 @@ management and add-in information (default = About EGTools++).
 |---|---|
 | [Apply Legacy Compatibility](apply-compat.md) | Batch-convert modern/native (`_xlfn.*`) function tokens to EGTools-compatible names |
 | [Restore Native Functions](restore-native.md) | Batch-restore EGTools function names to native built-ins |
+| [List/Array Cells to Text](list-to-text.md) | Read Microsoft 365 beta list/array cells (`#UNKNOWN!` in older Excel) from the saved file and convert them to comma-separated / `{…}` array text |
 | [SMTP Settings](smtp-settings.md) | Register the SMTP server for mail-merge sending (password never stored) |
 | [Manage API Keys](api-keys.md) | Register/remove public-API keys (juso · data.go.kr · vworld — the data.go.kr key is shared by holidays, calendars and business-registration lookups) |
 | About EGTools++ | Shows version, distribution page and base libraries; notifies with a link when a newer GitHub Release is available |

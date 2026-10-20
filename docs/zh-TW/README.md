@@ -6,7 +6,7 @@
 
 各函數的詳細說明。在 IntelliSense 工具提示中按一下函數名稱，即可開啟對應頁面。
 
-## MS Excel 相容函數 (69)
+## MS Excel 相容函數 (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365 (2026 新增)
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365 (2026 新增)
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365 (2026 新增)
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365 (2026 新增)
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365 (2026 新增)
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365 (2026 新增)
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@
 
 - [套用舊版相容](ribbon/apply-compat.md)
 - [還原為內建函數](ribbon/restore-native.md)
+- [清單/陣列儲存格 → 文字](ribbon/list-to-text.md)
 - [SMTP 設定](ribbon/smtp-settings.md)
 - [管理 API 金鑰](ribbon/api-keys.md)
 

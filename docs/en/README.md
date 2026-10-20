@@ -6,7 +6,7 @@ Download: [GitHub Releases](https://github.com/EGTools/EGToolsPP/releases) · So
 
 Per-function reference. Clicking a function name in the IntelliSense tooltip opens the matching page.
 
-## MS Excel compatibility functions (69)
+## MS Excel compatibility functions (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@ Per-function reference. Clicking a function name in the IntelliSense tooltip ope
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365 (new in 2026)
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365 (new in 2026)
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365 (new in 2026)
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365 (new in 2026)
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365 (new in 2026)
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365 (new in 2026)
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@ Features on the `EGTools` ribbon tab. See the [ribbon overview](ribbon/README.md
 
 - [Apply Legacy Compatibility](ribbon/apply-compat.md)
 - [Restore Native Functions](ribbon/restore-native.md)
+- [List/Array Cells to Text](ribbon/list-to-text.md)
 - [SMTP Settings](ribbon/smtp-settings.md)
 - [Manage API Keys](ribbon/api-keys.md)
 

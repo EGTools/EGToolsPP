@@ -507,6 +507,87 @@ namespace egtools::ribbon
             return out;
         }
 
+        // ── `_xlfn._ARRAY(_xlfn._ARRAYROW(…))` — 셀 내 배열 래퍼 (plan/26·27) ──
+        // M365 베타가 스필 결과를 셀 하나에 담을 때 쓰는 내부 함수. 네이티브가
+        // 없는 호스트에서는 #NAME?가 되므로 같은 값을 텍스트 표기로 내는
+        // ARRAYTOTEXT(…,1)로 바꾼다 — "목록/배열 셀 → 텍스트" 변환 명령의 strict
+        // 표기와 동일해 HAS/HASANY/HASALL/FLATTEN이 그대로 읽는다.
+        //   _ARRAYROW(a)      → a            _ARRAYROW(a,b,…) → HSTACK(a,b,…)
+        //   _ARRAY(r)         → ARRAYTOTEXT(r,1)
+        //   _ARRAY(r1,r2,…)   → ARRAYTOTEXT(VSTACK(r1,r2,…),1)
+        // 안쪽부터 재귀 처리(중첩 _ARRAY는 바깥 텍스트 안의 인용 텍스트 항목이 됨).
+        // bare ARRAYTOTEXT/HSTACK/VSTACK은 2024+/365에선 네이티브, 그 이하에선
+        // 드롭인 UDF로 해석된다. 방향 A는 항상, 방향 B는 네이티브 미확인 시에만.
+        bool isArrayWrapper(const std::wstring& identUpper)
+        { return identUpper == L"_XLFN._ARRAY" || identUpper == L"_XLFN._ARRAYROW"; }
+
+        std::wstring convertArrayCalls(const std::wstring& f, std::map<std::wstring, int>& counts)
+        {
+            std::wstring out; out.reserve(f.size());
+            bool inStr = false;
+            for (size_t i = 0; i < f.size(); )
+            {
+                wchar_t c = f[i];
+                if (inStr)
+                {
+                    out += c;
+                    if (c == L'"')
+                    {
+                        if (i + 1 < f.size() && f[i + 1] == L'"') { out += f[i + 1]; i += 2; continue; }
+                        inStr = false;
+                    }
+                    ++i; continue;
+                }
+                if (c == L'"') { inStr = true; out += c; ++i; continue; }
+
+                if (isIdentStart(c))
+                {
+                    size_t j = i;
+                    while (j < f.size() && isIdentChar(f[j])) ++j;
+                    const std::wstring ident = f.substr(i, j - i);
+                    const std::wstring up = upperOf(ident);
+                    size_t k = j;
+                    while (k < f.size() && iswspace(f[k])) ++k;
+                    if (isArrayWrapper(up) && k < f.size() && f[k] == L'(')
+                    {
+                        int depth = 0; bool s2 = false; size_t close = std::wstring::npos;
+                        for (size_t p = k; p < f.size(); ++p)
+                        {
+                            wchar_t d = f[p];
+                            if (s2) { if (d == L'"') { if (p + 1 < f.size() && f[p + 1] == L'"') ++p; else s2 = false; } continue; }
+                            if (d == L'"') { s2 = true; continue; }
+                            if (d == L'(') ++depth;
+                            else if (d == L')') { if (--depth == 0) { close = p; break; } }
+                        }
+                        if (close != std::wstring::npos)
+                        {
+                            const std::wstring inside =
+                                convertArrayCalls(f.substr(k + 1, close - k - 1), counts);
+                            std::vector<std::wstring> args = splitTopLevel(inside);
+                            std::wstring joined;
+                            for (size_t x = 0; x < args.size(); ++x)
+                            { if (x) joined += L","; joined += trim(args[x]); }
+                            const bool row = (up == L"_XLFN._ARRAYROW");
+                            std::wstring repl;
+                            if (row)
+                                repl = args.size() == 1 ? trim(args[0]) : (L"HSTACK(" + joined + L")");
+                            else
+                                repl = L"ARRAYTOTEXT(" +
+                                       (args.size() == 1 ? trim(args[0]) : (L"VSTACK(" + joined + L")")) +
+                                       L",1)";
+                            counts[row ? L"_ARRAYROW" : L"_ARRAY"]++;
+                            out += repl;
+                            i = close + 1;
+                            continue;
+                        }
+                    }
+                    out += ident; i = j; continue;
+                }
+                out += c; ++i;
+            }
+            return out;
+        }
+
         // ── full per-formula transform ───────────────────────────────────────
         // The (from → to) token rules are host- and direction-dependent but
         // formula-independent, so they are built ONCE per conversion run
@@ -608,12 +689,24 @@ namespace egtools::ribbon
                     // F is refused/hijacked by modern-binary hosts with older
                     // licenses), and direction B must accept xF as a source.
                     const bool xPfx = core::needsXPrefix(F);
-                    const std::wstring compatName = xPfx ? (L"x" + F) : F;
+                    // Staged function on a host whose table year says "native"
+                    // (365) but the native name is NOT confirmed (HAS/FLATTEN on
+                    // Current Channel, plan/27): our UDF is registered here as
+                    // EG.F, so the compat target must be EG.F — it works on this
+                    // host, and a later direction-A run on a legacy host rewrites
+                    // EG.F → F as usual. Bare F (a doc converted on a legacy host)
+                    // is lifted to EG.F for the same reason.
+                    const bool stagedAbsent = toCompat && core::isStagedRollout(F) &&
+                                              core::hasNativeFunction(F) && !nativeConfirmed(F);
+                    const std::wstring compatName =
+                        stagedAbsent ? (L"EG." + F) : (xPfx ? (L"x" + F) : F);
                     if (toCompat)
                     {
-                        add(core::storedName(F), compatName);  // _xlfn[._xlws].F → F/xF
-                        add(L"EG." + F, compatName);           // EG.F            → F/xF
-                        if (xPfx) add(F, compatName);          // old-doc bare F  → xF
+                        add(core::storedName(F), compatName);  // _xlfn[._xlws].F → F/xF/EG.F
+                        if (!stagedAbsent)
+                            add(L"EG." + F, compatName);       // EG.F            → F/xF
+                        if (xPfx || stagedAbsent)
+                            add(F, compatName);                // old-doc bare F  → xF/EG.F
                     }
                     else if (core::hasNativeFunction(F))
                     {
@@ -625,12 +718,15 @@ namespace egtools::ribbon
                             plan.nativeUpper.push_back(F);     // `@F` → `F` (strip)
                         }
                         else
+                        {
                             // Staged rollout without a positive native probe
-                            // (IMPORTTEXT/IMPORTCSV): keep the EGTools
-                            // implementation. Legacy bare-F cells re-point to
-                            // the registered EG.F (Class E treatment); EG.F
-                            // cells stay put.
-                            add(F, L"EG." + F);                // bare F → EG.F
+                            // (IMPORTTEXT/IMPORTCSV, HAS/FLATTEN): keep the EGTools
+                            // implementation. Legacy bare-F cells and the beta
+                            // document's stored `_xlfn.F` token re-point to the
+                            // registered EG.F (Class E treatment); EG.F cells stay.
+                            add(F, L"EG." + F);                // bare F    → EG.F
+                            add(core::storedName(F), L"EG." + F); // _xlfn.F → EG.F (plan/27)
+                        }
                     }
                 }
                 if (!r.repl.empty() || r.retokenBare)
@@ -664,6 +760,12 @@ namespace egtools::ribbon
             if (fu.find(L"GROUPBY") != std::wstring::npos ||
                 fu.find(L"PIVOTBY") != std::wstring::npos)
                 f = convertGroupCalls(f, plan.toCompat, plan.nativeUpper, counts);
+
+            // 셀 내 배열 래퍼 `_xlfn._ARRAY(_xlfn._ARRAYROW(…))` → ARRAYTOTEXT(…,1)
+            // (plan/27). 방향 B는 이 호스트에 래퍼가 없을 때만(베타 호스트 보존).
+            if (fu.find(L"_XLFN._ARRAY") != std::wstring::npos &&
+                (plan.toCompat || !nativeConfirmed(L"_xlfn._ARRAY")))
+                f = convertArrayCalls(f, counts);
 
             // Class E IMAGE, Direction B — source-aware: https sources go
             // native, everything else (and anything unprovable) → EG.IMAGE.

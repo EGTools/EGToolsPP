@@ -49,6 +49,9 @@ namespace egtools::commands
     void udfFreeze();          // EGTools UDF 수식 → 값 고정(배포용)
     void drawFreeForm();       // 색칠 셀 외곽 자유형 도형 생성
 
+    // ── 셀 내 목록 (CmdListCells.cpp, plan/27) ──
+    void listCellsToText();    // M365 베타 목록/배열 셀 → 텍스트 표기(저장 파일 richData 읽기)
+
     // ── 날짜 선택 (DatePicker.cpp) ──
     void pickDateIntoCell();   // 달력에서 날짜를 골라 현재 셀에 입력(컨텍스트 메뉴)
 

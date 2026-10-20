@@ -29,6 +29,7 @@ namespace egtools::functions {
     void registerBarcode();    // FxBarcode.cpp
     void registerColor();      // FxColor.cpp
     void registerPublicApi();  // FxPublicApi.cpp
+    void registerListCompat(); // FxListCompat.cpp
 }
 
 namespace egtools::core
@@ -165,6 +166,7 @@ namespace egtools::core
         group(egtools::functions::registerBarcode);    // BARCODE/QRCODE/DATAMATRIX/CODE128/READBARCODE/READGS1 (plan/22 B2)
         group(egtools::functions::registerColor);      // DISPLAYCOLOR/COUNTIFCOLOR/SUMIFCOLOR/ISVISIBLE/VISIBLEAGGR/ILOOKUP (plan/22 B3)
         group(egtools::functions::registerPublicApi);  // SEARCHADDRESS/BRNSTATUS/GEO*/ADDRESSMAP (plan/22 B4, 키=HKCU ApiKeys)
+        group(egtools::functions::registerListCompat); // HAS/HASANY/HASALL/FLATTEN — 셀 내 목록 텍스트 호환 (plan/27)
     }
 
     void unregisterFunctions()

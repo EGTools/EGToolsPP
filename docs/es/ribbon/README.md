@@ -94,6 +94,7 @@ Botón dividido que reúne la conversión en bloque de nombres de función en la
 |---|---|
 | [Aplicar compatibilidad](apply-compat.md) | Convierte en bloque los tokens de funciones modernas/nativas (`_xlfn.*`) a los nombres de función compatibles de EGTools |
 | [Restaurar funciones nativas](restore-native.md) | Restaura en bloque los nombres de función de EGTools a las funciones nativas integradas |
+| [Celdas de lista/matriz → texto](list-to-text.md) | Lee las celdas de lista/matriz de la beta de Microsoft 365 (`#UNKNOWN!` en Excel antiguo) desde el archivo guardado y las convierte en texto separado por comas o matricial `{…}` |
 | [Configuración SMTP](smtp-settings.md) | Registra el servidor SMTP para el envío de correo de Combinar correspondencia (la contraseña no se guarda) |
 | [Administrar claves API](api-keys.md) | Registra/elimina claves de API públicas (búsqueda de direcciones · data.go.kr · vworld — la clave de data.go.kr se comparte entre festivos, calendarios y registro de empresas) |
 | Acerca de EGTools++ | Muestra la versión, la página de distribución y las bibliotecas base; si hay una nueva versión en GitHub Release, avisa y ofrece el enlace a la página de distribución |

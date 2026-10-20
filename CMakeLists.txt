@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 1.5
+  VERSION 1.6
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX C)
 
@@ -37,6 +37,7 @@ set(EG_SOURCES
   src/core/Spill.cpp
   src/core/Registry.cpp
   src/core/Ref3D.cpp
+  src/core/ListText.cpp
   src/functions/Spike.cpp
   src/functions/FxLookup.cpp
   src/functions/FxLogic.cpp
@@ -64,6 +65,7 @@ set(EG_SOURCES
   src/functions/FxBarcode.cpp
   src/functions/FxColor.cpp
   src/functions/FxPublicApi.cpp
+  src/functions/FxListCompat.cpp
   src/intellisense/IntelliSense.cpp
   src/intellisense/FormulaParser.cpp
   src/intellisense/Catalog.cpp
@@ -79,6 +81,8 @@ set(EG_SOURCES
   src/ribbon/commands/CmdForm.cpp
   src/ribbon/commands/CmdApiKeys.cpp
   src/ribbon/commands/CmdSmtp.cpp
+  src/ribbon/commands/OoxmlPkg.cpp
+  src/ribbon/commands/CmdListCells.cpp
   src/ribbon/commands/DatePicker.cpp
   resources/egtools.rc
   # Module-definition file: exports the XLL entry points (xlAutoOpen, …) with

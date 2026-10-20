@@ -6,7 +6,7 @@
 
 各函数的详细说明。在 IntelliSense 工具提示中单击函数名即可跳转到对应页面。
 
-## MS Excel 兼容函数 (69)
+## MS Excel 兼容函数 (73)
 
 ### Excel 2013 (28)
 
@@ -80,9 +80,13 @@
 - [WRAPCOLS](functions/excel-2024/WRAPCOLS.md)
 - [WRAPROWS](functions/excel-2024/WRAPROWS.md)
 
-### Microsoft 365 (9)
+### Microsoft 365 (13)
 
+- [FLATTEN](functions/microsoft-365/FLATTEN.md) — Microsoft 365（2026 年新增）
 - [GROUPBY](functions/microsoft-365/GROUPBY.md)
+- [HAS](functions/microsoft-365/HAS.md) — Microsoft 365（2026 年新增）
+- [HASALL](functions/microsoft-365/HASALL.md) — Microsoft 365（2026 年新增）
+- [HASANY](functions/microsoft-365/HASANY.md) — Microsoft 365（2026 年新增）
 - [IMPORTCSV](functions/microsoft-365/IMPORTCSV.md) — Microsoft 365（2026 年新增）
 - [IMPORTTEXT](functions/microsoft-365/IMPORTTEXT.md) — Microsoft 365（2026 年新增）
 - [PERCENTOF](functions/microsoft-365/PERCENTOF.md)
@@ -218,6 +222,7 @@
 
 - [应用旧版兼容](ribbon/apply-compat.md)
 - [还原为内置函数](ribbon/restore-native.md)
+- [列表/数组单元格 → 文本](ribbon/list-to-text.md)
 - [SMTP 设置](ribbon/smtp-settings.md)
 - [管理 API 密钥](ribbon/api-keys.md)
 

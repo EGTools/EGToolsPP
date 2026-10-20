@@ -251,6 +251,7 @@ namespace egtools::ribbon
         constexpr BtnDef kMainMenuItems[] = {
             { L"egpp.toCompat",  L"onToCompat",  L"compat-apply",   nullptr, nullptr },
             { L"egpp.toNative",  L"onToNative",  L"restore-native", nullptr, nullptr },
+            { L"egpp.listToText", L"onListToText", L"udf-freeze",   nullptr, nullptr },   // plan/27
             { L"egpp.smtpSetup", L"onSmtpSetup", L"smtp-setup",     nullptr, nullptr },
             { L"egpp.apiKeys",   L"onApiKeys",   L"api-keys",       nullptr, nullptr },
             { L"egpp.about",     L"onAbout",     L"about",          nullptr, nullptr },
@@ -968,6 +969,7 @@ namespace egtools::ribbon
                 { L"onMemoArrange",  &rearrangeMemo },
                 { L"onBorderColor",  &changeLineColors },
                 { L"onUdfFreeze",    &udfFreeze },
+                { L"onListToText",   &listCellsToText },
                 { L"onCheckBox",     &applyCheckBox },
                 { L"onRecalc",       &recalcAll },
                 { L"onApiKeys",      &manageApiKeys },

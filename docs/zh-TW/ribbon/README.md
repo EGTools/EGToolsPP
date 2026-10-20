@@ -97,6 +97,7 @@
 |---|---|
 | [套用舊版相容](apply-compat.md) | 將現代/原生（`_xlfn.*`）函數權杖批次轉換為 EGTools 相容函數名稱 |
 | [還原為內建函數](restore-native.md) | 將 EGTools 函數名稱批次還原為原生內建函數 |
+| [清單/陣列儲存格 → 文字](list-to-text.md) | 從已儲存檔案讀取 Microsoft 365 測試版的儲存格內清單/陣列（舊版顯示 `#UNKNOWN!`），轉換為逗號分隔或 `{…}` 陣列文字 |
 | [SMTP 設定](smtp-settings.md) | 註冊郵件合併發送郵件用的 SMTP 伺服器（不儲存密碼） |
 | [管理 API 金鑰](api-keys.md) | 註冊/刪除公共 API 金鑰（地址搜尋 · data.go.kr · vworld — data.go.kr 金鑰由節假日、行事曆、商業登記查詢共用） |
 | 關於 EGTools++ | 顯示版本、發佈頁與基礎程式庫；當 GitHub Release 有新版本時，會連同通知提供發佈頁連結 |

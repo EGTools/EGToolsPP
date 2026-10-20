@@ -97,6 +97,7 @@
 |---|---|
 | [应用旧版兼容](apply-compat.md) | 将现代/原生（`_xlfn.*`）函数标记批量转换为 EGTools 兼容函数名 |
 | [还原为内置函数](restore-native.md) | 将 EGTools 函数名批量还原为原生内置函数 |
+| [列表/数组单元格 → 文本](list-to-text.md) | 从已保存文件读取 Microsoft 365 测试版的单元格内列表/数组（旧版显示 `#UNKNOWN!`），转换为逗号分隔或 `{…}` 数组文本 |
 | [SMTP 设置](smtp-settings.md) | 登记邮件合并发送邮件所用的 SMTP 服务器（不保存密码） |
 | [管理 API 密钥](api-keys.md) | 注册/删除公共 API 密钥（地址搜索 · data.go.kr · vworld — data.go.kr 密钥由节假日·日历·营业登记共用） |
 | 关于 EGTools++ | 显示版本·发布页·基础库；GitHub Release 上有新版本时会通知并提供发布页链接 |
