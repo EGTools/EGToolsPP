@@ -21,11 +21,6 @@ namespace egtools::commands
 {
     using namespace egtools::latecom;
 
-    inline HWND excelHwnd()
-    {
-        return (HWND)xloil::Environment::excelProcess().hWnd;
-    }
-
     // AddRef된 Application IDispatch (caller releases — Releaser 사용).
     inline IDispatch* appDisp()
     {
@@ -33,6 +28,37 @@ namespace egtools::commands
         auto& app = xloil::thisApp();
         if (app.ptr()) app.ptr()->QueryInterface(IID_IDispatch, (void**)&d);
         return d;
+    }
+
+    // 대화상자/메시지 상자의 소유자 창 = "지금 명령을 실행한 통합문서"의 창.
+    //
+    // Excel 2013+는 SDI라 통합문서마다 최상위 창이 따로 있다. xlOil이 로드 시점에
+    // xlGetHwnd로 저장한 excelProcess().hWnd는 그때의 활성 창 하나로 고정이라,
+    // 다른 통합문서에서 명령을 부르면 엉뚱한 통합문서 창이 모달 대화상자의 소유자가
+    // 되고, 대화상자가 닫히는 순간 Windows가 그 소유자 창을 활성화 → ActiveWorkbook이
+    // 바뀐 채로 뒤이은 ActiveSheet/Selection 작업이 진행되던 버그.
+    //
+    // 리본 콜백은 클릭 직후 메인 스레드에서 불리므로 GetActiveWindow()가 현재 통합문서
+    // 창이다. 비어 있으면 Application.Hwnd(2013+에서 활성 창 핸들; x64는 VT_I8) →
+    // 마지막으로 xlOil 저장값 순으로 내려간다.
+    inline HWND excelHwnd()
+    {
+        if (HWND h = GetActiveWindow()) return h;
+
+        if (IDispatch* ad = appDisp())
+        {
+            Releaser rApp{ ad };
+            VARIANT r; VariantInit(&r);
+            if (invokeRaw(ad, L"Hwnd", DISPATCH_PROPERTYGET, &r, nullptr, 0))
+            {
+                HWND h = nullptr;
+                if (r.vt == VT_I8)      h = (HWND)(INT_PTR)r.llVal;
+                else if (r.vt == VT_I4) h = (HWND)(INT_PTR)r.lVal;
+                VariantClear(&r);
+                if (h) return h;
+            }
+        }
+        return (HWND)xloil::Environment::excelProcess().hWnd;
     }
 
     // Selection이 셀 Range일 때만 반환(그림 등 다른 선택은 nullptr).
