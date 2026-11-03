@@ -48,6 +48,8 @@ namespace egtools::commands
     void removeEmptyStrings(); // 길이 0 문자열 셀 → 빈 셀
     void udfFreeze();          // EGTools UDF 수식 → 값 고정(배포용)
     void drawFreeForm();       // 색칠 셀 외곽 자유형 도형 생성
+    void centerAcrossSelection(); // 선택 영역의 가운데로 토글(홈 탭 '맞춤' 교체 그룹)
+    bool hasNativeCenterAcross();  // 네이티브 항목(idMso CenterAcrossSelection) 존재 → 교체 생략
 
     // ── 셀 내 목록 (CmdListCells.cpp, plan/27) ──
     void listCellsToText();    // M365 베타 목록/배열 셀 → 텍스트 표기(저장 파일 richData 읽기)

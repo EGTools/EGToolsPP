@@ -230,3 +230,7 @@ Features on the `EGTools` ribbon tab. See the [ribbon overview](ribbon/README.md
 
 - [Cell Right-Click Menu — Date Picker, Open URL](ribbon/context-menu.md)
 
+### Home Tab Alignment
+
+- [Home Tab Alignment Group — Center Across Selection](ribbon/home-alignment.md)
+

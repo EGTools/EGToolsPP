@@ -230,3 +230,7 @@
 
 - [儲存格右鍵選單 — 日期選擇 · 開啟連結](ribbon/context-menu.md)
 
+### 常用索引標籤對齊方式
+
+- [常用索引標籤的對齊方式群組 — 跨欄置中](ribbon/home-alignment.md)
+

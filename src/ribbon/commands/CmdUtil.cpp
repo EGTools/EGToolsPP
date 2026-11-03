@@ -100,6 +100,60 @@ namespace egtools::commands
         catch (...) {}
     }
 
+    // 네이티브 '선택 영역의 가운데로' 존재 여부 (plan/28 §7)
+    // idMso는 CenterAcrossSelection — Microsoft 공개 컨트롤 ID 목록(office-fluent-ui-
+    // command-identifiers, Current Channel 2402)에 MergeCenterMenu 하위 toggleButton으로
+    // 등재돼 있지만 기능 플래그로 꺼진 빌드(비-Insider, 2026-11 실측 build 20326)에서는
+    // CommandBars의 Mso 조회(GetLabelMso 등)가 전부 실패한다. 따라서 GetLabelMso 성공 =
+    // 병합 메뉴에 항목이 실제로 있음(Insider 채널). 판정 불가(COM 실패)는 '없음'으로 본다.
+    bool hasNativeCenterAcross()
+    {
+        try
+        {
+            IDispatch* ad = appDisp();
+            if (!ad) return false;
+            Releaser rApp{ ad };
+            IDispatch* cb = getObject(ad, L"CommandBars");
+            if (!cb) return false;
+            Releaser rCb{ cb };
+
+            VARIANT arg = varBStr(L"CenterAcrossSelection");
+            VARIANT r; VariantInit(&r);
+            const bool present =
+                invokeRaw(cb, L"GetLabelMso", DISPATCH_METHOD, &r, &arg, 1) &&
+                r.vt == VT_BSTR && r.bstrVal && *r.bstrVal;
+            VariantClear(&r);
+            VariantClear(&arg);
+            return present;
+        }
+        catch (...) { return false; }
+    }
+
+    // 선택 영역의 가운데로 (홈 탭 '맞춤' 교체 그룹, plan/28)
+    // Excel 2026-10 롤아웃의 병합 메뉴 항목과 같은 동작: 셀을 병합하지 않고
+    // 가로 맞춤을 xlHAlignCenterAcrossSelection(7)으로 두고, 선택 영역이 이미
+    // 그 상태면(혼합이면 NULL→0이라 적용) xlHAlignGeneral(1)로 되돌리는 토글.
+    void centerAcrossSelection()
+    {
+        try
+        {
+            IDispatch* ad = appDisp();
+            if (!ad) return;
+            Releaser rApp{ ad };
+            IDispatch* sel = selectionRange(ad);
+            if (!sel) return;                       // 셀 선택이 아니면 조용히 종료
+            Releaser rSel{ sel };
+
+            constexpr long xlHAlignGeneral = 1;
+            constexpr long xlHAlignCenterAcrossSelection = 7;
+            const long cur = getLong(sel, L"HorizontalAlignment", 0);
+            putVar(sel, L"HorizontalAlignment",
+                   varLong(cur == xlHAlignCenterAcrossSelection
+                               ? xlHAlignGeneral : xlHAlignCenterAcrossSelection));
+        }
+        catch (...) {}
+    }
+
     // 셀 내용의 URL 열기 (VB OpenUrlInCell, C09_Util.vb:319) — 컨텍스트 메뉴 포함
     void openUrlInCell()
     {

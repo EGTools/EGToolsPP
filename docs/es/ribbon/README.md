@@ -118,4 +118,12 @@ Además de la cinta, también se añaden elementos al menú contextual de las ce
 También se añade el botón [Aplicar CheckBox](utilities.md#aplicar-checkbox) a la pestaña `Insertar` de Excel.
 No se muestra en Microsoft 365, que ya dispone de casillas de verificación nativas.
 
+## Grupo Alineación de la pestaña Inicio
+
+El grupo `Alineación` predeterminado de la pestaña `Inicio` de Excel se sustituye por otro con la misma
+disposición más un botón **Centrar en la selección** bajo el botón de combinar (un conmutador que
+aplica/quita la alineación horizontal sin combinar celdas). Si el desplegable de combinar de Excel ya
+tiene el elemento nativo "Centrar en la selección" (canal Insider de Microsoft 365), el grupo
+predeterminado se deja tal cual. Detalles: [Grupo Alineación de la pestaña Inicio](home-alignment.md)
+
 <!-- Las funciones que se añadan en el futuro se incorporarán aquí como nuevas secciones de grupo -->

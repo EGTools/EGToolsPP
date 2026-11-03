@@ -230,3 +230,7 @@
 
 - [セル右クリックメニュー — 日付入力 · リンクを開く](ribbon/context-menu.md)
 
+### ホームタブの配置
+
+- [ホームタブの配置グループ — 選択範囲内で中央](ribbon/home-alignment.md)
+

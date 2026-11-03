@@ -230,3 +230,7 @@
 
 - [셀 오른쪽 클릭 메뉴 — 날짜입력 · 링크열기](ribbon/context-menu.md)
 
+### 홈 탭 맞춤 그룹
+
+- [홈 탭 맞춤 그룹 — 선택 영역의 가운데로](ribbon/home-alignment.md)
+

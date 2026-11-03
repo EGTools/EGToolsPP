@@ -230,3 +230,7 @@ Funciones disponibles en la pestaña `EGTools` de la cinta. Consulte la [descrip
 
 - [Menú contextual de celda — Selector de fecha · Abrir URL](ribbon/context-menu.md)
 
+### Alineación en Inicio
+
+- [Grupo Alineación de la pestaña Inicio — Centrar en la selección](ribbon/home-alignment.md)
+

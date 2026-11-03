@@ -122,4 +122,12 @@ Details: [Cell Right-Click Menu](context-menu.md)
 An [Apply CheckBox](utilities.md#apply-checkbox) button is also added to Excel's
 `Insert` tab. It is not shown on Microsoft 365, which has native checkboxes.
 
+## Home Tab Alignment Group
+
+The default `Alignment` group on Excel's `Home` tab is replaced with an identical layout plus a
+**Center Across Selection** button below the merge button (a toggle that applies/clears the
+horizontal alignment without merging cells). If Excel's merge dropdown already has the native
+"Center Across Selection" item (Microsoft 365 Insider channel), the default group is left as is.
+Details: [Home Tab Alignment Group](home-alignment.md)
+
 <!-- Future features are added here as new group sections. -->

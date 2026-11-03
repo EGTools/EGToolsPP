@@ -230,3 +230,7 @@
 
 - [单元格右键菜单 — 日期选择 · 打开链接](ribbon/context-menu.md)
 
+### 开始选项卡对齐方式
+
+- [开始选项卡的对齐方式组 — 跨列居中](ribbon/home-alignment.md)
+

@@ -15,6 +15,9 @@
 //    표준 컨트롤 시그니처라 안전하다. PICTYPE_ICON은 알파 보존이 확실한 경로.
 //  - tag="LT2021"/"GT2016" + GetVisible로 Excel 버전별 표시 게이트(VB 규약,
 //    365는 최신 취급).
+//  - 홈 탭 '맞춤' 그룹은 숨기고 같은 구성 + '선택 영역의 가운데로'로 교체한다
+//    (기본 그룹 내부에는 끼워 넣기 불가 — kHomeAlignButtons 주석, plan/28).
+//    네이티브 항목(idMso CenterAcrossSelection, Insider 채널)이 있으면 교체 생략.
 
 #include "Ribbon.h"
 #include "Convert.h"
@@ -303,6 +306,15 @@ namespace egtools::ribbon
             { L"egpp.insCheckBox", L"onCheckBox", L"checkbox", nullptr, L"LT365" },
         };
 
+        // 홈 탭 '맞춤' 그룹 교체 (2026-11-03, plan/28): Office 기본 그룹 안에는
+        // 컨트롤을 끼워 넣을 수 없으므로 GroupAlignmentExcel을 숨기고 같은 자리에
+        // 같은 구성의 그룹을 다시 만든 뒤(기본 컨트롤은 <control idMso> 재배치)
+        // '선택 영역의 가운데로' 버튼을 병합 버튼 아래 3행에 둔다. 사용한 idMso는
+        // 전부 Excel COM CommandBars.GetLabelMso로 실존 확인(365 build 20326).
+        constexpr BtnDef kHomeAlignButtons[] = {
+            { L"egpp.centerAcross", L"onCenterAcross", L"center-across", nullptr, nullptr },
+        };
+
         // 커스텀 아이콘 이름 → RCDATA PNG 리소스 ID.
         constexpr std::pair<const wchar_t*, int> kIcons[] = {
             { L"compat-apply",   IDR_ICON_COMPAT_APPLY },
@@ -353,6 +365,7 @@ namespace egtools::ribbon
             { L"date-picker",      IDR_ICON_DATE_PICKER },
             { L"mail-merge",       IDR_ICON_MAIL_MERGE },
             { L"smtp-setup",       IDR_ICON_SMTP_SETUP },
+            { L"center-across",    IDR_ICON_CENTER_ACROSS },
         };
 
         // 버튼 XML. topLevel=true면 size="large"(그룹 직속/스플릿 기본 버튼),
@@ -401,6 +414,57 @@ namespace egtools::ribbon
             for (const auto& b : kInsertTabButtons)
                 appendButton(xml, b, true);
             xml += L"</group></tab>";
+
+            // 홈 탭: 기본 '맞춤' 그룹을 숨기고 같은 자리에 같은 구성으로 재구성.
+            // 왼쪽 세로 상자 = 기본 그룹의 2행(위/가운데/아래+방향, 왼/가운데/오른+
+            // 들여쓰기), 오른쪽 세로 상자 = 자동 줄 바꿈 / 병합 / 선택 영역의 가운데로.
+            // 대화상자 실행기는 기본 그룹과 같은 CellAlignmentOptions(셀 서식: 맞춤).
+            // 단, 병합 메뉴에 네이티브 '선택 영역의 가운데로'가 이미 있는 Excel(Insider
+            // 채널, 2026-09 롤아웃)에서는 교체하지 않고 기본 그룹을 그대로 둔다(사용자
+            // 지시 2026-11-03). 판정은 로드 시 1회, COM GetLabelMso(CenterAcrossSelection).
+            if (!egtools::commands::hasNativeCenterAcross())
+            {
+            xml += L"<tab idMso=\"TabHome\">"
+                   L"<group idMso=\"GroupAlignmentExcel\" visible=\"false\"/>"
+                   L"<group id=\"egpp.grpAlign\" getLabel=\"GetLabel\""
+                   L" insertAfterMso=\"GroupAlignmentExcel\">"
+                   // 그룹 직속 [열A][sep][열B][sep][열C]: box 안에는 separator를 둘 수 없어
+                   // 기본 그룹의 구분선 자리(세로정렬 3개|쓰기 각도, 가로정렬 3개|들여쓰기,
+                   // 그리고 오른쪽 열 앞)에 선을 두려면 행 단위 가로 상자가 아니라 열 단위
+                   // 세로 상자로 나눠야 한다(사용자 지적 2026-11-03). 그룹 직속 separator는
+                   // 행 높이가 아니라 그룹 높이로 그려지는 것이 기본 그룹과의 유일한 차이.
+                   L"<box id=\"egpp.alignColA\" boxStyle=\"vertical\">"
+                   L"<buttonGroup id=\"egpp.alignBgV\">"
+                   L"<control idMso=\"AlignTopExcel\" showLabel=\"false\"/>"
+                   L"<control idMso=\"AlignMiddleExcel\" showLabel=\"false\"/>"
+                   L"<control idMso=\"AlignBottomExcel\" showLabel=\"false\"/>"
+                   L"</buttonGroup>"
+                   L"<buttonGroup id=\"egpp.alignBgH\">"
+                   L"<control idMso=\"AlignLeft\" showLabel=\"false\"/>"
+                   L"<control idMso=\"AlignCenter\" showLabel=\"false\"/>"
+                   L"<control idMso=\"AlignRight\" showLabel=\"false\"/>"
+                   L"</buttonGroup>"
+                   L"</box>"
+                   L"<separator id=\"egpp.alignSep1\"/>"
+                   L"<box id=\"egpp.alignColB\" boxStyle=\"vertical\">"
+                   L"<buttonGroup id=\"egpp.alignBgO\">"
+                   L"<control idMso=\"OrientationMenu\" showLabel=\"false\"/>"
+                   L"</buttonGroup>"
+                   L"<buttonGroup id=\"egpp.alignBgI\">"
+                   L"<control idMso=\"IndentDecreaseExcel\" showLabel=\"false\"/>"
+                   L"<control idMso=\"IndentIncreaseExcel\" showLabel=\"false\"/>"
+                   L"</buttonGroup>"
+                   L"</box>"
+                   L"<separator id=\"egpp.alignSep2\"/>"
+                   L"<box id=\"egpp.alignBoxR\" boxStyle=\"vertical\">"
+                   L"<control idMso=\"WrapText\"/>"
+                   L"<control idMso=\"MergeCenterMenu\"/>";
+            for (const auto& b : kHomeAlignButtons)
+                appendButton(xml, b, false);
+            xml += L"</box>"
+                   L"<dialogBoxLauncher><button idMso=\"CellAlignmentOptions\"/></dialogBoxLauncher>"
+                   L"</group></tab>";
+            }
 
             xml += L"<tab id=\"egpp.tab\" insertBeforeMso=\"TabHome\" getLabel=\"GetLabel\">";
             for (const auto& g : kGroups)
@@ -615,6 +679,8 @@ namespace egtools::ribbon
                     for (size_t i = 0; i < m.count; ++i)
                         add(m.items[i]);
                 for (const auto& b : kInsertTabButtons)
+                    add(b);
+                for (const auto& b : kHomeAlignButtons)
                     add(b);
             }
             const auto it = index.find(ctrlId ? ctrlId : L"");
@@ -972,6 +1038,7 @@ namespace egtools::ribbon
                 { L"onListToText",   &listCellsToText },
                 { L"onCheckBox",     &applyCheckBox },
                 { L"onRecalc",       &recalcAll },
+                { L"onCenterAcross", &centerAcrossSelection },
                 { L"onApiKeys",      &manageApiKeys },
                 { L"onSmtpSetup",    &smtpSettings },
                 { L"onOpenUrl",      &openUrlInCell },

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 선택 영역의 가운데로 — 세 칸이 나뉜 채(연한 구분선 유지) 내용(초록 막대)만 칸 경계를 가로질러 가운데 정렬 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="3" y="8" width="26" height="16" rx="2" fill="none" stroke="#475569" stroke-width="2"/>
+  <line x1="11.5" y1="8" x2="11.5" y2="24" stroke="#CBD5E1" stroke-width="1.5"/>
+  <line x1="20.5" y1="8" x2="20.5" y2="24" stroke="#CBD5E1" stroke-width="1.5"/>
+  <line x1="9" y1="13.5" x2="23" y2="13.5" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="12" y1="18.5" x2="20" y2="18.5" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
