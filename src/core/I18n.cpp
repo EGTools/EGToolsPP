@@ -63,18 +63,32 @@ namespace egtools::i18n
         {
             // 실행 중인 Excel의 메이저 버전(2010=14 / 2013=15 / 2016+=16) 키만
             // 읽는다 — 버전 하드코딩 시 2010/2013에서 표시 언어를 못 읽고, 여러
-            // Office가 공존하면 다른 버전의 설정을 읽는 문제. 값이 없으면(표시
-            // 언어를 "Windows와 일치"로 둔 경우 포함) 0을 돌려 호출부가
-            // GetUserDefaultUILanguage로 폴백한다.
+            // Office가 공존하면 다른 버전의 설정을 읽는 문제. 우선순위:
+            // UILanguage > UILanguageTag > PreferredEditingLanguage. 모두 없으면
+            // 0을 돌려 호출부가 GetUserDefaultUILanguage로 폴백한다.
             const int major = xloil::Environment::excelProcess().version;
             if (major < 12) return 0;   // 2007 미만은 LanguageResources 레이아웃 상이
             wchar_t path[96];
             swprintf_s(path, L"Software\\Microsoft\\Office\\%d.0\\Common\\LanguageResources",
                        major);
+            // 1) UILanguage (DWORD LCID) — 구형/일부 설치
             DWORD val = 0, sz = sizeof(val);
             if (RegGetValueW(HKEY_CURRENT_USER, path,
-                    L"UILanguage", RRF_RT_REG_DWORD, nullptr, &val, &sz) == ERROR_SUCCESS)
+                    L"UILanguage", RRF_RT_REG_DWORD, nullptr, &val, &sz) == ERROR_SUCCESS
+                && val)
                 return (LCID)val;
+            // 2) UILanguageTag, 3) PreferredEditingLanguage — 문자열 로캘 이름("ko-KR").
+            //    최신 Microsoft 365는 UILanguage 대신 UILanguageTag를 쓴다.
+            for (const wchar_t* name : { L"UILanguageTag", L"PreferredEditingLanguage" })
+            {
+                wchar_t tag[85] = {};
+                DWORD tsz = sizeof(tag) - sizeof(wchar_t);
+                if (RegGetValueW(HKEY_CURRENT_USER, path, name,
+                        RRF_RT_REG_SZ, nullptr, tag, &tsz) != ERROR_SUCCESS || !tag[0])
+                    continue;
+                LCID l = LocaleNameToLCID(tag, 0);   // "x-none" 등 미인식 → 0
+                if (l) return l;
+            }
             return 0;
         }
 
