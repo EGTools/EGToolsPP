@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 제목/본문 2단 사각형 — 위 제목 칸 + 아래 본문 칸 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="4" y="4" width="24" height="8" fill="#BFDBFE" stroke="#1D4ED8" stroke-width="2"/>
+  <rect x="4" y="12" width="24" height="16" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="2"/>
+  <path d="M9 18 L23 18 M9 23 L19 23" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+</svg>

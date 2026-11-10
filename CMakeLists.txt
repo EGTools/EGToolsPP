@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(EGToolsPP
-  VERSION 1.7
+  VERSION 1.8
   DESCRIPTION "Modern Excel functions for legacy Excel as a single static .xll add-in"
   LANGUAGES CXX C)
 
@@ -76,6 +76,7 @@ set(EG_SOURCES
   src/ribbon/commands/CmdCopy.cpp
   src/ribbon/commands/CmdMerge.cpp
   src/ribbon/commands/CmdPicture.cpp
+  src/ribbon/commands/CmdShape.cpp
   src/ribbon/commands/CmdUtil.cpp
   src/ribbon/commands/CmdCalendar.cpp
   src/ribbon/commands/CmdForm.cpp

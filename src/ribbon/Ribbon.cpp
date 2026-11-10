@@ -92,10 +92,21 @@ namespace egtools::ribbon
             const BtnDef*  items;
             size_t         count;
         };
-        struct ControlDef        // btn/split 중 정확히 하나만 non-null
+        // 갤러리(드롭다운 그리드): 항목은 동적 콜백(getItem*)으로 채운다. 항목 이름은 툴팁으로만
+        // 보이고(showItemLabel=false), 항목 선택은 onAction(selectedId)로 해당 항목의 명령을 부른다.
+        struct GalleryDef
         {
-            const BtnDef*   btn;
-            const SplitDef* split;
+            const wchar_t* id;        // gallery id (라벨/툴팁 키: ribbon.<id>.label/.tip)
+            BtnDef         self;      // 갤러리 큰 버튼 아이콘(image) — id는 gallery id와 같게
+            const BtnDef*  items;
+            size_t         count;
+            int            columns;
+        };
+        struct ControlDef        // btn/split/gallery 중 정확히 하나만 non-null
+        {
+            const BtnDef*     btn;
+            const SplitDef*   split;
+            const GalleryDef* gallery = nullptr;
         };
         struct GroupDef
         {
@@ -192,6 +203,23 @@ namespace egtools::ribbon
             { nullptr, &kSbPicture }, { nullptr, &kSbFit },
         };
 
+        // ── 도형 (plan/29): 핸들 달린 사용자 정의 도형을 활성 셀 위치에 삽입 ──
+        constexpr BtnDef kShapeMenuItems[] = {
+            { L"egpp.shpVennTwo",   L"onShpVenn2",   L"shape-venn2",   nullptr, nullptr },
+            { L"egpp.shpVennThree", L"onShpVenn3",   L"shape-venn3",   nullptr, nullptr },
+            { L"egpp.shpOneSide",   L"onShpOneSide", L"shape-oneside", nullptr, nullptr },
+            { L"egpp.shpDonut",     L"onShpDonut",   L"shape-donut",   nullptr, nullptr },
+            { L"egpp.shpTabPad",    L"onShpTabPad",  L"shape-tabpad",  nullptr, nullptr },
+            { L"egpp.shpSlot",      L"onShpSlot",    L"shape-slot",    nullptr, nullptr },
+            { L"egpp.shpTable",     L"onShpTable",   L"shape-table",   nullptr, nullptr },
+        };
+        constexpr GalleryDef kGalShape = {
+            L"egpp.galShape",
+            { L"egpp.galShape", L"", L"shape-venn2", nullptr, nullptr },
+            kShapeMenuItems, _countof(kShapeMenuItems), 2,
+        };
+        constexpr ControlDef kShapeControls[] = { { nullptr, nullptr, &kGalShape } };
+
         // ── M3: 달력/일정표 ──
         constexpr BtnDef kCalMenuItems[] = {
             { L"egpp.calMonth", L"onCalMonth", L"calendar-month",  nullptr, nullptr },
@@ -270,6 +298,7 @@ namespace egtools::ribbon
             { L"egpp.grpVisible",  kVisibleControls,  _countof(kVisibleControls) },
             { L"egpp.grpMerge",    kMergeControls,    _countof(kMergeControls) },
             { L"egpp.grpPicture",  kPictureControls,  _countof(kPictureControls) },
+            { L"egpp.grpShape",    kShapeControls,    _countof(kShapeControls) },
             { L"egpp.grpCalendar", kCalendarControls, _countof(kCalendarControls) },
             { L"egpp.grpForm",     kFormControls,     _countof(kFormControls) },
             { L"egpp.grpTools",    kToolsControls,    _countof(kToolsControls) },
@@ -366,6 +395,13 @@ namespace egtools::ribbon
             { L"mail-merge",       IDR_ICON_MAIL_MERGE },
             { L"smtp-setup",       IDR_ICON_SMTP_SETUP },
             { L"center-across",    IDR_ICON_CENTER_ACROSS },
+            { L"shape-oneside",    IDR_ICON_SHAPE_ONESIDE },
+            { L"shape-donut",      IDR_ICON_SHAPE_DONUT },
+            { L"shape-tabpad",     IDR_ICON_SHAPE_TABPAD },
+            { L"shape-venn2",      IDR_ICON_SHAPE_VENN2 },
+            { L"shape-venn3",      IDR_ICON_SHAPE_VENN3 },
+            { L"shape-slot",       IDR_ICON_SHAPE_SLOT },
+            { L"shape-table",      IDR_ICON_SHAPE_TABLE },
         };
 
         // 버튼 XML. topLevel=true면 size="large"(그룹 직속/스플릿 기본 버튼),
@@ -477,6 +513,20 @@ namespace egtools::ribbon
                     const ControlDef& ctl = g.controls[c];
                     if (ctl.btn)
                         appendButton(xml, *ctl.btn, true);
+                    else if (ctl.gallery)
+                    {
+                        const GalleryDef& gl = *ctl.gallery;
+                        xml += L"<gallery id=\"";
+                        xml += gl.id;
+                        xml += L"\" size=\"large\" columns=\"";
+                        xml += std::to_wstring(gl.columns);
+                        xml += L"\" showItemLabel=\"false\" itemWidth=\"40\" itemHeight=\"40\""
+                               L" getLabel=\"GetLabel\" getScreentip=\"GetLabel\" getSupertip=\"GetSupertip\""
+                               L" getImage=\"GetImage\" onAction=\"OnGalleryAction\""
+                               L" getItemCount=\"GalItemCount\" getItemID=\"GalItemId\""
+                               L" getItemLabel=\"GalItemLabel\" getItemScreentip=\"GalItemLabel\""
+                               L" getItemSupertip=\"GalItemTip\" getItemImage=\"GalItemImage\"/>";
+                    }
                     else if (ctl.split)
                     {
                         const SplitDef& s = *ctl.split;
@@ -668,6 +718,12 @@ namespace egtools::ribbon
                     for (size_t c = 0; c < g.count; ++c)
                     {
                         if (g.controls[c].btn) add(*g.controls[c].btn);
+                        else if (g.controls[c].gallery)
+                        {
+                            add(g.controls[c].gallery->self);
+                            for (size_t i = 0; i < g.controls[c].gallery->count; ++i)
+                                add(g.controls[c].gallery->items[i]);
+                        }
                         else if (g.controls[c].split)
                         {
                             add(g.controls[c].split->defBtn);
@@ -685,6 +741,32 @@ namespace egtools::ribbon
             }
             const auto it = index.find(ctrlId ? ctrlId : L"");
             return it == index.end() ? nullptr : it->second;
+        }
+
+        // 갤러리 id → 정의(그룹 테이블 순회).
+        const GalleryDef* findGallery(const wchar_t* id)
+        {
+            for (const auto& g : kGroups)
+                for (size_t c = 0; c < g.count; ++c)
+                    if (const GalleryDef* gl = g.controls[c].gallery)
+                        if (wcscmp(gl->id, id ? id : L"") == 0) return gl;
+            return nullptr;
+        }
+
+        // 콜백 인수(by-value 또는 by-ref) → long / 문자열.
+        long argLong(VARIANT* v)
+        {
+            if (!v) return -1;
+            VARIANT t; VariantInit(&t);
+            if (FAILED(VariantChangeType(&t, v, 0, VT_I4))) return -1;
+            return t.lVal;
+        }
+        std::wstring argStr(VARIANT* v)
+        {
+            if (!v) return L"";
+            if (v->vt == VT_BSTR) return v->bstrVal ? v->bstrVal : L"";
+            if (v->vt == (VT_BSTR | VT_BYREF) && v->pbstrVal && *v->pbstrVal) return *v->pbstrVal;
+            return L"";
         }
 
         // 매 호출 새 그림 생성 — 참조 1개(생성분)를 호출자에게 넘긴다.
@@ -986,6 +1068,50 @@ namespace egtools::ribbon
                            r->pdispVal = pic;
                        };
 
+            // ── gallery callbacks (control = 갤러리, args[0] = index / selectedId) ──
+            if (n == L"GalItemCount")
+                return [](const RibbonControl& c, VARIANT* r, int, VARIANT**)
+                       {
+                           const GalleryDef* gl = findGallery(c.Id);
+                           if (!r || !gl) return;
+                           r->vt = VT_I4;
+                           r->lVal = (long)gl->count;
+                       };
+            if (n == L"GalItemId" || n == L"GalItemLabel" || n == L"GalItemTip" || n == L"GalItemImage")
+            {
+                const int kind = n == L"GalItemId" ? 0 : n == L"GalItemLabel" ? 1
+                               : n == L"GalItemTip" ? 2 : 3;
+                return [kind](const RibbonControl& c, VARIANT* r, int nArgs, VARIANT** args)
+                       {
+                           const GalleryDef* gl = findGallery(c.Id);
+                           const long i = nArgs > 0 ? argLong(args[0]) : -1;
+                           if (!r || !gl || i < 0 || (size_t)i >= gl->count) return;
+                           const BtnDef& it = gl->items[i];
+                           if (kind == 0) setResult(r, it.id);
+                           else if (kind == 3)
+                           {
+                               if (IPictureDisp* pic = iconFor(it.id))
+                               { r->vt = VT_DISPATCH; r->pdispVal = pic; }
+                           }
+                           else
+                           {
+                               const std::wstring key = L"ribbon." + normalizedId(it.id) +
+                                                        (kind == 1 ? L".label" : L".tip");
+                               setResult(r, egtools::i18n::t(key));
+                           }
+                       };
+            }
+            if (n == L"OnGalleryAction")
+                return [](const RibbonControl&, VARIANT*, int nArgs, VARIANT** args)
+                       {
+                           if (nArgs < 1) return;
+                           const std::wstring id = argStr(args[0]);
+                           const BtnDef* b = findButton(id.c_str());
+                           if (!b || !b->onAction) return;
+                           if (auto cb = callbackFor(b->onAction))
+                               cb(RibbonControl{ b->id, b->tag }, nullptr, 0, nullptr);
+                       };
+
             // ── commands ──
             using namespace egtools::commands;
             struct Cmd { const wchar_t* name; void (*fn)(); };
@@ -1039,6 +1165,13 @@ namespace egtools::ribbon
                 { L"onCheckBox",     &applyCheckBox },
                 { L"onRecalc",       &recalcAll },
                 { L"onCenterAcross", &centerAcrossSelection },
+                { L"onShpOneSide",   &insertShapeOneSide },
+                { L"onShpDonut",     &insertShapeDonut },
+                { L"onShpTabPad",    &insertShapeTabPad },
+                { L"onShpSlot",      &insertShapeSlot },
+                { L"onShpTable",     &insertShapeTable },
+                { L"onShpVenn2",     &insertShapeVenn2 },
+                { L"onShpVenn3",     &insertShapeVenn3 },
                 { L"onApiKeys",      &manageApiKeys },
                 { L"onSmtpSetup",    &smtpSettings },
                 { L"onOpenUrl",      &openUrlInCell },

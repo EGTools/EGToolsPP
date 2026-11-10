@@ -36,6 +36,15 @@ namespace egtools::commands
     void pictureFitAll();      // 시트 전체 이미지 셀 맞춤
     void exportAllPictures();  // 시트 그림 전체를 폴더로 추출(원본 화질)
 
+    // ── 도형 (CmdShape.cpp, plan/29) — 핸들 달린 사용자 정의 도형을 활성 셀에 삽입 ──
+    void insertShapeOneSide(); // 한쪽 반원 사각형
+    void insertShapeDonut();   // 도넛형
+    void insertShapeTabPad();  // 탭 달린 전극 패드
+    void insertShapeSlot();    // 벌어진 홈 사각형
+    void insertShapeTable();   // 제목/본문 2단 사각형(그룹)
+    void insertShapeVenn2();   // 벤 다이어그램 2원(그룹)
+    void insertShapeVenn3();   // 벤 다이어그램 3원(그룹)
+
     // ── 도구 (CmdUtil.cpp) ──
     void applyCheckBox();      // CheckBox 셀서식 적용
     void recalcAll();          // 전체 재계산
