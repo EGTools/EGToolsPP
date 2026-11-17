@@ -1,5 +1,6 @@
 // FxGoogle.cpp — Google Sheets 호환 함수 (EGToolsVB FXG_Google.vb 포팅, plan/20).
-//   GOOGLETRANSLATE / GTRS — translate.google.com/m 페이지 스크래핑 번역.
+//   GOOGLETRANSLATE / GTRS — translate.googleapis.com gtx JSON 엔드포인트 번역
+//     (2026-11 이전엔 translate.google.com/m 스크래핑 — 봇 차단으로 교체).
 //     비공식 엔드포인트: 형식 변경/실패는 VB판과 동일하게 "ERROR:…" 문자열로 반환.
 //   (후속 배치: IMPORTDATA, IMPORTFEED, IMPORTRANGE, IMPORTHTML, QUERY)
 //
@@ -1538,6 +1539,109 @@ namespace egtools::functions
 
         // ---- GOOGLETRANSLATE ----------------------------------------------
 
+        // gtx 응답(JSON 배열)용 최소 리더. 필요한 건 문자열·배열 순회뿐이고,
+        // 나머지 값(숫자/null/bool/객체)은 건너뛰기만 한다.
+        struct JsonCursor
+        {
+            const std::wstring& s;
+            size_t i = 0;
+
+            void ws() { while (i < s.size() && iswspace(s[i])) ++i; }
+            bool peek(wchar_t c) { ws(); return i < s.size() && s[i] == c; }
+            bool eat(wchar_t c) { if (!peek(c)) return false; ++i; return true; }
+
+            bool readString(std::wstring& out)
+            {
+                out.clear();
+                if (!eat(L'"')) return false;
+                while (i < s.size())
+                {
+                    wchar_t c = s[i++];
+                    if (c == L'"') return true;
+                    if (c != L'\\') { out += c; continue; }
+                    if (i >= s.size()) return false;
+                    c = s[i++];
+                    switch (c)
+                    {
+                    case L'n': out += L'\n'; break;
+                    case L'r': out += L'\r'; break;
+                    case L't': out += L'\t'; break;
+                    case L'b': out += L'\b'; break;
+                    case L'f': out += L'\f'; break;
+                    case L'u':
+                    {
+                        if (i + 4 > s.size()) return false;
+                        out += (wchar_t)wcstoul(s.substr(i, 4).c_str(), nullptr, 16);
+                        i += 4;
+                        break;
+                    }
+                    default: out += c; break;            // \" \\ \/
+                    }
+                }
+                return false;
+            }
+
+            bool skipValue()
+            {
+                ws();
+                if (i >= s.size()) return false;
+                const wchar_t c = s[i];
+                if (c == L'"') { std::wstring t; return readString(t); }
+                if (c == L'[' || c == L'{')
+                {
+                    const wchar_t close = (c == L'[') ? L']' : L'}';
+                    ++i;
+                    if (eat(close)) return true;
+                    for (;;)
+                    {
+                        if (c == L'{')
+                        {
+                            std::wstring key;
+                            if (!readString(key) || !eat(L':')) return false;
+                        }
+                        if (!skipValue()) return false;
+                        if (eat(L',')) continue;
+                        return eat(close);
+                    }
+                }
+                // 숫자 / null / true / false
+                const size_t start = i;
+                while (i < s.size() && s[i] != L',' && s[i] != L']' && s[i] != L'}' &&
+                       !iswspace(s[i]))
+                    ++i;
+                return i > start;
+            }
+        };
+
+        // translate_a/single?client=gtx&dt=t 응답:
+        //   [[["번역1","원문1",…],["번역2","원문2",…],…], null, "en", …]
+        // 첫 원소의 각 조각에서 0번 문자열을 이어붙인다.
+        bool parseGtxResult(const std::wstring& json, std::wstring& out)
+        {
+            out.clear();
+            JsonCursor c{ json };
+            if (!c.eat(L'[') || !c.eat(L'[')) return false;   // data[0]이 null이면 실패
+            if (c.eat(L']')) return false;
+            bool any = false;
+            for (;;)
+            {
+                if (!c.eat(L'[')) return false;
+                if (c.peek(L'"'))
+                {
+                    std::wstring piece;
+                    if (!c.readString(piece)) return false;
+                    out += piece;
+                    any = true;
+                }
+                else if (!c.peek(L']') && !c.skipValue()) return false;
+                while (c.eat(L','))
+                    if (!c.skipValue()) return false;
+                if (!c.eat(L']')) return false;
+                if (c.eat(L',')) continue;
+                return c.eat(L']') && any;
+            }
+        }
+
         bool isValidLangCode(const std::wstring& lc)
         {
             static const wchar_t* kCodes[] = {
@@ -1614,35 +1718,33 @@ namespace egtools::functions
             sl = normalizeLang(sl);
             tl = normalizeLang(tl);
 
-            const std::wstring url = L"https://translate.google.com/m?hl=en&sl=" + sl +
-                                     L"&tl=" + tl + L"&q=" + percentEncode(text);
+            // 2026-11: translate.google.com/m 이 봇 차단(/sorry CAPTCHA)으로 막혀
+            // JSON 엔드포인트(gtx)로 교체. dt=t = 번역문 조각만.
+            const std::wstring url =
+                L"https://translate.googleapis.com/translate_a/single?client=gtx"
+                L"&ie=UTF-8&oe=UTF-8&dt=t&sl=" + sl + L"&tl=" + tl +
+                L"&q=" + percentEncode(text);
 
             std::string body;
             if (!httpGet(url, body) || body.empty())
                 return returnValue(CellError::Value);
-            const std::wstring html = utf8ToWide(body);
+            const std::wstring json = utf8ToWide(body);
 
-            // Google 오류 페이지: <title>Error NNN …</title>
-            size_t pos = findNoCase(html, L"<title>Error");
-            if (pos != std::wstring::npos)
+            // 차단/오류 시에는 JSON 대신 HTML 페이지가 온다.
+            if (findNoCase(json, L"<html") != std::wstring::npos)
             {
-                const size_t from = pos + 7;                     // "<title>" 뒤
-                const size_t end = findNoCase(html, L"</title>", from);
-                const std::wstring msg = (end == std::wstring::npos)
-                    ? L"Error" : html.substr(from, end - from);
+                if (findNoCase(json, L"unusual traffic") != std::wstring::npos)
+                    return returnValue(ExcelObj(std::wstring_view(L"ERROR:Blocked by Google (unusual traffic)")));
+                const size_t t = findNoCase(json, L"<title>");
+                const size_t te = (t == std::wstring::npos) ? t : findNoCase(json, L"</title>", t);
+                const std::wstring msg = (te == std::wstring::npos)
+                    ? L"Error" : decodeEntities(json.substr(t + 7, te - t - 7));
                 return returnValue(ExcelObj(std::wstring_view(L"ERROR:" + msg)));
             }
 
-            static const std::wstring kMarker = L"<div class=\"result-container\">";
-            pos = findNoCase(html, kMarker);
-            if (pos == std::wstring::npos)
+            std::wstring result;
+            if (!parseGtxResult(json, result))
                 return returnValue(ExcelObj(std::wstring_view(L"ERROR:No result")));
-            const size_t from = pos + kMarker.size();
-            const size_t end = findNoCase(html, L"</div>", from);
-            if (end == std::wstring::npos)
-                return returnValue(ExcelObj(std::wstring_view(L"ERROR:html error")));
-
-            const std::wstring result = decodeEntities(html.substr(from, end - from));
             return returnValue(ExcelObj(std::wstring_view(result)));
         }
     }
